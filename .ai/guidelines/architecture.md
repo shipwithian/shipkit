@@ -232,14 +232,14 @@ Actions
 Models / Services / Laravel
 ```
 
-| Component | May depend on |
-| --- | --- |
-| Controller | Requests, policies, Actions, resources, Laravel HTTP |
-| Action | Eloquent models, services, events, exceptions, Laravel facilities |
-| Service | Models, external SDK abstractions, Laravel facilities when appropriate |
-| Model | Eloquent, casts, relations, enums, small model-local behavior |
-| Resource | Models and Laravel resource APIs |
-| Policy | Models and the authenticated actor |
+| Component  | May depend on                                                          |
+| ---------- | ---------------------------------------------------------------------- |
+| Controller | Requests, policies, Actions, resources, Laravel HTTP                   |
+| Action     | Eloquent models, services, events, exceptions, Laravel facilities      |
+| Service    | Models, external SDK abstractions, Laravel facilities when appropriate |
+| Model      | Eloquent, casts, relations, enums, small model-local behavior          |
+| Resource   | Models and Laravel resource APIs                                       |
+| Policy     | Models and the authenticated actor                                     |
 
 The key restriction is simple: controllers should not become the application layer. Actions own workflows; Eloquent models remain the Active Record layer.
 
