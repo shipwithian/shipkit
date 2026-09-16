@@ -123,7 +123,7 @@ export default function Profile({
                 </Form>
             </div>
 
-            <DeleteUser />
+            {!auth.user.is_protected && <DeleteUser />}
         </>
     );
 }
