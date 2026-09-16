@@ -1,9 +1,10 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "shipwithian/shipkit",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "The starter kit for building Laravel applications.",
     "keywords": [
+        "shipkit",
         "laravel",
         "framework"
     ],
