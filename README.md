@@ -62,17 +62,17 @@ The application includes an Inertia and React interface with:
 
 ## Technology
 
-| Area             | Technology                         |
-| ---------------- | ---------------------------------- |
-| Backend          | Laravel 13, PHP 8.3+               |
-| Frontend         | React 19, TypeScript, Inertia.js 3 |
-| Styling          | Tailwind CSS 4                     |
-| Authentication   | Laravel Fortify                    |
-| Authorization    | Spatie Laravel Permission          |
-| Typed routes     | Laravel Wayfinder                  |
-| Frontend tooling | Vite+                              |
-| Testing          | Pest                               |
-| Code quality     | PHPStan, Laravel Pint, TypeScript  |
+| Area             | Technology                                |
+| ---------------- | ----------------------------------------- |
+| Backend          | Laravel 13, PHP 8.3+                      |
+| Frontend         | React 19, TypeScript, Inertia.js 3        |
+| Styling          | Tailwind CSS 4                            |
+| Authentication   | Laravel Fortify                           |
+| Authorization    | Spatie Laravel Permission                 |
+| Typed routes     | Laravel Wayfinder                         |
+| Frontend tooling | Vite+                                     |
+| Testing          | Pest                                      |
+| Code quality     | PHPStan, Laravel Pint, Rector, TypeScript |
 
 Exact dependency constraints are maintained in `composer.json` and `package.json`.
 
@@ -255,6 +255,12 @@ composer test
 # Run the complete CI-oriented check
 composer ci:check
 
+# Preview pending Laravel upgrade transformations
+composer rector:check
+
+# Apply configured Laravel upgrade transformations
+composer rector
+
 # Check frontend formatting and lint rules
 npm run check
 
@@ -266,6 +272,8 @@ npm run build
 ```
 
 When working on a focused change, run the narrowest relevant Pest tests first, then run the complete checks before handing the work off.
+
+Rector is configured only for composer-version-aware Laravel upgrades. Run it deliberately after PHP or Laravel dependency upgrades, review every generated diff, and then run Pint, PHPStan, and the test suite. Rector is not used as an automatic formatter or as a replacement for code review.
 
 ## Extending a generated project
 

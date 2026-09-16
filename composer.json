@@ -20,6 +20,7 @@
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.6",
         "fakerphp/faker": "^1.24",
         "larastan/larastan": "^3.9",
         "laravel/boost": "^2.2",
@@ -65,12 +66,19 @@
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
+            "@rector:check",
             "npm run check",
             "npm run types:check",
             "@test"
         ],
         "types:check": [
             "phpstan analyse"
+        ],
+        "rector": [
+            "rector process"
+        ],
+        "rector:check": [
+            "rector process --dry-run --no-progress-bar"
         ],
         "test": [
             "@php artisan config:clear --ansi",
