@@ -1,6 +1,10 @@
 <?php
 
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -47,4 +51,26 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * @param  array<int, string>  $permissions
+ */
+function userWithPermissions(array $permissions): User
+{
+    $role = Role::create([
+        'name' => 'test-role-'.Str::uuid(),
+        'guard_name' => 'web',
+    ]);
+
+    $role->givePermissionTo(
+        collect($permissions)->map(
+            fn (string $permission): Permission => Permission::findOrCreate($permission, 'web'),
+        ),
+    );
+
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    return $user;
 }

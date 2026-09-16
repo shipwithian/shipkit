@@ -83,3 +83,14 @@ test('correct password must be provided to delete account', function () {
 
     expect($user->fresh())->not->toBeNull();
 });
+
+test('protected users cannot delete their account', function () {
+    $user = User::factory()->create();
+    $user->forceFill(['is_protected' => true])->save();
+
+    $this->actingAs($user)
+        ->delete(route('profile.destroy'), ['password' => 'password'])
+        ->assertForbidden();
+
+    $this->assertModelExists($user);
+});
