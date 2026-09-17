@@ -11,4 +11,4 @@ Use `auth.permissions` for navigation and control visibility; never infer access
 
 ## Use the shared Auth permission contract
 
-The shared `Auth` contract exposes the authenticated user and direct plus role-inherited permission names in `permissions: string[]`. Check the exact permission names defined by the backend system-permission vocabulary.
+The shared `Auth` contract exposes the authenticated user and direct plus role-inherited permission names in `permissions: string[]`. Frontend checks use the exact permission names supplied by the backend. Feature permission names may originate from feature seeders and are not expected to exist in `SystemPermission`.

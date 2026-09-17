@@ -5,6 +5,6 @@ paths:
 
 # Enums
 
-## Name and reference system permissions consistently
+## Reserve SystemPermission for access-control bootstrap
 
-Name consolidated CRUD permissions `manage {plural resource} resource`; give non-CRUD workflows independent verb permissions. Define protected system permission names in `SystemPermission` and reference its cases instead of duplicating strings.
+Reserve `SystemPermission` for protected bootstrap permissions required to administer roles and permissions and prevent access-control deadlocks. Ordinary feature and project permissions belong to their owning feature seeders, not this enum.
