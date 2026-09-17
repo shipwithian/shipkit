@@ -177,8 +177,8 @@ On GitHub, choose **Use this template**, then create the repository for the new 
 Clone the new repository:
 
 ```bash
-git clone git@github.com:your-organization/your-project.git
-cd your-project
+git clone https://github.com/shipwithian/shipkit.git
+cd shipkit
 ```
 
 ### 2. Create and configure the environment
