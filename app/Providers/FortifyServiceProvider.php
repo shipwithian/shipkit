@@ -91,6 +91,30 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($throttleKey);
         });
 
+        RateLimiter::for('api-register', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('api-two-factor', function (Request $request) {
+            $throttleKey = hash('sha256', (string) $request->input('challenge_token')).'|'.$request->ip();
+
+            return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        RateLimiter::for('api-password-reset', function (Request $request) {
+            $throttleKey = Str::transliterate(
+                Str::lower((string) $request->input(Fortify::email())).'|'.$request->ip(),
+            );
+
+            return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        RateLimiter::for('api-verification', function (Request $request) {
+            return Limit::perMinute(6)->by(
+                (string) $request->user()?->getAuthIdentifier().'|'.$request->ip(),
+            );
+        });
+
         RateLimiter::for('passkeys', function (Request $request) {
             return Limit::perMinute(10)->by(
                 ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
