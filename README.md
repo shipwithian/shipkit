@@ -2,9 +2,20 @@
 
 ShipKit is an opinionated Laravel and React starter application for building new projects on top of a production-minded application foundation.
 
-It is designed to be used as a **GitHub template repository**, not installed as a Laravel package. Each project created from ShipKit becomes an independent application that can evolve around its own requirements.
+It is designed to be used as a **GitHub template source or cloned branch**, not installed as a Laravel package. Each project created from ShipKit becomes an independent application that can evolve around its own requirements.
 
 > Stop rebuilding the foundation. Start building the product.
+
+## Template variants
+
+ShipKit is maintained as two starting points:
+
+| Variant                 | Branch              | Includes                                                                                     | Choose it when                                                   |
+| ----------------------- | ------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Web application         | `main`              | Fortify web authentication and the standard dashboard foundation                             | The project does not need bearer-token API authentication        |
+| API-enabled application | `codex/sanctum-api` | Everything in `main`, plus Sanctum bearer-token authentication and versioned API foundations | The project will serve mobile, third-party, or other API clients |
+
+The API-enabled branch is intentionally not merged into `main`. Choose the branch before creating a project so a web-only project does not inherit the API dependencies, routes, migrations, and tests.
 
 ## Why ShipKit exists
 
@@ -36,6 +47,22 @@ Authentication is powered by Laravel Fortify and currently includes:
 - Passkey support
 - Protected account deletion
 
+The default `main` variant is web/session based. The API-enabled variant keeps this Fortify authentication and adds Sanctum bearer-token authentication for API clients.
+
+### API authentication (`codex/sanctum-api` only)
+
+The API-enabled variant includes:
+
+- Versioned `/api/v1` authentication endpoints
+- Sanctum bearer tokens with configurable expiration
+- API registration, login, logout, and current-user endpoints
+- TOTP and recovery-code two-factor challenges
+- API email verification and password reset flows
+- Policy- and permission-based authorization
+- A public `/api/up` health endpoint
+
+The API variant does not replace the web dashboard authentication and does not enable stateful SPA cookie authentication.
+
 ### Roles and permissions
 
 Authorization is powered by Spatie Laravel Permission and currently includes:
@@ -62,17 +89,18 @@ The application includes an Inertia and React interface with:
 
 ## Technology
 
-| Area             | Technology                                |
-| ---------------- | ----------------------------------------- |
-| Backend          | Laravel 13, PHP 8.3+                      |
-| Frontend         | React 19, TypeScript, Inertia.js 3        |
-| Styling          | Tailwind CSS 4                            |
-| Authentication   | Laravel Fortify                           |
-| Authorization    | Spatie Laravel Permission                 |
-| Typed routes     | Laravel Wayfinder                         |
-| Frontend tooling | Vite+                                     |
-| Testing          | Pest                                      |
-| Code quality     | PHPStan, Laravel Pint, Rector, TypeScript |
+| Area               | Technology                                |
+| ------------------ | ----------------------------------------- |
+| Backend            | Laravel 13, PHP 8.3+                      |
+| Frontend           | React 19, TypeScript, Inertia.js 3        |
+| Styling            | Tailwind CSS 4                            |
+| Authentication     | Laravel Fortify                           |
+| API authentication | Laravel Sanctum (API-enabled branch)      |
+| Authorization      | Spatie Laravel Permission                 |
+| Typed routes       | Laravel Wayfinder                         |
+| Frontend tooling   | Vite+                                     |
+| Testing            | Pest                                      |
+| Code quality       | PHPStan, Laravel Pint, Rector, TypeScript |
 
 Exact dependency constraints are maintained in `composer.json` and `package.json`.
 
@@ -170,26 +198,54 @@ The frontend uses `auth.permissions` to show appropriate navigation and controls
 
 ## Create a project from ShipKit
 
+### Choose the template variant
+
+- **Web-only project:** clone the `main` branch.
+- **API-enabled project:** clone the `codex/sanctum-api` branch.
+
+The selected branch is only the starting point. The generated project should become its own repository with a new `main` branch and an independent version sequence.
+
 ### 1. Create an independent repository
 
-On GitHub, choose **Use this template**, then create the repository for the new project. Do not fork ShipKit for normal project development.
+Create an empty repository for the new project on GitHub. Do not fork ShipKit or initialize the new repository with a README, license, or `.gitignore`.
 
-Clone the new repository:
-
-```bash
-git clone https://github.com/shipwithian/shipkit.git
-cd shipkit
-```
-
-### 2. Create and configure the environment
-
-Create the local environment file before running setup:
+Clone the desired ShipKit branch:
 
 ```bash
-cp .env.example .env
+git clone --branch main --single-branch https://github.com/shipwithian/shipkit.git YOUR_PROJECT
+# Or, for the API-enabled variant:
+# git clone --branch codex/sanctum-api --single-branch https://github.com/shipwithian/shipkit.git YOUR_PROJECT
+cd YOUR_PROJECT
 ```
 
-At minimum, review:
+Remove the template Git history, initialize the project's own repository, and push it to the empty remote:
+
+Run the following while inside the newly cloned `YOUR_PROJECT` directory. It removes the template history so the project can establish its own independent version sequence.
+
+```bash
+rm -rf .git
+git init -b main
+git add .
+git commit -m "chore: initialize project from ShipKit"
+git remote add origin https://github.com/YOUR_GITHUB_OWNER/YOUR_PROJECT.git
+git push -u origin main
+```
+
+The generated repository is now independent from ShipKit. Its version sequence and release tags should be established separately from the template.
+
+### 2. Install and initialize the application
+
+Run the project setup script:
+
+```bash
+composer setup
+```
+
+`composer setup` creates `.env` from `.env.example` when it is missing, generates the application key, runs migrations, installs PHP and frontend dependencies, and creates a production frontend build. If the project needs non-default database settings before the first migration, create and configure `.env` before running setup; otherwise let the setup script create it.
+
+### 3. Configure the environment and seed defaults
+
+Review the generated `.env` file:
 
 ```env
 APP_NAME="Your Project"
@@ -202,17 +258,9 @@ SUPER_ADMIN_PASSWORD=use-a-unique-password
 
 The example Super Admin credentials are for local setup only. Replace them before seeding a real environment or deploying the application.
 
+For the API-enabled variant, also review `SANCTUM_TOKEN_EXPIRATION` and the API authentication routes before exposing the application to clients.
+
 SQLite is configured by default. Update the `DB_*` variables before setup if the project will use PostgreSQL, MySQL, or another supported database.
-
-### 3. Install and initialize the application
-
-Run the project setup script:
-
-```bash
-composer setup
-```
-
-This installs PHP and frontend dependencies, generates the application key, runs migrations, and creates a production frontend build.
 
 Seed the protected access-control defaults:
 
@@ -232,7 +280,8 @@ The development command starts the configured Laravel and frontend development p
 
 Before starting business features:
 
-- [ ] Create an independent repository from the GitHub template.
+- [ ] Create an empty project repository and initialize it from the selected ShipKit branch.
+- [ ] Choose either the web-only `main` variant or the API-enabled `codex/sanctum-api` variant before setup.
 - [ ] Update `APP_NAME`, `APP_URL`, and project branding.
 - [ ] Update the root package name, description, and keywords in `composer.json`.
 - [ ] Replace template repository and documentation links in the application navigation.
@@ -240,6 +289,8 @@ Before starting business features:
 - [ ] Set unique `SUPER_ADMIN_NAME`, `SUPER_ADMIN_EMAIL`, and `SUPER_ADMIN_PASSWORD` values.
 - [ ] Run migrations and seed the access-control defaults.
 - [ ] Sign in as the Super Admin and verify role and permission management.
+- [ ] If using the API-enabled variant, review Sanctum expiration, API policies, and bearer-token flows.
+- [ ] Establish the project's independent semantic-version sequence and release tags.
 - [ ] Run the automated quality checks and production build.
 - [ ] Update this README with the project's business purpose and capabilities.
 
