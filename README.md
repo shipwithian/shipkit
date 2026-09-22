@@ -104,6 +104,57 @@ The application includes an Inertia and React interface with:
 
 Exact dependency constraints are maintained in `composer.json` and `package.json`.
 
+## Optional Jev developer quality workflow
+
+ShipKit includes a project-scoped Codex MCP configuration for [Jev](https://docs.typesafe.ai/), TypeSafe's typed judgment layer. Jev is an advisory development tool for risk classification, focused review, and completion verification. It does not modify code, commit changes, merge pull requests, or replace Pest, Pint, PHPStan, Rector, TypeScript checks, or human review.
+
+The configuration is tracked in [`.codex/config.toml`](.codex/config.toml), alongside the Laravel Boost server, so every project created from ShipKit gets the same MCP registration. The Jev MCP package is pinned to a known version for repeatable setup; update that pin deliberately when upgrading the workflow.
+
+### Benefits
+
+Jev gives every ShipKit-based project a shared, lightweight quality workflow around development:
+
+- **Risk-based effort:** classify changes before choosing review and test depth. Documentation-only work can stay lightweight, while authentication, authorization, database, dependency, and deployment changes can receive deeper checks.
+- **Focused review:** review the relevant diff and evidence instead of relying on broad, generic feedback.
+- **More reliable handoffs:** check completion claims against the proposed changes and reported test evidence before calling work finished.
+- **Consistent project setup:** every project generated from ShipKit can use the same advisory checkpoints without adding Jev to the Laravel runtime.
+- **Safe escalation:** missing keys, service failures, malformed results, and low-confidence judgments route to normal deterministic checks and human review.
+
+Jev improves where attention goes; it does not prove correctness. Pest, Pint, PHPStan, Rector, TypeScript checks, CI, and human review remain the authoritative quality gates.
+
+### One-time developer setup
+
+Each developer needs to complete these steps on their own machine:
+
+1. Create a TypeSafe API key and store it in the user environment as `TYPESAFE_API_KEY`. Never put the key in this repository, a Laravel `.env` file, a `VITE_` variable, a prompt, or a committed Codex configuration file.
+
+   For a temporary shell session, the shape is:
+
+   ```bash
+   export TYPESAFE_API_KEY='your-new-typesafe-key'
+   ```
+
+   For regular use, store the variable through your local shell profile or secret manager, then restart Codex so the desktop, CLI, or IDE process can read it.
+
+2. Install the official TypeSafe agent skill for Codex:
+
+   ```bash
+   npx skills add typesafe-ai/skills --skill typesafe-ai -g
+   ```
+
+3. Open the trusted ShipKit project in Codex Desktop, CLI, or IDE and restart the client if it was already open. The project-scoped configuration supplies the Jev MCP server and forwards only the local `TYPESAFE_API_KEY` environment variable.
+4. Confirm that the `jev` MCP server is listed, then use the enabled tools: `jev_classify`, `jev_review`, and `jev_gate`.
+
+For a local smoke test, ask Codex to classify a synthetic change description. A healthy response contains typed judgment data with confidence or probability information. Test with a focused diff and only the relevant repository context; do not send `.env` files, credentials, `vendor`, build output, or unrelated source files.
+
+Jev is used at three optional checkpoints:
+
+- classify change risk and affected areas before selecting review and test depth;
+- review a focused diff with `jev_review`;
+- verify acceptance claims and test evidence with `jev_gate` before handoff.
+
+If the key is missing, authentication fails, Jev is rate-limited or unavailable, or a result is malformed or low-confidence, route the change to normal human review and deterministic project checks. Jev must never be an approval bypass.
+
 ## Architecture
 
 ShipKit uses Laravel's standard application structure, Eloquent's Active Record pattern, and focused Actions for application workflows.
@@ -291,6 +342,7 @@ Before starting business features:
 - [ ] Sign in as the Super Admin and verify role and permission management.
 - [ ] If using the API-enabled variant, review Sanctum expiration, API policies, and bearer-token flows.
 - [ ] Establish the project's independent semantic-version sequence and release tags.
+- [ ] (Optional) Configure `TYPESAFE_API_KEY`, install the TypeSafe Codex skill, and verify the project-scoped Jev MCP server.
 - [ ] Run the automated quality checks and production build.
 - [ ] Update this README with the project's business purpose and capabilities.
 
