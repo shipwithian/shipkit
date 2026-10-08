@@ -1,32 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\V1\AuthenticationController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
-use Illuminate\Foundation\Events\DiagnosingHealth;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 
-Route::get('up', function (): JsonResponse {
-    $exception = null;
-
-    try {
-        Event::dispatch(new DiagnosingHealth);
-    } catch (Throwable $e) {
-        if (app()->hasDebugModeEnabled()) {
-            throw $e;
-        }
-
-        report($e);
-        $exception = $e;
-    }
-
-    return response()->json([
-        'status' => $exception ? 'down' : 'up',
-    ], $exception ? 500 : 200);
-})->name('api.health');
+Route::get('up', HealthCheckController::class)->name('api.health');
 
 Route::prefix('v1')
     ->group(function (): void {
