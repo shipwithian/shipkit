@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,12 +40,32 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $this->sharedUser($request->user()),
                 'permissions' => fn (): array => $request->user()
                     ? $request->user()->getAllPermissions()->pluck('name')->sort()->values()->all()
                     : [],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string, email: string, email_verified_at: string|null, is_protected: bool, created_at: string|null, updated_at: string|null}|null
+     */
+    private function sharedUser(?User $user): ?array
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at?->toJSON(),
+            'is_protected' => $user->is_protected,
+            'created_at' => $user->created_at?->toJSON(),
+            'updated_at' => $user->updated_at?->toJSON(),
         ];
     }
 }

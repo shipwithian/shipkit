@@ -42,3 +42,22 @@ it('shares only currently assigned permissions', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.permissions', []));
 });
+
+it('shares only the listed user fields', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.user.id', $user->id)
+            ->where('auth.user.email', $user->email)
+            ->where('auth.user', fn ($shared): bool => collect($shared)->keys()->sort()->values()->all() === [
+                'created_at',
+                'email',
+                'email_verified_at',
+                'id',
+                'is_protected',
+                'name',
+                'updated_at',
+            ]));
+});
