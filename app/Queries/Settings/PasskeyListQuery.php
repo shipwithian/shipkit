@@ -4,12 +4,12 @@ namespace App\Queries\Settings;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
+use Laravel\Passkeys\Passkey;
 
 class PasskeyListQuery
 {
     /**
-     * @return Collection<int, Model>
+     * @return Collection<int, Passkey>
      */
     public function handle(User $user): Collection
     {

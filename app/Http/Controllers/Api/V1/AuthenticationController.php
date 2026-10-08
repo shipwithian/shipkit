@@ -15,7 +15,6 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Fortify\Fortify;
 use Laravel\Sanctum\NewAccessToken;
@@ -30,7 +29,12 @@ class AuthenticationController extends Controller
         $validated = $request->validated();
 
         $token = $registerApiUser->handle(
-            Arr::except($validated, 'device_name'),
+            [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+                'password_confirmation' => $validated['password_confirmation'],
+            ],
             $validated['device_name'],
         );
 
