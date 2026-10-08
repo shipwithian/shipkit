@@ -7,10 +7,10 @@ import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
-import type { Props as ManagePasskeysProps } from '@/components/manage-passkeys';
-import ManagePasskeys from '@/components/manage-passkeys';
-import type { Props as ManageTwoFactorProps } from '@/components/manage-two-factor';
-import ManageTwoFactor from '@/components/manage-two-factor';
+import type { Props as ManagePasskeysProps } from '@/pages/settings/partials/manage-passkeys';
+import { ManagePasskeys } from '@/pages/settings/partials/manage-passkeys';
+import type { Props as ManageTwoFactorProps } from '@/pages/settings/partials/manage-two-factor';
+import { ManageTwoFactor } from '@/pages/settings/partials/manage-two-factor';
 
 // oxfmt-ignore
 type Props = {

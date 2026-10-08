@@ -18,7 +18,7 @@ type Props = {
     errors: string[];
 };
 
-export default function TwoFactorRecoveryCodes({
+export function TwoFactorRecoveryCodes({
     recoveryCodesList,
     fetchRecoveryCodes,
     errors,

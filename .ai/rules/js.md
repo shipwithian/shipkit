@@ -15,11 +15,11 @@ The shared `Auth` contract exposes the authenticated user and direct plus role-i
 
 ## Organize pages by controller action
 
-A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it: `index`, `create`, `edit`, or `show`. A page reads its props and composes partials; it does not hold form or table markup.
+A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it: `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
 
 ## Keep page pieces in a partials folder
 
-Place a feature's pieces in `pages/{feature}/partials/`, named for the action they submit to: `create-{model}-dialog.tsx` (store), `edit-{model}-dialog.tsx` (update), `delete-{model}-dialog.tsx` (destroy), and `{models}-table.tsx` (index list). Partials use named exports and are never passed to `Inertia::render()`. Move a partial to `components/` only when a second feature uses it; `components/ui` is for primitives.
+Place a feature's pieces in `pages/{feature}/partials/`, named for the action they submit to: `create-{model}-dialog.tsx` (store), `edit-{model}-dialog.tsx` (update), `delete-{model}-dialog.tsx` (destroy), and `{models}-table.tsx` (index list). Partials use named exports and are never passed to `Inertia::render()`. A component used by a single page or feature lives in that feature's `partials/`. Move it to `components/` only when a second feature uses it; `components/ui` is for primitives.
 
 ## Share prop types per feature
 

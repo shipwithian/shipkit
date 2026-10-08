@@ -9,7 +9,7 @@ type Props = {
     onSuccess: () => void;
 };
 
-export default function PasskeyRegistration({ onSuccess }: Props) {
+export function PasskeyRegistration({ onSuccess }: Props) {
     const [name, setName] = useState(() => {
         const ua = navigator.userAgent;
 

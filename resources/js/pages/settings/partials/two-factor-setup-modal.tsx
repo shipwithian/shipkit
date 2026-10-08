@@ -241,7 +241,7 @@ type Props = {
     errors: string[];
 };
 
-export default function TwoFactorSetupModal({
+export function TwoFactorSetupModal({
     isOpen,
     onClose,
     requiresConfirmation,

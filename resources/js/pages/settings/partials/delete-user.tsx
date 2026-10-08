@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
-export default function DeleteUser() {
+export function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
 
     return (
