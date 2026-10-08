@@ -4,6 +4,7 @@ namespace App\Actions\AccessControl;
 
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Support\Facades\DB;
 
 class SyncRolePermissionsAction
 {
@@ -19,6 +20,6 @@ class SyncRolePermissionsAction
             ];
         }
 
-        $role->syncPermissions(array_values(array_unique($permissionIds)));
+        DB::transaction(fn () => $role->syncPermissions(array_values(array_unique($permissionIds))));
     }
 }

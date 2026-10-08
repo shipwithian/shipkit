@@ -8,6 +8,7 @@ use App\Actions\AccessControl\UpdatePermissionAction;
 use App\Http\Requests\AccessControl\StorePermissionRequest;
 use App\Http\Requests\AccessControl\UpdatePermissionRequest;
 use App\Models\Permission;
+use App\Queries\AccessControl\PermissionListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ use Inertia\Response;
 
 class PermissionController extends Controller
 {
-    public function index(): Response
+    public function index(PermissionListQuery $permissionList): Response
     {
         Gate::authorize('viewAny', Permission::class);
 
@@ -28,7 +29,7 @@ class PermissionController extends Controller
                     'roles_count' => $permission->roles_count,
                     'users_count' => $permission->users_count,
                 ],
-                Permission::query()->withCount(['roles', 'users'])->orderBy('name')->get()->all(),
+                $permissionList->handle()->all(),
             ),
         ]);
     }

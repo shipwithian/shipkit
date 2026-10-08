@@ -8,6 +8,7 @@ use App\Actions\AccessControl\UpdateRoleAction;
 use App\Http\Requests\AccessControl\StoreRoleRequest;
 use App\Http\Requests\AccessControl\UpdateRoleRequest;
 use App\Models\Role;
+use App\Queries\AccessControl\RoleListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ use Inertia\Response;
 
 class RoleController extends Controller
 {
-    public function index(): Response
+    public function index(RoleListQuery $roleList): Response
     {
         Gate::authorize('viewAny', Role::class);
 
@@ -28,7 +29,7 @@ class RoleController extends Controller
                     'permissions_count' => $role->permissions_count,
                     'users_count' => $role->users_count,
                 ],
-                Role::query()->withCount(['permissions', 'users'])->orderBy('name')->get()->all(),
+                $roleList->handle()->all(),
             ),
         ]);
     }

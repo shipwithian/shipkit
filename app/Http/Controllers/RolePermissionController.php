@@ -6,6 +6,7 @@ use App\Actions\AccessControl\SyncRolePermissionsAction;
 use App\Http\Requests\AccessControl\UpdateRolePermissionsRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Queries\AccessControl\AssignablePermissionListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -13,16 +14,18 @@ use Inertia\Response;
 
 class RolePermissionController extends Controller
 {
-    public function edit(Role $role): Response
+    public function edit(Role $role, AssignablePermissionListQuery $assignablePermissionList): Response
     {
         Gate::authorize('assignPermissions', $role);
+
+        $role->loadMissing('permissions');
 
         return Inertia::render('roles/permissions', [
             'role' => [
                 'id' => $role->id,
                 'name' => $role->name,
                 'is_protected' => $role->is_protected,
-                'permission_ids' => $role->permissions()->pluck('permissions.id'),
+                'permission_ids' => $role->permissions->modelKeys(),
             ],
             'permissions' => array_map(
                 fn (Permission $permission): array => [
@@ -30,7 +33,7 @@ class RolePermissionController extends Controller
                     'name' => $permission->name,
                     'is_protected' => $permission->is_protected,
                 ],
-                Permission::query()->orderBy('name')->get()->all(),
+                $assignablePermissionList->handle()->all(),
             ),
         ]);
     }
