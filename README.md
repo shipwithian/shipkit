@@ -149,19 +149,19 @@ Each developer needs to complete these steps on their own machine:
 
 1. Create a TypeSafe API key and store it in the user environment as `TYPESAFE_API_KEY`. Never put the key in this repository, a Laravel `.env` file, a `VITE_` variable, a prompt, or a committed Codex configuration file.
 
-   For a temporary shell session, the shape is:
+    For a temporary shell session, the shape is:
 
-   ```bash
-   export TYPESAFE_API_KEY='your-new-typesafe-key'
-   ```
+    ```bash
+    export TYPESAFE_API_KEY='your-new-typesafe-key'
+    ```
 
-   For regular use, store the variable through your local shell profile or secret manager, then restart Codex so the desktop, CLI, or IDE process can read it.
+    For regular use, store the variable through your local shell profile or secret manager, then restart Codex so the desktop, CLI, or IDE process can read it.
 
 2. Install the official TypeSafe agent skill for Codex:
 
-   ```bash
-   npx skills add typesafe-ai/skills --skill typesafe-ai -g
-   ```
+    ```bash
+    npx skills add typesafe-ai/skills --skill typesafe-ai -g
+    ```
 
 3. Open the trusted ShipKit project in Codex Desktop, CLI, or IDE and restart the client if it was already open. The project-scoped configuration supplies the Jev MCP server and forwards only the local `TYPESAFE_API_KEY` environment variable.
 4. Confirm that the `jev` MCP server is listed, then use the enabled tools: `jev_classify`, `jev_review`, and `jev_gate`.
