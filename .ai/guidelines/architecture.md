@@ -170,7 +170,7 @@ Form Requests own HTTP validation and normalization only. They do not authorize 
 
 Authorization happens at the HTTP delivery boundary:
 
-- Routes apply authentication, email verification, throttling, and signed-URL middleware. They do not apply permission middleware.
+- Routes point to controller actions and apply authentication, email verification, throttling, and signed-URL middleware. They do not apply permission middleware or define closures that contain logic.
 - Every protected controller action calls `Gate::authorize()` explicitly as its first statement.
 - Policies answer whether the actor may perform the operation.
 - Form Requests validate only.
@@ -249,9 +249,9 @@ Do not hide essential workflow in Eloquent observers. Keep critical behavior exp
 
 Inertia pages mirror the controller that renders them:
 
-- `pages/{feature}/{action}.tsx` is a routable page named after the controller action (`index`, `create`, `edit`, `show`). It reads props and composes partials.
+- `pages/{feature}/{action}.tsx` is a routable page named after the controller action (`index`, `create`, `edit`, `show`). A page that serves more than one action reads props and composes partials; a single-form page may hold its own form.
 - `pages/{feature}/partials/` holds the feature's pieces, named for the action they submit to: `create-{model}-dialog.tsx` (store), `edit-{model}-dialog.tsx` (update), `delete-{model}-dialog.tsx` (destroy), and `{models}-table.tsx` (index list).
-- Partials use named exports and are never rendered by name from a controller. A partial moves to `components/` only when a second feature uses it.
+- Partials use named exports and are never rendered by name from a controller. A component used by one page or feature lives in its `partials/` and moves to `components/` only when a second feature uses it.
 - Types for server-provided props live in `resources/js/types/{feature}.ts`.
 
 Frontend permission checks only control what is shown; policies remain authoritative.
@@ -320,7 +320,7 @@ The key restriction is simple: controllers should not become the application lay
 
 Use Laravel feature tests as the primary confidence layer. Organize them by feature in `tests/Feature/{Feature}/`, with no by-type folders: policy, Action, and Query tests sit beside the feature's HTTP tests.
 
-Use one file per resource, such as `{Model}ManagementTest`, with a `describe()` block per controller action and one behaviour per `it()` case. When a file would cover several unrelated endpoints, split it into one file per flow. Within each action, order cases as guest, forbidden, validation, success, then invariants.
+Use one file per resource, such as `{Model}ManagementTest`, with one behaviour per `it()` case and a `describe()` block per controller action when the file covers more than one. Single-purpose files, such as policy, Action, and Query tests, stay flat. When a file would cover several unrelated endpoints, split it into one file per flow. Within each action, order cases as guest, forbidden, validation, success, then invariants.
 
 Feature tests should cover authentication, authorization, validation, database state, relationships, response shape, important events, and cross-actor or tenant isolation.
 
