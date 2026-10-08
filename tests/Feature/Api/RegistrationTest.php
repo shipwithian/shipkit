@@ -5,7 +5,7 @@ use App\Notifications\ApiVerifyEmailNotification;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\PersonalAccessToken;
 
-test('users can register through the API and receive a bearer token', function () {
+it('registers a user and issues a bearer token', function () {
     Notification::fake();
 
     $response = $this->postJson('/api/v1/register', [

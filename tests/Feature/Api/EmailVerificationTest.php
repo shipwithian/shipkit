@@ -7,33 +7,37 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 
-test('API email verification uses a signed link', function () {
-    Event::fake();
+describe('send', function () {
+    it('sends a verification email', function () {
+        Notification::fake();
 
-    $user = User::factory()->unverified()->create();
-    $url = URL::temporarySignedRoute(
-        'api.v1.email.verify',
-        now()->addMinutes(60),
-        ['id' => $user->id, 'hash' => sha1($user->email)],
-    );
+        $user = User::factory()->unverified()->create();
+        $token = $user->createToken('mobile app', ['*'])->plainTextToken;
 
-    $this->getJson($url)
-        ->assertOk()
-        ->assertJsonPath('message', 'Your email address has been verified.');
+        $this->withToken($token)
+            ->postJson('/api/v1/email/verification-notification')
+            ->assertAccepted();
 
-    Event::assertDispatched(Verified::class);
-    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+        Notification::assertSentTo($user, ApiVerifyEmailNotification::class);
+    });
 });
 
-test('API users can request a verification email', function () {
-    Notification::fake();
+describe('verify', function () {
+    it('verifies the email through a signed link', function () {
+        Event::fake();
 
-    $user = User::factory()->unverified()->create();
-    $token = $user->createToken('mobile app', ['*'])->plainTextToken;
+        $user = User::factory()->unverified()->create();
+        $url = URL::temporarySignedRoute(
+            'api.v1.email.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)],
+        );
 
-    $this->withToken($token)
-        ->postJson('/api/v1/email/verification-notification')
-        ->assertAccepted();
+        $this->getJson($url)
+            ->assertOk()
+            ->assertJsonPath('message', 'Your email address has been verified.');
 
-    Notification::assertSentTo($user, ApiVerifyEmailNotification::class);
+        Event::assertDispatched(Verified::class);
+        expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+    });
 });

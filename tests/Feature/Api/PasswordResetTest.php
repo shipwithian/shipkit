@@ -5,7 +5,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\PersonalAccessToken;
 
-test('API users can request and complete a password reset', function () {
+it('sends a reset link and resets the password', function () {
     Notification::fake();
 
     $user = User::factory()->create();

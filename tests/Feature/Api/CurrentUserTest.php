@@ -1,6 +1,6 @@
 <?php
 
-test('the current API user includes current permissions without exposing secrets', function () {
+it('returns current permissions without exposing secrets', function () {
     $user = userWithPermissions(['reports.view']);
     $token = $user->createToken('test client', ['*'])->plainTextToken;
 

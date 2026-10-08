@@ -11,7 +11,11 @@ Place feature tests in `tests/Feature/{Feature}/`, using the same feature name a
 
 ## Use one file per resource with a describe block per action
 
-Name the file for the resource or page, such as `{Model}ManagementTest`. Wrap cases in a `describe()` block per controller action (`index`, `store`, `edit`, `update`, `destroy`) and write cases with `it()`. Test one behaviour per case; do not chain create, update, and delete in a single test.
+Name the file for the resource or page, such as `{Model}ManagementTest`. When a file covers more than one controller action, wrap cases in a `describe()` block per action (`index`, `store`, `edit`, `update`, `destroy`). Write cases with `it()`. Test one behaviour per case; do not chain create, update, and delete in a single test.
+
+## Keep single-purpose files flat
+
+Files that cover one action or one class, such as policy, Action, Query, seeder, and health tests, do not need `describe()` blocks. Leave the upstream starter-kit files under `tests/Feature/Auth` as shipped.
 
 ## Split by flow when a file covers several endpoints
 
