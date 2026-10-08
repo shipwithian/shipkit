@@ -1,6 +1,3 @@
-[mcp_servers.laravel-boost]
-command = "php"
-args = ["artisan", "boost:mcp"]
 
 [mcp_servers.jev]
 command = "npx"
@@ -9,3 +6,7 @@ env_vars = ["TYPESAFE_API_KEY"]
 enabled_tools = ["jev_classify", "jev_review", "jev_gate"]
 startup_timeout_sec = 30
 tool_timeout_sec = 90
+
+[mcp_servers.laravel-boost]
+command = "php"
+args = ["artisan", "boost:mcp"]
