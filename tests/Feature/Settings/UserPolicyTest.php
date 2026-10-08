@@ -22,3 +22,16 @@ it('forbids a user from deleting another account', function () {
 
     expect(Gate::forUser($user)->allows('delete', $otherUser))->toBeFalse();
 });
+
+it('allows a user to update their own account', function () {
+    $user = User::factory()->create();
+
+    expect(Gate::forUser($user)->allows('update', $user))->toBeTrue();
+});
+
+it('forbids a user from updating another account', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    expect(Gate::forUser($user)->allows('update', $otherUser))->toBeFalse();
+});

@@ -13,4 +13,5 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Http/Requests/** | .ai/rules/requests.md |
 | routes/** | .ai/rules/routes.md |
 | database/seeders/** | .ai/rules/seeders.md |
+| tests/** | .ai/rules/tests.md |
 | ** | .ai/rules/general.md |

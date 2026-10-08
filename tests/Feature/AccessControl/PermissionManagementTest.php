@@ -5,103 +5,128 @@ use App\Models\Role;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-it('redirects guests from permission management', function () {
-    $this->get(route('permissions.index'))->assertRedirect(route('login'));
+describe('index', function () {
+    it('redirects guests to the login page', function () {
+        $this->get(route('permissions.index'))->assertRedirect(route('login'));
+    });
+
+    it('forbids users without permission resource management', function () {
+        $this->actingAs(User::factory()->create())
+            ->get(route('permissions.index'))
+            ->assertForbidden();
+    });
+
+    it('renders permissions for a user who manages the permission resource', function () {
+        Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
+
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->get(route('permissions.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('permissions/index')
+                ->has('permissions', 2));
+    });
 });
 
-it('forbids users without permission resource management', function () {
-    $this->actingAs(User::factory()->create())
-        ->get(route('permissions.index'))
-        ->assertForbidden();
+describe('store', function () {
+    it('forbids users without permission resource management', function () {
+        $this->actingAs(User::factory()->create())
+            ->post(route('permissions.store'), ['name' => 'publish posts'])
+            ->assertForbidden();
+
+        expect(Permission::query()->where('name', 'publish posts')->exists())->toBeFalse();
+    });
+
+    it('rejects a name that is already taken', function () {
+        Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
+
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->post(route('permissions.store'), ['name' => ' publish posts '])
+            ->assertSessionHasErrors('name');
+    });
+
+    it('creates a permission with a trimmed name', function () {
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->post(route('permissions.store'), ['name' => '  publish posts  '])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('permissions.index'));
+
+        expect(Permission::query()->where('name', 'publish posts')->where('guard_name', 'web')->exists())->toBeTrue();
+    });
 });
 
-it('forbids creating permissions without permission resource management', function () {
-    $this->actingAs(User::factory()->create())
-        ->post(route('permissions.store'), ['name' => 'publish posts'])
-        ->assertForbidden();
+describe('update', function () {
+    it('renames a permission', function () {
+        $permission = Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
 
-    expect(Permission::query()->where('name', 'publish posts')->exists())->toBeFalse();
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->put(route('permissions.update', $permission), ['name' => 'archive posts'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('permissions.index'));
+
+        expect($permission->refresh()->name)->toBe('archive posts');
+    });
+
+    it('does not rename a protected permission', function () {
+        $permission = Permission::create([
+            'name' => 'system permission',
+            'guard_name' => 'web',
+            'is_protected' => true,
+        ]);
+
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->put(route('permissions.update', $permission), ['name' => 'renamed'])
+            ->assertSessionHasErrors('name');
+
+        expect($permission->refresh()->name)->toBe('system permission');
+    });
 });
 
-it('renders permissions for an authorized user', function () {
-    Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
+describe('destroy', function () {
+    it('deletes an unused permission', function () {
+        $permission = Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
 
-    $this->actingAs(userWithPermissions(['manage permissions resource']))
-        ->get(route('permissions.index'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('permissions/index')
-            ->has('permissions', 2));
-});
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->delete(route('permissions.destroy', $permission))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('permissions.index'));
 
-it('creates updates and deletes an unused permission', function () {
-    $user = userWithPermissions(['manage permissions resource']);
+        $this->assertModelMissing($permission);
+    });
 
-    $this->actingAs($user)
-        ->post(route('permissions.store'), ['name' => '  publish posts  '])
-        ->assertSessionHasNoErrors()
-        ->assertRedirect(route('permissions.index'));
+    it('does not delete a protected permission', function () {
+        $permission = Permission::create([
+            'name' => 'system permission',
+            'guard_name' => 'web',
+            'is_protected' => true,
+        ]);
 
-    $permission = Permission::findByName('publish posts');
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->delete(route('permissions.destroy', $permission))
+            ->assertSessionHasErrors('permission');
 
-    $this->actingAs($user)
-        ->put(route('permissions.update', $permission), ['name' => 'archive posts'])
-        ->assertSessionHasNoErrors()
-        ->assertRedirect(route('permissions.index'));
+        $this->assertModelExists($permission);
+    });
 
-    expect($permission->refresh()->name)->toBe('archive posts');
+    it('does not delete a permission assigned to a role', function () {
+        $permission = Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
+        Role::create(['name' => 'editor', 'guard_name' => 'web'])->givePermissionTo($permission);
 
-    $this->actingAs($user)
-        ->delete(route('permissions.destroy', $permission))
-        ->assertSessionHasNoErrors()
-        ->assertRedirect(route('permissions.index'));
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->delete(route('permissions.destroy', $permission))
+            ->assertSessionHasErrors('permission');
 
-    $this->assertModelMissing($permission);
-});
+        $this->assertModelExists($permission);
+    });
 
-it('validates permission names', function () {
-    $user = userWithPermissions(['manage permissions resource']);
-    Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
+    it('does not delete a permission assigned to a user', function () {
+        $permission = Permission::create(['name' => 'archive posts', 'guard_name' => 'web']);
+        User::factory()->create()->givePermissionTo($permission);
 
-    $this->actingAs($user)
-        ->post(route('permissions.store'), ['name' => ' publish posts '])
-        ->assertSessionHasErrors('name');
-});
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->delete(route('permissions.destroy', $permission))
+            ->assertSessionHasErrors('permission');
 
-it('does not rename or delete protected permissions', function () {
-    $user = userWithPermissions(['manage permissions resource']);
-    $permission = Permission::create([
-        'name' => 'system permission',
-        'guard_name' => 'web',
-        'is_protected' => true,
-    ]);
-
-    $this->actingAs($user)
-        ->put(route('permissions.update', $permission), ['name' => 'renamed'])
-        ->assertSessionHasErrors('name');
-
-    $this->actingAs($user)
-        ->delete(route('permissions.destroy', $permission))
-        ->assertSessionHasErrors('permission');
-
-    expect($permission->refresh()->name)->toBe('system permission');
-});
-
-it('does not delete permissions assigned to roles or users', function () {
-    $manager = userWithPermissions(['manage permissions resource']);
-    $rolePermission = Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
-    $userPermission = Permission::create(['name' => 'archive posts', 'guard_name' => 'web']);
-    Role::create(['name' => 'editor', 'guard_name' => 'web'])->givePermissionTo($rolePermission);
-    User::factory()->create()->givePermissionTo($userPermission);
-
-    $this->actingAs($manager)
-        ->delete(route('permissions.destroy', $rolePermission))
-        ->assertSessionHasErrors('permission');
-
-    $this->actingAs($manager)
-        ->delete(route('permissions.destroy', $userPermission))
-        ->assertSessionHasErrors('permission');
-
-    $this->assertModelExists($rolePermission);
-    $this->assertModelExists($userPermission);
+        $this->assertModelExists($permission);
+    });
 });
