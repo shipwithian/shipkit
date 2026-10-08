@@ -12,8 +12,23 @@ Create a new project with the Laravel installer:
 
 ```bash
 laravel new my-app --using=shipwithian/shipkit
+```
+
+Move into the project:
+
+```bash
 cd my-app
+```
+
+Seed the access-control defaults:
+
+```bash
 php artisan db:seed
+```
+
+Start development:
+
+```bash
 composer dev
 ```
 
@@ -349,29 +364,51 @@ Before starting business features:
 
 ## Development commands
 
+Start local development:
+
 ```bash
-# Start local development
 composer dev
+```
 
-# Run PHP formatting, static analysis, and the test suite
+Run PHP formatting, static analysis, and the test suite:
+
+```bash
 composer test
+```
 
-# Run the complete CI-oriented check
+Run the complete CI-oriented check:
+
+```bash
 composer ci:check
+```
 
-# Preview pending Laravel upgrade transformations
+Preview pending Laravel upgrade transformations:
+
+```bash
 composer rector:check
+```
 
-# Apply configured Laravel upgrade transformations
+Apply configured Laravel upgrade transformations:
+
+```bash
 composer rector
+```
 
-# Check frontend formatting and lint rules
+Check frontend formatting and lint rules:
+
+```bash
 npm run check
+```
 
-# Check TypeScript
+Check TypeScript:
+
+```bash
 npm run types:check
+```
 
-# Create a production build
+Create a production build:
+
+```bash
 npm run build
 ```
 
