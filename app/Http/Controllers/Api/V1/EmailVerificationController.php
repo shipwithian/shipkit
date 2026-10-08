@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Api\VerifyApiEmailAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
 use App\Notifications\ApiVerifyEmailNotification;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -32,18 +32,10 @@ class EmailVerificationController extends Controller
         ], 202);
     }
 
-    public function verify(int $id, string $hash): JsonResponse
+    public function verify(int $id, string $hash, VerifyApiEmailAction $verifyApiEmail): JsonResponse
     {
-        $user = User::query()->findOrFail($id);
-
-        abort_unless(
-            hash_equals(sha1($user->getEmailForVerification()), $hash),
-            403,
-        );
-
-        if (! $user->hasVerifiedEmail() && $user->markEmailAsVerified()) {
-            event(new Verified($user));
-        }
+        $user = $verifyApiEmail->handle($id, $hash);
+        $user->loadMissing(['permissions', 'roles.permissions']);
 
         return response()->json([
             'message' => __('Your email address has been verified.'),

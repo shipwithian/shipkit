@@ -2,16 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Actions\Fortify\ResetUserPassword;
+use App\Actions\Api\ResetApiPasswordAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\ResetPasswordRequest;
-use App\Models\User;
-use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 
 class PasswordResetController extends Controller
@@ -35,32 +31,12 @@ class PasswordResetController extends Controller
 
     public function reset(
         ResetPasswordRequest $request,
-        ResetUserPassword $resetUserPassword,
+        ResetApiPasswordAction $resetApiPassword,
     ): JsonResponse {
         /** @var array{token: string, email: string, password: string, password_confirmation: string} $validated */
         $validated = $request->validated();
 
-        $status = Password::broker(config('fortify.passwords'))->reset(
-            $validated,
-            function (User $user, string $password) use ($resetUserPassword): void {
-                $resetUserPassword->reset($user, [
-                    'password' => $password,
-                    'password_confirmation' => $password,
-                ]);
-
-                $user->setRememberToken(Str::random(60));
-                $user->save();
-                $user->tokens()->delete();
-
-                event(new PasswordReset($user));
-            },
-        );
-
-        if ($status !== Password::PASSWORD_RESET) {
-            throw ValidationException::withMessages([
-                Fortify::email() => [__('The password reset token is invalid or expired.')],
-            ]);
-        }
+        $resetApiPassword->handle($validated);
 
         return response()->json([
             'message' => __('Your password has been reset.'),

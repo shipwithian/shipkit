@@ -2,65 +2,65 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Actions\Api\AuthenticateApiUserAction;
 use App\Actions\Api\CompleteApiTwoFactorChallengeAction;
-use App\Actions\Api\CreateApiTwoFactorChallengeAction;
-use App\Actions\ApiTokens\CreateApiTokenAction;
+use App\Actions\Api\LoginApiUserAction;
+use App\Actions\Api\RegisterApiUserAction;
 use App\Actions\ApiTokens\RevokeApiTokenAction;
-use App\Actions\Fortify\CreateNewUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Requests\Api\V1\TwoFactorChallengeRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
-use App\Notifications\ApiVerifyEmailNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Fortify\Fortify;
 use Laravel\Sanctum\NewAccessToken;
 
 class AuthenticationController extends Controller
 {
     public function register(
         RegisterRequest $request,
-        CreateNewUser $createNewUser,
-        CreateApiTokenAction $createApiToken,
+        RegisterApiUserAction $registerApiUser,
     ): JsonResponse {
         /** @var array{name: string, email: string, password: string, password_confirmation: string, device_name: string} $validated */
         $validated = $request->validated();
 
-        $user = $createNewUser->create($validated);
-        $user->notify(new ApiVerifyEmailNotification);
-
-        return $this->tokenResponse(
-            $createApiToken->handle($user, $validated['device_name']),
-            $user,
-            201,
+        $token = $registerApiUser->handle(
+            Arr::except($validated, 'device_name'),
+            $validated['device_name'],
         );
+
+        /** @var User $user */
+        $user = $token->accessToken->tokenable;
+
+        return $this->tokenResponse($token, $user, 201);
     }
 
     public function login(
         LoginRequest $request,
-        AuthenticateApiUserAction $authenticateApiUser,
-        CreateApiTwoFactorChallengeAction $createApiTwoFactorChallenge,
-        CreateApiTokenAction $createApiToken,
+        LoginApiUserAction $loginApiUser,
     ): JsonResponse {
-        $user = $authenticateApiUser->handle($request);
-        $deviceName = $request->string('device_name')->toString();
+        $result = $loginApiUser->handle(
+            $request->string(Fortify::username())->toString(),
+            $request->string('password')->toString(),
+            $request->string('device_name')->toString(),
+        );
 
-        if ($user->hasEnabledTwoFactorAuthentication()) {
+        if (! $result instanceof NewAccessToken) {
             return response()->json([
                 'two_factor_required' => true,
-                ...$createApiTwoFactorChallenge->handle($user, $deviceName),
+                ...$result,
             ]);
         }
 
-        return $this->tokenResponse(
-            $createApiToken->handle($user, $deviceName),
-            $user,
-        );
+        /** @var User $user */
+        $user = $result->accessToken->tokenable;
+
+        return $this->tokenResponse($result, $user);
     }
 
     public function twoFactorChallenge(

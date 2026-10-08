@@ -2,7 +2,6 @@
 
 namespace App\Actions\Api;
 
-use App\Http\Requests\Api\V1\LoginRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Support\Facades\Auth;
@@ -11,40 +10,29 @@ use Laravel\Fortify\Fortify;
 
 class AuthenticateApiUserAction
 {
-    public function handle(LoginRequest $request): User
+    public function handle(string $username, string $password): User
     {
         $guard = Auth::guard((string) config('fortify.guard', 'web'));
         $provider = $guard->getProvider();
 
-        if (Fortify::$authenticateUsingCallback) {
-            $user = call_user_func(Fortify::$authenticateUsingCallback, $request);
-        } else {
-            $user = $provider->retrieveByCredentials(
-                $request->only(Fortify::username(), 'password'),
-            );
+        $user = $provider->retrieveByCredentials([
+            Fortify::username() => $username,
+            'password' => $password,
+        ]);
 
-            if ($user && $provider->validateCredentials($user, [
-                'password' => $request->string('password')->toString(),
-            ])) {
-                if (config('hashing.rehash_on_login', true)) {
-                    $provider->rehashPasswordIfRequired($user, [
-                        'password' => $request->string('password')->toString(),
-                    ]);
-                }
-            } else {
-                $user = null;
-            }
-        }
-
-        if (! $user instanceof User) {
+        if (! $user instanceof User || ! $provider->validateCredentials($user, ['password' => $password])) {
             event(new Failed($guard->getName(), null, [
-                Fortify::username() => $request->input(Fortify::username()),
-                'password' => $request->input('password'),
+                Fortify::username() => $username,
+                'password' => $password,
             ]));
 
             throw ValidationException::withMessages([
                 Fortify::username() => [trans('auth.failed')],
             ]);
+        }
+
+        if (config('hashing.rehash_on_login', true)) {
+            $provider->rehashPasswordIfRequired($user, ['password' => $password]);
         }
 
         return $user;

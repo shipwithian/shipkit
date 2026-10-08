@@ -10,14 +10,6 @@ use Laravel\Fortify\Fortify;
 class LoginRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
      * Prepare the request for validation.
      */
     protected function prepareForValidation(): void
