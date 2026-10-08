@@ -173,16 +173,19 @@ Eloquent model
 Database
 ```
 
+Reads follow the same path with a Query object in place of the Form Request and Action.
+
 Responsibilities are intentionally separated:
 
 - **Form Requests** validate and normalize input.
-- **Controllers** authorize the request, invoke an Action, and return the response.
+- **Controllers** authorize the request, invoke an Action or Query object, and return the response. They do not query the database directly.
 - **Policies** map application abilities to user permissions.
 - **Actions** perform named workflows and enforce non-bypassable system invariants.
+- **Query objects** own the Eloquent query behind each page, list, or API response.
 - **Eloquent models** own persistence, relationships, casts, scopes, and small model-local behavior.
 - **React pages** present server-provided state and improve usability without replacing backend authorization.
 
-DTOs, repositories, services, query objects, and domain-oriented structures are not required by default. Introduce them only when they solve a concrete complexity in the project.
+DTOs, repositories, services, and domain-oriented structures are not required by default. Introduce them only when they solve a concrete complexity in the project.
 
 For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
 
