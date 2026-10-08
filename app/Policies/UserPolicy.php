@@ -11,6 +11,11 @@ class UserPolicy
         return $user->is($model);
     }
 
+    public function update(User $user, User $model): bool
+    {
+        return $user->is($model);
+    }
+
     public function delete(User $user, User $model): bool
     {
         return $user->is($model) && ! $model->is_protected;
