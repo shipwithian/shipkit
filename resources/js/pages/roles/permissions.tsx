@@ -7,25 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { index as rolesIndex } from '@/routes/roles';
-
-type Permission = {
-    id: number;
-    name: string;
-    is_protected: boolean;
-};
-
-type Role = {
-    id: number;
-    name: string;
-    is_protected: boolean;
-    permission_ids: number[];
-};
+import type { Permission, RoleWithPermissionIds } from '@/types';
 
 export default function RolePermissions({
     role,
     permissions,
 }: {
-    role: Role;
+    role: RoleWithPermissionIds;
     permissions: Permission[];
 }) {
     const form = useForm({ permissions: role.permission_ids });
