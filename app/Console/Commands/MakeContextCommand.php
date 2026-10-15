@@ -62,9 +62,9 @@ class MakeContextCommand extends Command
         $this->components->bulletList([
             "Fill in .ai/rules/contexts/{$slug}.md with the context's vocabulary as it emerges.",
             "Add Actions and Queries under app/Domain/{$context}; list each one in the rule file.",
-            'Guard aggregate invariants with ensure...() methods registered in booting(), and use GuardsBulkWrites.',
+            'Guard aggregate invariants with ensure...() methods called from guardUpdate()/guardDelete(), and use GuardsInvariants.',
             "Put web controllers and requests in app/Http/Controllers/{$context} and app/Http/Requests/{$context}.",
-            'tests/Unit/ArchitectureTest.php already covers the new context.',
+            'tests/Unit/ArchitectureTest.php already covers the new context. Delete a folder\'s .gitkeep once it holds a class.',
         ]);
 
         return self::SUCCESS;

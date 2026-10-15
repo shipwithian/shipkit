@@ -62,6 +62,6 @@ Stops only the server this script started, by its recorded pid, and deletes the 
 
 ## Gotchas
 
-- **A stale `public/hot` file** (left by a stopped `npm run dev`) makes full HTML pages hang for 30 seconds on server-side rendering. `launch` warns about it. JSON driving is unaffected. For checks in a real browser (Claude in Chrome against the launched URL), run `npm run dev` or remove `public/hot` first.
+- **A stale `public/hot` file** (left by a stopped `npm run dev`) points pages at a Vite server that is not running. The instance runs with server-side rendering off, so nothing hangs, but HTML pages load without assets. `launch` warns about it. For checks in a real browser (Claude in Chrome against the launched URL), run `npm run dev` or remove `public/hot` first.
 - **Login is rate limited** to 5 attempts per minute per email and IP, shared between web and API login. The limiter lives in the scratch database, so `stop` then `launch` resets it.
 - **Validation and domain errors** both arrive in `props.errors` after a `send`. A domain exception reports against the field its `field()` method names, such as `role` or `permission`.

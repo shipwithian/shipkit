@@ -23,7 +23,7 @@ Each bounded context's model lives in `.ai/rules/contexts/{context}.md`, scaffol
 ```
 
 - One row per rule that must hold for every caller, independent of who is asking.
-- **Enforced by** names the `ensure...()` method (guarded in the model's `booting()`) or the Action that checks it.
+- **Enforced by** names the `ensure...()` method (run by the model's `guardUpdate()`/`guardDelete()`) or the Action that checks it.
 - **Exception** names the domain exception it throws, or `—` when the rule is applied silently.
 
 ## Public surface

@@ -32,3 +32,7 @@ Helpers used by more than one file belong in `tests/Pest.php`. Do not leave plac
 ## Keep architecture rules in ArchitectureTest
 
 Boundary rules live as Pest `arch()` expectations in `tests/Unit/ArchitectureTest.php`. It discovers contexts from `app/Domain/*`, so a context created with `php artisan make:context` is covered without editing it. Assert invariant failures by their named domain exception, not `ValidationException`, when calling an Action directly.
+
+## Run the full suite yourself
+
+The whole suite runs in seconds. Run the narrowest tests while iterating, then `composer ci:check`, which runs the full suite with every other check, before handing work back; there is no need to ask the user to run it.

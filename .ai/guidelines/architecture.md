@@ -37,7 +37,7 @@ A bounded context groups everything that shares one business vocabulary and one 
 
 Rules for contexts:
 
-- A context's Models, Enums, Exceptions, and Policies are internal. Other contexts use it only through its Actions, Query objects, and events.
+- A context's Models, Enums, Policies, and Services are internal. Its public surface is its Actions, Query objects, domain exceptions, and events, which other contexts may call, catch, and declare.
 - The delivery layer (`app/Http`) may use any context.
 - `App\Models\User` is the shared identity model. It stays in `app/Models` because Fortify, Sanctum, Spatie Permission, and the auth configuration reference it.
 - Each context has a rule file in `.ai/rules/contexts/{context}.md` that lists its vocabulary, its invariants and where each is enforced, and its public surface. Update it when a context gains a term, an invariant, or a public class.
@@ -55,7 +55,7 @@ app/
 │   ├── Shared/
 │   │   ├── Eloquent/
 │   │   │   ├── GuardedBuilder.php
-│   │   │   └── GuardsBulkWrites.php
+│   │   │   └── GuardsInvariants.php
 │   │   └── Exceptions/
 │   │       ├── BulkWriteBypassesInvariants.php
 │   │       └── DomainException.php
@@ -153,7 +153,7 @@ Using Laravel and Eloquent inside an Action is intentional. The Action orchestra
 
 Business invariants hold for every caller, independently of actor authorization: protected records, required assignments, in-use deletion guards, ownership, and similar rules. A policy decides whether this actor may attempt the operation; the invariant decides whether the operation is valid at all. Console commands, jobs, and other non-HTTP callers must not be able to bypass an invariant by skipping the controller.
 
-Put an invariant that protects one aggregate's own state on the model as an `ensure...()` method, such as `{model}.ensureCanBeDeleted()`, and register it in the model's `booting()` method as an `updating` or `deleting` guard. The guard then runs on every save or delete, so no Action, job, seeder, or tinker session can skip it, and registering it while booting makes it run before package model events such as Spatie's pivot cleanup. Query-builder bulk updates, deletes, and upserts skip model events, so every guarded model also uses the `GuardsBulkWrites` trait: its `GuardedBuilder` lets single-record saves and deletes through and throws `BulkWriteBypassesInvariants` for bulk writes. To change many guarded records, load them and save or delete each one. Keep invariants that span several aggregates or systems in the Action. Every invariant throws a named exception that extends `App\Domain\Shared\Exceptions\DomainException`.
+Put an invariant that protects one aggregate's own state on the model as an `ensure...()` method, such as `{model}.ensureCanBeDeleted()`. Add `use GuardsInvariants;` to the model and call the `ensure...()` methods from its `guardUpdate()` and `guardDelete()` overrides. The trait runs those guards on every save and delete, so no Action, job, seeder, or tinker session can skip them: as model events registered before package events such as Spatie's pivot cleanup, directly from the save path when events are silenced (`saveQuietly()`, `deleteQuietly()`, `withoutEvents()`, `WithoutModelEvents` seeders), and by refusing query-builder bulk updates, deletes, and upserts with `BulkWriteBypassesInvariants`. To change many guarded records, load them and save or delete each one. Database cascades skip model code entirely: a foreign key into a guarded table uses `restrictOnDelete()`, and the Action that deletes the parent handles the guarded rows first. Keep invariants that span several aggregates or systems in the Action. Every invariant throws a named exception that extends `App\Domain\Shared\Exceptions\DomainException`.
 
 ### Transactions, errors, and side effects
 
@@ -271,7 +271,7 @@ Resources and controller mapping transform already-loaded data. They do not quer
 - **Events** represent meaningful completed facts, such as `{Model}Created` or `{Model}Updated`. An Action performs the primary operation; listeners may handle secondary reactions.
 - **Exceptions** communicate broken business rules, such as `{Model}CannotBeUpdated`, and extend `DomainException`. Input-format validation stays in Form Requests; do not create custom exceptions for it.
 
-Do not hide essential workflow in Eloquent observers. Keep critical behavior explicit in the Action. The one exception is an aggregate's own invariant guards, which belong in its `booting()` method so they cannot be bypassed.
+Do not hide essential workflow in Eloquent observers. Keep critical behavior explicit in the Action. The one exception is an aggregate's own invariant guards, which `GuardsInvariants` runs so they cannot be bypassed.
 
 ## Frontend Pages
 
@@ -376,7 +376,7 @@ Project skills live in `.ai/skills/` and are synced to every agent by `php artis
 - [ ] Routes carry no permission middleware.
 - [ ] Form Requests validate and normalize input only, with no authorization logic.
 - [ ] Actions receive only the explicit typed values they need.
-- [ ] Invariants hold independently of actor authorization: aggregate rules as `ensure...()` model methods guarded in `booting()`, cross-aggregate rules in Actions, each throwing a named `DomainException`.
+- [ ] Invariants hold independently of actor authorization: aggregate rules as `ensure...()` model methods called from `guardUpdate()`/`guardDelete()` with `GuardsInvariants`, cross-aggregate rules in Actions, each throwing a named `DomainException`.
 - [ ] The context's `.ai/rules/contexts/{context}.md` lists any new term, invariant, or public class.
 - [ ] Multi-step writes run in one transaction, and side effects fire after it succeeds.
 - [ ] Eloquent models remain the aggregates, owning persistence configuration, small local behavior, and their own invariants.

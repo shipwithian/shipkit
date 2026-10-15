@@ -28,6 +28,7 @@ export APP_URL="$BASE_URL"
 export DB_CONNECTION=sqlite
 export DB_DATABASE="$VERIFY_DIR/database.sqlite"
 export MAIL_MAILER=log
+export INERTIA_SSR_ENABLED=false
 
 mkdir -p "$EVIDENCE"
 
@@ -89,13 +90,15 @@ case "${1:-}" in
       exit 1
     fi
     if [[ -f "$PROJECT_ROOT/public/hot" ]] && ! curl -s -o /dev/null --max-time 2 "$(cat "$PROJECT_ROOT/public/hot")"; then
-      echo "warning: public/hot points at a Vite server that is not running, so full HTML pages hang on SSR." >&2
-      echo "         JSON driving (page/send/api) still works. For browser checks, run 'npm run dev' or remove public/hot." >&2
+      echo "warning: public/hot points at a Vite server that is not running; HTML pages will load without assets." >&2
+      echo "         JSON driving (page/send/api) is unaffected. For browser checks, run 'npm run dev' or remove public/hot." >&2
     fi
     rm -f "$DB_DATABASE" "$JAR" "$VERIFY_DIR/version"
     touch "$DB_DATABASE"
     (cd "$PROJECT_ROOT" && php artisan migrate --seed --force --no-interaction >/dev/null)
-    (cd "$PROJECT_ROOT" && nohup php artisan serve --host=127.0.0.1 --port="$VERIFY_PORT" >"$VERIFY_DIR/server.log" 2>&1 & echo $! >"$VERIFY_DIR/server.pid")
+    # Detach fully: no inherited stdin/stdout/stderr, so callers reading this script's output never wait on the server.
+    (cd "$PROJECT_ROOT" && exec nohup php artisan serve --host=127.0.0.1 --port="$VERIFY_PORT") </dev/null >"$VERIFY_DIR/server.log" 2>&1 &
+    echo $! >"$VERIFY_DIR/server.pid"
     for _ in $(seq 1 50); do
       if [[ "$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/up")" == "200" ]]; then
         inertia_version >"$VERIFY_DIR/version"

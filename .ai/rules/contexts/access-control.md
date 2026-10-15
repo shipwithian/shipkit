@@ -15,7 +15,7 @@ paths:
 
 ## Invariants
 
-Aggregate rules run as `updating`/`deleting` guards registered in each model's `booting()`, so they hold for every caller.
+Aggregate rules run from each model's `guardUpdate()`/`guardDelete()` through `GuardsInvariants`, so they hold for every caller.
 
 | Rule                                                      | Enforced by                                                          | Exception                        |
 | --------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------- |

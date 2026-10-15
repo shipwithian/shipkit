@@ -15,4 +15,12 @@ Use `manage {plural resource} resource` for standard resource CRUD abilities. Gi
 
 ## Allow identity checks for self-service abilities
 
-Abilities that act on the authenticated user's own account, such as viewing or updating their profile, may compare identity with `$user->is($model)` instead of a permission. Every other ability stays permission-based.
+Abilities that act on the authenticated user's own account, such as viewing or updating their profile, may compare identity with `$user->is($model)` instead of a permission.
+
+## Allow membership checks for record-scoped abilities
+
+Abilities that depend on the actor's relationship to one record, such as a team owner managing that team's members, may check that relationship through a method on the record's model (`$team->hasOwner($user)`). Use this only when a global permission cannot express the rule because the answer differs per record. Abilities that any authorized user may perform, such as creating a team, return `true` or check a permission; every other ability stays permission-based.
+
+## Hide records the actor may not know about
+
+When a record's existence is private to its members or tenant, deny outsiders with `Response::denyAsNotFound()` so they receive a 404 and cannot probe for it. Use the default 403 when the actor may know the record exists but may not act on it, such as an administrator resource without the needed permission, or a member who is not an owner.
