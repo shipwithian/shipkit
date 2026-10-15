@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\AccessControl\Enums\SystemPermission;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -95,6 +96,49 @@ it('lists every exposed field instead of serializing whole models', function () 
     expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
 });
 
+it('reserves SystemPermission for permissions that keep access control recoverable', function () {
+    $reserved = [
+        'manage roles resource' => 'create, rename, and delete roles',
+        'manage permissions resource' => 'create, rename, and delete permissions',
+        'assign permissions' => 'put permissions on roles',
+    ];
+
+    $actual = array_column(SystemPermission::cases(), 'value');
+
+    expect($actual)->toEqualCanonicalizing(array_keys($reserved), 'SystemPermission is reserved for permissions without which nobody could recover or change who may do what (.ai/rules/enums.md). A feature permission, even an access-control one such as viewing an audit log, belongs in its feature seeder. If this one genuinely qualifies, add it to $reserved in this test with the reason.');
+});
+
+it('receives the acting user instead of reading ambient request state', function () {
+    $violations = [];
+
+    foreach (phpFilesIn('app/Domain') as $path) {
+        if (preg_match_all('/\bauth\(|\bAuth::(?:user|id|check|guest|hasUser)\b|\brequest\(|\bsession\(/', (string) file_get_contents($path), $matches)) {
+            foreach ($matches[0] as $match) {
+                $violations[] = "{$path}: {$match} (take the acting user as a `User \$actor` parameter; the controller passes \$request->user())";
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
+it('never lists secrets in resources or shared props', function () {
+    $violations = [];
+    $files = [...phpFilesIn('app/Http/Resources'), repositoryPath('app/Http/Middleware/HandleInertiaRequests.php')];
+
+    foreach ($files as $path) {
+        $source = (string) file_get_contents($path);
+
+        if (preg_match_all("/['\"](?:token|plain_?text_?token|password|current_password|secret|remember_token|two_factor_\\w+)['\"]\\s*=>|->(?:plainTextToken|two_factor_secret|two_factor_recovery_codes|remember_token)\\b/", $source, $matches)) {
+            foreach ($matches[0] as $match) {
+                $violations[] = "{$path}: {$match} (a secret is shown once, by the controller that creates it, and never listed by a resource or shared prop)";
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
 it('keeps Eloquent queries out of controllers', function () {
     $violations = [];
 
@@ -151,18 +195,25 @@ it('guards invariants only through GuardsInvariants', function () {
     $violations = [];
 
     foreach ([...phpFilesIn('app/Domain'), ...phpFilesIn('app/Models')] as $path) {
-        if (str_ends_with($path, 'Shared/Eloquent/GuardsInvariants.php')) {
+        if (str_contains($path, 'Shared/Eloquent/')) {
             continue;
         }
 
         $source = (string) file_get_contents($path);
+        $isPivot = (bool) preg_match('/\bextends\s+(?:Morph)?Pivot\b/', $source);
+        $usesTrait = (bool) preg_match('/\buse\s+(?:[^;{]*,\s*)?GuardsInvariants\b/', $source);
+        $usesPivotTrait = str_contains($source, 'GuardsPivotInvariants');
 
         if (preg_match('/static::(?:updating|deleting|saving|creating)\(/', $source)) {
             $violations[] = "{$path}: registers a model event guard directly; call ensure...() from guardUpdate()/guardDelete() with GuardsInvariants instead";
         }
 
-        if (preg_match('/function guard(?:Update|Delete)\(/', $source) && ! str_contains($source, 'use GuardsInvariants')) {
+        if (preg_match('/function guard(?:Update|Delete)\(/', $source) && ! $usesTrait && ! $usesPivotTrait) {
             $violations[] = "{$path}: defines guardUpdate()/guardDelete() without `use GuardsInvariants;`, so the guards never run";
+        }
+
+        if ($isPivot && $usesTrait && ! $usesPivotTrait) {
+            $violations[] = "{$path}: a pivot must use GuardsPivotInvariants, not GuardsInvariants, or its detach guard is skipped when model events are silenced";
         }
     }
 

@@ -37,6 +37,7 @@ Route::prefix('v1')
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('logout', [AuthenticationController::class, 'logout'])
+                ->middleware('throttle:api-write')
                 ->name('api.v1.auth.logout');
 
             Route::get('user', CurrentUserController::class)
