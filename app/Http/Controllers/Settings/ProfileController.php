@@ -63,9 +63,9 @@ class ProfileController extends Controller
 
         Gate::authorize('delete', $user);
 
-        Auth::logout();
-
         $deleteAccount->handle($user);
+
+        Auth::logoutCurrentDevice();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

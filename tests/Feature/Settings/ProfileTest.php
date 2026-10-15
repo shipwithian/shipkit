@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Settings\Actions\DeleteAccountAction;
+use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
 use App\Models\User;
 
 describe('edit', function () {
@@ -97,6 +99,27 @@ describe('destroy', function () {
             ->delete(route('profile.destroy'), ['password' => 'password'])
             ->assertForbidden();
 
+        $this->assertModelExists($user);
+    });
+
+    it('keeps the user signed in and shows the error when deletion is refused', function () {
+        $user = User::factory()->create();
+
+        app()->instance(DeleteAccountAction::class, new class extends DeleteAccountAction
+        {
+            public function handle(User $user): void
+            {
+                throw new ProtectedAccountCannotBeDeleted;
+            }
+        });
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->delete(route('profile.destroy'), ['password' => 'password'])
+            ->assertSessionHasErrors('user')
+            ->assertRedirect(route('profile.edit'));
+
+        $this->assertAuthenticatedAs($user);
         $this->assertModelExists($user);
     });
 });
