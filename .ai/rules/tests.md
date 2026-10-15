@@ -48,3 +48,7 @@ A test that reuses a Sanctum bearer token after revoking it calls `Auth::forgetG
 ## Tests do not need built assets
 
 `tests/TestCase.php` calls `withoutVite()`, so tests pass without `npm run build`. Run the build only to check the app in a browser.
+
+## Cover isolation and prefer real behavior
+
+Feature tests cover authentication, authorization, validation, database state, relationships, response shape, important events, and cross-actor isolation: one actor cannot read or change another's records. Test Actions and Query objects that rely on Eloquent against the test database; do not introduce fake repositories merely to label a test a unit test. Keep fast unit tests for pure calculations and other framework-independent logic.

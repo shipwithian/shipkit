@@ -25,3 +25,7 @@ Check protected-record, ownership, in-use, and similar business rules before the
 ## Own the transaction for multi-step writes
 
 Wrap writes that must commit or roll back together in one transaction inside the Action. Dispatch events, notifications, and other side effects only after it succeeds.
+
+## Run only the reads the write needs
+
+An Action may run the queries its own write needs, such as looking up the record it is about to change. Reuse a Query object from an Action only when the page or API response needs the same read.
