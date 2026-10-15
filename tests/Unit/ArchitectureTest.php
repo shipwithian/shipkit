@@ -205,11 +205,11 @@ it('guards invariants only through GuardsInvariants', function () {
         $usesPivotTrait = str_contains($source, 'GuardsPivotInvariants');
 
         if (preg_match('/static::(?:updating|deleting|saving|creating)\(/', $source)) {
-            $violations[] = "{$path}: registers a model event guard directly; call ensure...() from guardUpdate()/guardDelete() with GuardsInvariants instead";
+            $violations[] = "{$path}: registers a model event guard directly; call ensure...() from guardCreate()/guardUpdate()/guardDelete() with GuardsInvariants instead";
         }
 
-        if (preg_match('/function guard(?:Update|Delete)\(/', $source) && ! $usesTrait && ! $usesPivotTrait) {
-            $violations[] = "{$path}: defines guardUpdate()/guardDelete() without `use GuardsInvariants;`, so the guards never run";
+        if (preg_match('/function guard(?:Create|Update|Delete)\(/', $source) && ! $usesTrait && ! $usesPivotTrait) {
+            $violations[] = "{$path}: defines guardCreate()/guardUpdate()/guardDelete() without `use GuardsInvariants;`, so the guards never run";
         }
 
         if ($isPivot && $usesTrait && ! $usesPivotTrait) {

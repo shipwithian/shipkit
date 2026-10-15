@@ -7,7 +7,7 @@ The reviewer's standards beyond what `composer ci:check` already enforces. Rows 
 - [ ] Each Action describes one clear use case and receives only the explicit typed values it needs.
 - [ ] Controllers coordinate HTTP rather than own application workflows; every protected action calls `Gate::authorize()` first; every read goes through a Query object.
 - [ ] Routes carry no permission middleware, and Form Requests validate and normalize input only.
-- [ ] Invariants hold independently of actor authorization: aggregate rules as `ensure...()` model methods called from `guardUpdate()`/`guardDelete()` with `GuardsInvariants`, relationship rules on a pivot with `GuardsPivotInvariants`, cross-aggregate rules in Actions, each throwing a named `DomainException`.
+- [ ] Invariants hold independently of actor authorization: aggregate rules as `ensure...()` model methods called from `guardCreate()`/`guardUpdate()`/`guardDelete()` with `GuardsInvariants`, relationship rules on a pivot with `GuardsPivotInvariants`, cross-aggregate rules in Actions, each throwing a named `DomainException`.
 - [ ] The context's `.ai/rules/contexts/{context}.md` lists any new term, invariant, or public class.
 - [ ] Multi-step writes run in one transaction, and side effects fire after it succeeds.
 - [ ] Eloquent models remain the aggregates; services have a focused, reusable responsibility.

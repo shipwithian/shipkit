@@ -14,7 +14,7 @@ A context earns its own folder when it has its own vocabulary and its own invari
 3. **Build the first slice.** Model, migration, and factory with `php artisan make:model 'App\Domain\{Name}\Models\{Model}' -mf --no-interaction` (the factory lands in `database/factories/Domain/{Name}/Models/`; `AppServiceProvider` maps it to the model by namespace, so no `$model` property is needed), an Action under `Actions/`, a Query under `Queries/`, a policy under `Policies/`, and a controller and Form Request under `app/Http/Controllers/{Name}/` and `app/Http/Requests/{Name}/`. List each Action, Query, and exception in the rule file's Public surface.
 4. **Guard each invariant.** For every rule that must hold for every caller:
     - add an `ensure...()` method on the model that throws a named exception extending `App\Domain\Shared\Exceptions\DomainException`;
-    - call it from the model's `guardUpdate()` or `guardDelete()` override, and add `use GuardsInvariants;` to the model;
+    - call it from the model's `guardCreate()`, `guardUpdate()` or `guardDelete()` override (`guardCreate()` for a limit such as "at most 50 per user"), and add `use GuardsInvariants;` to the model;
     - give the model's table foreign keys `restrictOnDelete()` rather than `cascadeOnDelete()`, so a database cascade can't skip the guard (`GuardedTablesTest` fails otherwise unless you record why the parent owns the rows);
     - add a row to the rule file's Invariants table;
     - add a feature test that calls the model directly and asserts the named exception;

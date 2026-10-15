@@ -63,7 +63,7 @@ An Action is one named use case, `{Verb}{Model}Action`, with a single `handle()`
 
 Business invariants hold for every caller, independently of actor authorization. A policy decides whether this actor may attempt the operation; the invariant decides whether the operation is valid at all.
 
-- A rule about one aggregate's own state is an `ensure...()` method on the model, called from its `guardUpdate()` and `guardDelete()` overrides, with `use GuardsInvariants;`. The trait runs those guards on every save and delete, even with model events silenced, and refuses query-builder bulk writes.
+- A rule about one aggregate's own state is an `ensure...()` method on the model, called from its `guardCreate()`, `guardUpdate()` and `guardDelete()` overrides, with `use GuardsInvariants;`. The trait runs those guards on every create, save, and delete, even with model events silenced, and refuses query-builder bulk writes.
 - A rule about a relationship ("a protected role keeps its protected permissions") sits on a pivot model that uses `GuardsPivotInvariants`, attached with `->using()` on both sides of the relation.
 - A rule that spans several aggregates or systems stays in the Action.
 - Every invariant throws a named exception extending `DomainException`; `bootstrap/app.php` renders it as a validation error.

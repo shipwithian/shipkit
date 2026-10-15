@@ -19,7 +19,7 @@ Read recent commits, reverts, review comments, `.ai/guidelines/architecture.md`,
 
 ## Fix each class at the highest level that works
 
-1. **Eliminate it with architecture.** Give each piece of state one owner and each task one supported way. Put aggregate invariants in the model's `guardUpdate()`/`guardDelete()` with `GuardsInvariants` so no caller can skip them. Hide context internals so the wrong import fails `ArchitectureTest`. Replace hand-synced lists with discovery (see `domainContexts()` in `tests/Unit/ArchitectureTest.php`). Delete old ways and dead code an agent would copy.
+1. **Eliminate it with architecture.** Give each piece of state one owner and each task one supported way. Put aggregate invariants in the model's `guardCreate()`/`guardUpdate()`/`guardDelete()` with `GuardsInvariants` so no caller can skip them. Hide context internals so the wrong import fails `ArchitectureTest`. Replace hand-synced lists with discovery (see `domainContexts()` in `tests/Unit/ArchitectureTest.php`). Delete old ways and dead code an agent would copy.
 2. **Fail the build.** Make the bad state unwritable with PHP types and PHPStan (`composer types:check`). If bad code still passes, add a Pest `arch()` rule or a check in `tests/Unit/ArchitectureTest.php` whose failure message names the file and the class or method to use instead.
 3. **Test the behavior.** Add a feature test under `tests/Feature/{Context}/`. Fix or delete any test that would still pass if every function it calls returned nothing.
 4. **Write a rule last, only for judgment calls.** Add it to the matching `.ai/rules` file or the context's `.ai/rules/contexts/{context}.md`. Nothing fails when an agent skips a rule.

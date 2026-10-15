@@ -16,6 +16,6 @@ class BulkWriteBypassesInvariants extends LogicException
     {
         $class = class_basename($model);
 
-        return new self("Bulk {$operation} on {$class} bypasses its invariant guards. Load the models and save or delete each one instead.");
+        return new self("Bulk {$operation} on {$class} bypasses its invariant guards. Create, save, or delete each record through the model instead.");
     }
 }

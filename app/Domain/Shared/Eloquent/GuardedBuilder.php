@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Query builder for aggregates whose invariants run as model events.
  *
- * Bulk writes skip model events, so they are refused. Single-record saves
- * and deletes are marked by {@see GuardsInvariants} and pass through.
+ * Bulk writes skip model events, so they are refused. Single-record saves,
+ * inserts, and deletes are marked by {@see GuardsInvariants} and pass through.
  *
  * @template TModel of Model
  *
@@ -45,6 +45,44 @@ class GuardedBuilder extends Builder
         $this->ensureSingleRecordWrite('delete');
 
         return parent::delete();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>|array<string, mixed>  $values
+     */
+    public function insert(array $values): bool
+    {
+        $this->ensureSingleRecordWrite('insert');
+
+        return parent::insert($values);
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @param  string|null  $sequence
+     */
+    public function insertGetId(array $values, $sequence = null): int|string
+    {
+        $this->ensureSingleRecordWrite('insertGetId');
+
+        return parent::insertGetId($values, $sequence);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>|array<string, mixed>  $values
+     */
+    public function insertOrIgnore(array $values): int
+    {
+        throw BulkWriteBypassesInvariants::for($this->model, 'insertOrIgnore');
+    }
+
+    /**
+     * @param  array<int, string>|string  $columns
+     * @param  \Closure|\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder<*>|string  $query
+     */
+    public function insertUsing($columns, $query): int
+    {
+        throw BulkWriteBypassesInvariants::for($this->model, 'insertUsing');
     }
 
     /**

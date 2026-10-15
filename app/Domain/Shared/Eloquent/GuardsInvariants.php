@@ -9,23 +9,26 @@ use Illuminate\Support\Facades\DB;
 /**
  * Run an aggregate's invariant guards on every write, with no way around them.
  *
- * The model overrides {@see guardUpdate()} and {@see guardDelete()} to call its `ensure...()` methods.
- * The guards run:
+ * The model overrides {@see guardCreate()}, {@see guardUpdate()} and {@see guardDelete()} to call its
+ * `ensure...()` methods. The guards run:
  *
- * - as `updating` and `deleting` events registered while booting, so they fire before package
- *   events such as Spatie's pivot cleanup;
- * - directly from the save and delete paths when model events are silenced
- *   (`saveQuietly()`, `deleteQuietly()`, `withoutEvents()`, `WithoutModelEvents` seeders);
- * - and query-builder bulk writes, which skip both, are refused by {@see GuardedBuilder}.
+ * - as `creating`, `updating` and `deleting` events registered while booting, so they fire before
+ *   package events such as Spatie's pivot cleanup;
+ * - directly from the insert, save and delete paths when model events are silenced
+ *   (`createQuietly()`, `saveQuietly()`, `deleteQuietly()`, `withoutEvents()`, `WithoutModelEvents` seeders);
+ * - and query-builder bulk writes, which skip both, are refused by {@see GuardedBuilder}:
+ *   `update`, `delete`, `upsert`, `insert`, `insertGetId`, `insertOrIgnore`, and `insertUsing`.
  *
- * A guard that checks whether other records remain ("at least one owner") must lock them with
- * `lockForUpdate()`. The trait runs each guarded save and delete in one transaction so that lock
- * holds from the check until the write commits, and concurrent requests cannot both pass.
+ * A guard that checks what else exists ("at least one owner", "at most 50 notes") must lock the rows
+ * it counts, or their parent, with `lockForUpdate()`. The trait runs each guarded save and delete in
+ * one transaction so that lock holds from the check until the write commits, and concurrent
+ * requests cannot both pass.
  */
 trait GuardsInvariants
 {
     protected static function booting(): void
     {
+        static::creating(fn (self $model) => $model->guardCreate());
         static::updating(fn (self $model) => $model->guardUpdate());
         static::deleting(fn (self $model) => $model->guardDelete());
     }
@@ -42,6 +45,11 @@ trait GuardsInvariants
     {
         return DB::transaction(fn (): ?bool => parent::delete());
     }
+
+    /**
+     * Throw a domain exception when inserting the record would break an invariant.
+     */
+    protected function guardCreate(): void {}
 
     /**
      * Throw a domain exception when the pending changes would break an invariant.
@@ -65,6 +73,22 @@ trait GuardsInvariants
         return parent::performUpdate($query);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     */
+    protected function performInsert(Builder $query): bool
+    {
+        if (self::modelEventsAreSilenced()) {
+            $this->guardCreate();
+        }
+
+        if ($query instanceof GuardedBuilder) {
+            $query->forSingleRecordWrite();
+        }
+
+        return parent::performInsert($query);
+    }
+
     protected function performDeleteOnModel(): void
     {
         if (self::modelEventsAreSilenced()) {
@@ -75,7 +99,7 @@ trait GuardsInvariants
     }
 
     /**
-     * Whether the `updating` and `deleting` guards will not fire for this write.
+     * Whether the `creating`, `updating` and `deleting` guards will not fire for this write.
      */
     private static function modelEventsAreSilenced(): bool
     {

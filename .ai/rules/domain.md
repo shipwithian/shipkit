@@ -15,7 +15,7 @@ Every invariant failure throws a named exception extending `App\Domain\Shared\Ex
 
 ## Keep Eloquent as the aggregate
 
-Do not add separate domain entities, repositories, record mappers, or ports. Protect an aggregate's own state with `ensure...()` methods on its Eloquent model, called from its `guardUpdate()` and `guardDelete()` overrides, and add `use App\Domain\Shared\Eloquent\GuardsInvariants;`. The trait runs the guards on every save and delete, including with model events silenced, and makes query-builder bulk writes throw `BulkWriteBypassesInvariants`. Register guards only through these methods, never with `static::updating()` or `static::deleting()`. To change many guarded records, load them and save or delete each one. Write guarded tables only through their models, never with `DB::table()`, and give a guarded table's foreign keys `restrictOnDelete()` (or `nullOnDelete()` when a null column cannot break the invariant) instead of cascading, because a database cascade deletes rows without running their guards. A cascade from a parent that owns the rows as parts of itself, such as a team and its memberships, is recorded in `GUARDED_CASCADES` in `tests/Feature/GuardedTablesTest.php` with the reason.
+Do not add separate domain entities, repositories, record mappers, or ports. Protect an aggregate's own state with `ensure...()` methods on its Eloquent model, called from its `guardCreate()`, `guardUpdate()` and `guardDelete()` overrides, and add `use App\Domain\Shared\Eloquent\GuardsInvariants;`. The trait runs the guards on every save and delete, including with model events silenced, and makes query-builder bulk writes (`update`, `delete`, `upsert`, `insert`, `insertGetId`, `insertOrIgnore`, `insertUsing`) throw `BulkWriteBypassesInvariants`. Register guards only through these methods, never with `static::updating()` or `static::deleting()`. To change many guarded records, load them and save or delete each one. Write guarded tables only through their models, never with `DB::table()`, and give a guarded table's foreign keys `restrictOnDelete()` (or `nullOnDelete()` when a null column cannot break the invariant) instead of cascading, because a database cascade deletes rows without running their guards. A cascade from a parent that owns the rows as parts of itself, such as a team and its memberships, is recorded in `GUARDED_CASCADES` in `tests/Feature/GuardedTablesTest.php` with the reason.
 
 ## Keep the context rule file current
 
@@ -28,3 +28,7 @@ An invariant about a relationship, such as "a protected role keeps its protected
 ## Keep the shared kernel context-free
 
 `app/Domain/Shared` holds only what every context needs, such as `DomainException` and the guarded Eloquent builder. It never depends on a context or on `app/Http`, and it is not a context.
+
+## Guard creation, and lock what you count
+
+A rule about creating a record, such as "at most 50 notes per user", goes in the model's `guardCreate()`. It runs for `create()`, `save()`, `firstOrCreate()`, `createQuietly()`, and `withoutEvents()`, and it runs for a pivot row made through `attach()`. A guard that counts existing rows locks the parent row first (`User::query()->whereKey($id)->lockForUpdate()->first()`), then counts. `GuardsInvariants` runs the guard and the insert in one transaction, so two requests cannot both pass the count.
