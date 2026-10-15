@@ -70,8 +70,14 @@
             "Composer\\Config::disableProcessTimeout",
             "@rector:check",
             "npm run check",
+            "@php artisan wayfinder:generate --with-form --no-interaction",
             "npm run types:check",
             "@test"
+        ],
+        "fix": [
+            "@rector",
+            "@lint",
+            "npm run check:fix"
         ],
         "types:check": [
             "phpstan analyse --memory-limit=1G"
