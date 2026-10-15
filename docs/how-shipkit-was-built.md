@@ -23,7 +23,7 @@ This is the story of how we reshaped ShipKit so that an agent who knows nothing 
 
 - Code is organised into **three bounded contexts** (`AccessControl`, `Settings`, `Authentication`) plus a small shared kernel.
 - Business rules live on the models and **can't be skipped**: not with `saveQuietly()`, not with bulk updates, not with raw SQL, not through relationship helpers.
-- **An enforcement table pairs 28 rules with the check that enforces each.** One is only partly enforced, and says so.
+- **An enforcement table pairs 29 rules with the check that enforces each.** One is only partly enforced, and says so.
 - We tested the result with **six unaided agent runs**. Every gap they found became a check or a clearer rule.
 
 |                                                |                                                  |
@@ -32,9 +32,9 @@ This is the story of how we reshaped ShipKit so that an agent who knows nothing 
 | Files changed                                  | 194 (+5,947 / −417)                              |
 | Bounded contexts                               | 3, plus a shared kernel                          |
 | Guarded models                                 | 5 (`Role`, `Permission`, `User`, and two pivots) |
-| Rules with a named enforcer                    | 28                                               |
+| Rules with a named enforcer                    | 29                                               |
 | Project skills                                 | 14                                               |
-| Tests                                          | 205 (648 assertions), in about 3 seconds         |
+| Tests                                          | 206 (649 assertions), in about 3 seconds         |
 | Unaided agent runs                             | 6                                                |
 | Ways around a protected rule, found and closed | 8                                                |
 
@@ -220,6 +220,8 @@ These are part of the story, because they show why the process looks the way it 
 
 **Ten minutes for a three-second suite.** Inertia's server-side rendering was switched on in tests, and a stale `public/hot` file pointed it at a dev server that wasn't running. Every page test waited about 30 seconds. The suite went from roughly ten minutes to under three seconds.
 
+**Shipping the thing we hadn't tested.** After everything was merged, we created a project with the real installer, the same command a user would run. It found two gaps nothing else had. New projects got the skill sources but not the generated skills the agents actually load, because the installer never ran `boost:update`. And an unanchored `README.md` rule in `.gitattributes` silently dropped a skill's index file from every archive; the generated project's own test caught it on its first run. Both are fixed, and a test now compares the archive against the tracked files.
+
 **Smaller ones.**
 
 - A rule that read backwards: "foreign keys into guarded tables use `restrictOnDelete()`" was taken by an agent to mean the opposite direction. It's now a rule plus a check that asks for a recorded reason for any cascade.
@@ -230,8 +232,8 @@ These are part of the story, because they show why the process looks the way it 
 |                                      | Before                               | After                                                |
 | ------------------------------------ | ------------------------------------ | ---------------------------------------------------- |
 | Full test suite                      | about 10 minutes                     | about 3 seconds                                      |
-| Tests                                | 152 when the refactor landed         | 205                                                  |
-| Rules tied to a check                | none                                 | 28                                                   |
+| Tests                                | 152 when the refactor landed         | 206                                                  |
+| Rules tied to a check                | none                                 | 29                                                   |
 | Known ways to break a protected rule | 8                                    | 0 known                                              |
 | Project skills                       | 0                                    | 14                                                   |
 | Agent setup in a fresh clone         | none (gitignored, installed by hand) | committed, and `composer setup` generates the skills |
@@ -319,35 +321,37 @@ Ideas borrowed along the way, both MIT licensed: [mattpocock/skills](https://git
 ## Appendix: the full findings log
 
 <details>
-<summary><strong>24 findings, with what changed and what keeps each one fixed</strong></summary>
+<summary><strong>26 findings, with what changed and what keeps each one fixed</strong></summary>
 
 "Rule only" means the fix is written down but nothing enforces it.
 
-| #   | Finding                                                                                              | Found by    | What changed                                          | Check                            |
-| --- | ---------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------- | -------------------------------- |
-| 1   | Boundary test banned cross-context calls the docs allow                                              | Run 2       | Internals vs public surface                           | `ArchitectureTest`               |
-| 2   | Factories blocked by the same boundary rule                                                          | Run 2       | Factories allowed                                     | `ArchitectureTest`               |
-| 3   | Domain-folder factories resolved to the wrong model; a skill said otherwise                          | Run 2       | Resolver in `AppServiceProvider`, factories rule      | `DomainFactoryResolutionTest`    |
-| 4   | Exceptions were "internal" but thrown across contexts                                                | Run 2       | Exceptions are public surface                         | `ArchitectureTest`               |
-| 5   | Policy rule couldn't express team-owner authorization; no 404 vs 403 guidance                        | Runs 1, 2   | Membership exception, "hide records" rule             | Rule only                        |
-| 6   | A refused account deletion logged the user out and lost the error                                    | Runs 1, 2   | Delete before logout                                  | `ProfileTest`                    |
-| 7   | Guards defeated by `saveQuietly()` and `withoutEvents()`                                             | Our probe   | Backstop in the save and delete path                  | `AccessControlInvariantsTest`    |
-| 8   | Raw-write check used a hard-coded table list                                                         | Our probe   | Tables discovered from guarded models                 | `GuardedTablesTest`              |
-| 9   | A fresh clone had no agent setup                                                                     | Our review  | Setup committed, `composer setup` runs `boost:update` | Drift test in `AgentToolingTest` |
-| 10  | Tests failed without a Vite build                                                                    | Run 2, B, C | `withoutVite()` in `TestCase`                         | The suite runs with no build     |
-| 11  | `ci:check` stops at the first failure; two tools to repair                                           | A, D        | `composer fix`                                        | Tooling                          |
-| 12  | Wayfinder output is gitignored; `tsc` failed on a missing module                                     | B           | `ci:check` regenerates it                             | Tooling                          |
-| 13  | Where a feature permission belongs was ambiguous                                                     | B, C        | Criterion in `.ai/rules/enums.md`                     | Pinned `SystemPermission` list   |
-| 14  | The cascade rule read backwards                                                                      | B           | Reworded; cascades need a recorded reason             | `GuardedTablesTest`              |
-| 15  | No convention for how an Action learns who is acting                                                 | B           | `$actor` parameter                                    | `ArchitectureTest`               |
-| 16  | New write routes lacked throttling; `logout` always had                                              | D           | `api-write` limiter                                   | `ApiRouteConventionsTest`        |
-| 17  | Route model binding could expose other users' records                                                | D           | Look up through the actor                             | `ApiRouteConventionsTest`        |
-| 18  | A resource could list a secret                                                                       | D, B        | None needed                                           | `ArchitectureTest`               |
-| 19  | A mistyped permission string hides UI silently                                                       | B, C        | None needed                                           | `FrontendPermissionsTest`        |
-| 20  | Relationship helpers bypassed protected-record rules (8 paths)                                       | C           | Guarded pivot models                                  | `RelationshipInvariantsTest`     |
-| 21  | Two requests could both pass a "last one" check                                                      | C           | One transaction, row lock                             | Transaction test                 |
-| 22  | Missing conventions: paginated pages, single-record finder, seeding defaults, `Auth::forgetGuards()` | A, B, D     | Documented                                            | Rule only                        |
-| 23  | Privilege escalation through role assignment                                                         | C           | Requirement documented                                | Not enforced                     |
-| 24  | Small: a launch script blocked its caller; partial naming; "run the full suite" note                 | Run 2       | Fixed                                                 | Tooling                          |
+| #   | Finding                                                                                              | Found by           | What changed                                          | Check                            |
+| --- | ---------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------- | -------------------------------- |
+| 1   | Boundary test banned cross-context calls the docs allow                                              | Run 2              | Internals vs public surface                           | `ArchitectureTest`               |
+| 2   | Factories blocked by the same boundary rule                                                          | Run 2              | Factories allowed                                     | `ArchitectureTest`               |
+| 3   | Domain-folder factories resolved to the wrong model; a skill said otherwise                          | Run 2              | Resolver in `AppServiceProvider`, factories rule      | `DomainFactoryResolutionTest`    |
+| 4   | Exceptions were "internal" but thrown across contexts                                                | Run 2              | Exceptions are public surface                         | `ArchitectureTest`               |
+| 5   | Policy rule couldn't express team-owner authorization; no 404 vs 403 guidance                        | Runs 1, 2          | Membership exception, "hide records" rule             | Rule only                        |
+| 6   | A refused account deletion logged the user out and lost the error                                    | Runs 1, 2          | Delete before logout                                  | `ProfileTest`                    |
+| 7   | Guards defeated by `saveQuietly()` and `withoutEvents()`                                             | Our probe          | Backstop in the save and delete path                  | `AccessControlInvariantsTest`    |
+| 8   | Raw-write check used a hard-coded table list                                                         | Our probe          | Tables discovered from guarded models                 | `GuardedTablesTest`              |
+| 9   | A fresh clone had no agent setup                                                                     | Our review         | Setup committed, `composer setup` runs `boost:update` | Drift test in `AgentToolingTest` |
+| 10  | Tests failed without a Vite build                                                                    | Run 2, B, C        | `withoutVite()` in `TestCase`                         | The suite runs with no build     |
+| 11  | `ci:check` stops at the first failure; two tools to repair                                           | A, D               | `composer fix`                                        | Tooling                          |
+| 12  | Wayfinder output is gitignored; `tsc` failed on a missing module                                     | B                  | `ci:check` regenerates it                             | Tooling                          |
+| 13  | Where a feature permission belongs was ambiguous                                                     | B, C               | Criterion in `.ai/rules/enums.md`                     | Pinned `SystemPermission` list   |
+| 14  | The cascade rule read backwards                                                                      | B                  | Reworded; cascades need a recorded reason             | `GuardedTablesTest`              |
+| 15  | No convention for how an Action learns who is acting                                                 | B                  | `$actor` parameter                                    | `ArchitectureTest`               |
+| 16  | New write routes lacked throttling; `logout` always had                                              | D                  | `api-write` limiter                                   | `ApiRouteConventionsTest`        |
+| 17  | Route model binding could expose other users' records                                                | D                  | Look up through the actor                             | `ApiRouteConventionsTest`        |
+| 18  | A resource could list a secret                                                                       | D, B               | None needed                                           | `ArchitectureTest`               |
+| 19  | A mistyped permission string hides UI silently                                                       | B, C               | None needed                                           | `FrontendPermissionsTest`        |
+| 20  | Relationship helpers bypassed protected-record rules (8 paths)                                       | C                  | Guarded pivot models                                  | `RelationshipInvariantsTest`     |
+| 21  | Two requests could both pass a "last one" check                                                      | C                  | One transaction, row lock                             | Transaction test                 |
+| 22  | Missing conventions: paginated pages, single-record finder, seeding defaults, `Auth::forgetGuards()` | A, B, D            | Documented                                            | Rule only                        |
+| 23  | Privilege escalation through role assignment                                                         | C                  | Requirement documented                                | Not enforced                     |
+| 24  | Small: a launch script blocked its caller; partial naming; "run the full suite" note                 | Run 2              | Fixed                                                 | Tooling                          |
+| 25  | A project made by the installer had no generated skills for Claude Code or Codex                     | Real installer run | `boost:update` in `post-create-project-cmd`           | Verified by creating a project   |
+| 26  | An unanchored `.gitattributes` rule dropped nested `README.md` files from archives                   | Real installer run | Anchored to the repository root                       | `TemplateArchiveTest`            |
 
 </details>
