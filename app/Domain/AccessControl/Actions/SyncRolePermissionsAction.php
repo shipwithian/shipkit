@@ -5,6 +5,7 @@ namespace App\Domain\AccessControl\Actions;
 use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\PermissionRegistrar;
 
 class SyncRolePermissionsAction
 {
@@ -20,6 +21,11 @@ class SyncRolePermissionsAction
             ];
         }
 
-        DB::transaction(fn () => $role->syncPermissions(array_values(array_unique($permissionIds))));
+        DB::transaction(function () use ($role, $permissionIds): void {
+            $role->permissions()->sync(array_values(array_unique($permissionIds)));
+
+            $role->unsetRelation('permissions');
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        });
     }
 }

@@ -17,7 +17,7 @@ use PhpParser\ParserFactory;
 const GUARDED_CASCADES = [];
 
 it('finds the guarded aggregates it protects', function () {
-    expect(guardedTables())->toContain('roles', 'permissions', 'users');
+    expect(guardedTables())->toContain('roles', 'permissions', 'users', 'model_has_roles', 'role_has_permissions');
 });
 
 it('never writes a guarded table around its model', function () {

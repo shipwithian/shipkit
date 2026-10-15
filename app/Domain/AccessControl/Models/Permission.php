@@ -5,6 +5,8 @@ namespace App\Domain\AccessControl\Models;
 use App\Domain\AccessControl\Exceptions\PermissionIsInUse;
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\Shared\Eloquent\GuardsInvariants;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 /**
@@ -26,6 +28,16 @@ class Permission extends SpatiePermission
         return [
             'is_protected' => 'boolean',
         ];
+    }
+
+    /**
+     * The roles holding this permission, attached through {@see RolePermission} so removals are guarded.
+     *
+     * @return BelongsToMany<Model, Model, RolePermission, 'pivot'>
+     */
+    public function roles(): BelongsToMany
+    {
+        return parent::roles()->using(RolePermission::class);
     }
 
     /**

@@ -2,9 +2,13 @@
 
 namespace App\Domain\AccessControl\Models;
 
+use App\Domain\AccessControl\Enums\SystemRole;
+use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\AccessControl\Exceptions\RoleIsInUse;
 use App\Domain\Shared\Eloquent\GuardsInvariants;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 /**
@@ -26,6 +30,26 @@ class Role extends SpatieRole
         return [
             'is_protected' => 'boolean',
         ];
+    }
+
+    /**
+     * The role's permissions, attached through {@see RolePermission} so removals are guarded.
+     *
+     * @return BelongsToMany<Model, Model, RolePermission, 'pivot'>
+     */
+    public function permissions(): BelongsToMany
+    {
+        return parent::permissions()->using(RolePermission::class);
+    }
+
+    /**
+     * The users holding this role, attached through {@see RoleAssignment} so removals are guarded.
+     *
+     * @return BelongsToMany<Model, Model, RoleAssignment, 'pivot'>
+     */
+    public function users(): BelongsToMany
+    {
+        return parent::users()->using(RoleAssignment::class);
     }
 
     /**
@@ -61,5 +85,26 @@ class Role extends SpatieRole
     protected function guardDelete(): void
     {
         $this->ensureCanBeDeleted();
+    }
+
+    /**
+     * Refuse to take this role from its only holder when it is the super-admin role.
+     *
+     * The holders are locked so two concurrent removals cannot both see another holder remaining;
+     * the lock holds because {@see GuardsInvariants} runs the guard and the delete in one transaction.
+     *
+     * @throws LastSuperAdminCannotBeRemoved
+     */
+    public function ensureCanLoseHolder(int|string $holderId): void
+    {
+        if ($this->getOriginal('name') !== SystemRole::SuperAdmin->value) {
+            return;
+        }
+
+        $holders = $this->users()->lockForUpdate()->limit(2)->get();
+
+        if ($holders->count() === 1 && $holders->first()?->getKey() == $holderId) {
+            throw new LastSuperAdminCannotBeRemoved;
+        }
     }
 }

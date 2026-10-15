@@ -21,6 +21,11 @@ class ProtectedRecordCannotBeChanged extends DomainException
         return new self(__('Protected roles cannot be deleted.'), 'role');
     }
 
+    public static function protectedPermissionRemoval(): self
+    {
+        return new self(__('Protected roles must keep their protected permissions.'), 'permissions');
+    }
+
     public static function permissionRename(): self
     {
         return new self(__('Protected permissions cannot be renamed.'), 'name');
