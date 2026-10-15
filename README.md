@@ -220,6 +220,23 @@ ShipKit deliberately stops short of full DDD: there are no separate domain entit
 
 The boundaries are checked by `tests/Unit/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
 
+## Agent skills
+
+ShipKit ships project skills in `.ai/skills/`, synced to Claude Code and Codex by `php artisan boost:update` alongside Laravel Boost's package skills:
+
+| Skill                                            | Use it to                                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `new-context`                                    | Create a bounded context with `php artisan make:context {Name}`                                |
+| `to-spec`, `to-tickets`, `implement`             | Turn a conversation into a GitHub issue spec, split it into tickets, and build them test-first |
+| `review-diff`                                    | Review a branch against the `.ai` rules and its originating issue                              |
+| `diagnosing-bugs`                                | Debug with a red-capable feedback loop before hypothesising                                    |
+| `verify-app`                                     | Drive an isolated copy of the app over HTTP and capture evidence                               |
+| `domain-modeling`, `grill-with-docs`, `grilling` | Sharpen the domain language into `.ai/rules/contexts/`                                         |
+| `retro`, `correct`                               | Turn repeated agent mistakes into checks                                                       |
+| `writing-for-agents`, `handoff`                  | Write agent documents; hand work to a fresh session                                            |
+
+Several skills are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) and [pstack](https://github.com/cursor/plugins/tree/main/pstack), both MIT licensed. Each adapted skill keeps its upstream `LICENSE` and names its source in `metadata.source`. To update one, compare it with the upstream file, re-apply the ShipKit adaptations (`.ai/rules` paths, GitHub Issues, Pest, `composer ci:check`), and keep the license. `tests/Feature/AgentToolingTest.php` checks that every skill has valid frontmatter, its license, and only references paths, commands, and links that exist.
+
 ## Authorization conventions
 
 ShipKit authorization is permission-based:

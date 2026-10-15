@@ -354,6 +354,17 @@ Feature tests should cover authentication, authorization, validation, database s
 
 Test Actions and Query objects directly when it improves confidence, for example an invariant with several branches or a query with non-trivial filtering. Actions and Query objects that rely on Eloquent may use Laravel's database test support; do not introduce fake repositories merely to label the test a unit test. Keep fast unit tests for pure calculations and similar framework-independent logic. `tests/Unit/ArchitectureTest.php` holds the Pest `arch()` rules that enforce the context boundaries; extend it rather than relying on review to catch a boundary violation.
 
+## Agent Workflow
+
+Project skills live in `.ai/skills/` and are synced to every agent by `php artisan boost:update`. Reach for them by situation:
+
+- **New capability with its own vocabulary:** `new-context`, which runs `php artisan make:context {Name}`.
+- **Feature work:** `to-spec` → `to-tickets` → `implement`, tracked in GitHub Issues as described in `.ai/issue-tracker.md`. `review-diff` reviews a branch against these rules.
+- **A bug or regression:** `diagnosing-bugs`.
+- **Proving behaviour in the running app:** `verify-app`.
+- **Shaping the domain language:** `domain-modeling` or `grill-with-docs`.
+- **After a session, or when the same correction repeats:** `retro` and `correct`. `.ai/rules/enforcement.md` pairs every rule with the check that enforces it; prefer adding a check over adding a rule.
+
 ## Review Checklist
 
 - [ ] New code lives in the bounded context whose vocabulary it uses, under `app/Domain/{Context}`.

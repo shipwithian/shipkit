@@ -20,4 +20,5 @@ Before planning or editing, find the row whose globs match the file's path and r
 | database/seeders/**                                                  | .ai/rules/seeders.md                 |
 | routes/**                                                            | .ai/rules/routes.md                  |
 | tests/**                                                             | .ai/rules/tests.md                   |
+| tests/Unit/**, .ai/**                                                | .ai/rules/enforcement.md             |
 | **                                                                   | .ai/rules/general.md                 |
