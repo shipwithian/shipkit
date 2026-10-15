@@ -178,7 +178,16 @@ If the key is missing, authentication fails, Jev is rate-limited or unavailable,
 
 ## Architecture
 
-ShipKit uses Laravel's standard application structure, Eloquent's Active Record pattern, and focused Actions for application workflows.
+ShipKit uses a DDD-lite architecture: business code is grouped by bounded context, Eloquent models are the aggregates, and Pest architecture tests enforce the boundaries.
+
+```text
+app/Domain/
+├── AccessControl/    roles, permissions, protected system records
+├── Settings/         profile, password, passkeys, account deletion
+└── Authentication/   API login, two-factor challenges, tokens, verification
+```
+
+Each context holds its Actions, Query objects, Models, Policies, Enums, and Exceptions. Other code reaches a context only through its Actions (writes) and Query objects (reads).
 
 The normal write flow is:
 
@@ -187,9 +196,9 @@ Form Request
     ↓
 Controller authorization
     ↓
-Focused Action
+Context Action
     ↓
-Eloquent model
+Eloquent aggregate (ensure...() invariants)
     ↓
 Database
 ```
@@ -201,14 +210,15 @@ Responsibilities are intentionally separated:
 - **Form Requests** validate and normalize input.
 - **Controllers** authorize the request, invoke an Action or Query object, and return the response. They do not query the database directly.
 - **Policies** map application abilities to user permissions.
-- **Actions** perform named workflows and enforce non-bypassable system invariants.
+- **Actions** perform named workflows and enforce non-bypassable business invariants.
 - **Query objects** own the Eloquent query behind each page, list, or API response.
-- **Eloquent models** own persistence, relationships, casts, scopes, and small model-local behavior.
+- **Eloquent models** are the aggregates: persistence, relationships, casts, and `ensure...()` methods that protect their own state.
+- **Domain exceptions** name each broken business rule and render as validation errors.
 - **React pages** present server-provided state and improve usability without replacing backend authorization.
 
-DTOs, repositories, services, and domain-oriented structures are not required by default. Introduce them only when they solve a concrete complexity in the project.
+ShipKit deliberately stops short of full DDD: there are no separate domain entities, repositories, or mappers, because Fortify, Sanctum, Spatie Permission, and the Gate all work with Eloquent models.
 
-For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
+The boundaries are checked by `tests/Unit/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
 
 ## Authorization conventions
 
@@ -418,7 +428,7 @@ Rector is configured only for composer-version-aware Laravel upgrades. Run it de
 
 ## Extending a generated project
 
-Start with the application's business capabilities rather than adding more foundation layers.
+Start with the application's business capabilities rather than adding more foundation layers. Give each capability with its own vocabulary and invariants a bounded context in `app/Domain/{Context}`, a rule file in `.ai/rules/contexts/`, and a boundary rule in `tests/Unit/ArchitectureTest.php`.
 
 For example, an ecommerce project might add products, orders, payments, and inventory. A community-management project might add residents, households, certificates, and programs. Those features belong to their individual applications, not to ShipKit.
 

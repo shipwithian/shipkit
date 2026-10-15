@@ -1,19 +1,19 @@
-# Laravel Active Record + Actions Architecture
+# Laravel DDD-lite Architecture
 
-Use Laravel's normal application structure and Eloquent's Active Record pattern. An Eloquent model is the persisted record: it owns table mapping, relationships, casts, scopes, and small behavior that changes its own state. Actions are a thin workflow layer above those models; Query objects own reads; controllers coordinate HTTP.
+Organize business code by bounded context, keep Eloquent as the aggregate, and enforce the boundaries with architecture tests. Each context lives in `app/Domain/{Context}` and exposes a small public surface: its Actions (writes), Query objects (reads), and events. Eloquent models are the aggregate roots: they own persistence, relationships, casts, and the invariants that protect their own state. Controllers coordinate HTTP.
 
-This architecture deliberately uses Laravel and Eloquent directly. Actions do not replace Eloquent models, persistence, or the domain with a separate layer. Do not introduce repositories, record mappers, separate domain entities, or ports merely to add layers.
+This is deliberately DDD-lite. Use bounded contexts, ubiquitous language, aggregate invariants, and named domain exceptions. Do not introduce separate domain entities, repositories, record mappers, or ports: Fortify, Sanctum, Spatie Permission, and the Gate all depend on Eloquent models, so a second representation of each record only adds code to keep in sync.
 
 ```text
-Write: Form Request → Controller → Action → Eloquent Active Record → Database
-Read:  Controller → Query object → Eloquent Active Record → Database
+Write: Form Request → Controller → {Context} Action → Eloquent aggregate → Database
+Read:  Controller → {Context} Query object → Eloquent aggregate → Database
 ```
 
 ## Template Placeholders
 
 The examples in this guide are templates, not application classes:
 
-- `{Feature}` is a plural feature folder name.
+- `{Context}` is a bounded context name, such as `AccessControl` or `Settings`.
 - `{Model}` is a singular Eloquent model name.
 - `{Action}` is a verb that describes one operation.
 - `{Actor}` is the authenticated model or another trusted caller that initiates the operation.
@@ -21,50 +21,76 @@ The examples in this guide are templates, not application classes:
 - `{Relation}` is the Eloquent relationship through which the actor owns or creates records.
 - `{Field}` is a validated input field required by the operation.
 
-For example, `{Action}{Model}Action` describes a named use-case class. Replace every placeholder with names from the feature being built.
+For example, `{Action}{Model}Action` describes a named use-case class. Replace every placeholder with names from the context being built.
 
 Use an Action when an operation is a named workflow: it creates a record, changes state, coordinates multiple models or systems, requires a transaction, or has behavior worth testing independently. For small model-local changes, keep the behavior on the Eloquent model.
 
 Use a Query object for every read that builds an Eloquent query for a page, list, or API response. Controllers never query the database themselves.
 
-## Structure
+## Bounded Contexts
 
-Organize shared Laravel concerns at the top level. Group Actions, Queries, Form Requests, and feature tests by feature when a concern has several related classes. Group versioned JSON API controllers, requests, and resources under `Api/V{n}`. Keep other controllers, models, policies, and concerns flat until they have a clear need for further organization.
+A bounded context groups everything that shares one business vocabulary and one set of invariants. ShipKit ships three:
+
+- `AccessControl`: roles, permissions, and their protected system records.
+- `Settings`: the authenticated user's own account: profile, password, passkeys, and account deletion. It shares its name with the settings routes, controllers, requests, and pages.
+- `Authentication`: API login, two-factor challenges, registration, password reset, email verification, and API tokens.
+
+Rules for contexts:
+
+- A context's Models, Enums, Exceptions, and Policies are internal. Other contexts use it only through its Actions, Query objects, and events.
+- The delivery layer (`app/Http`) may use any context.
+- `App\Models\User` is the shared identity model. It stays in `app/Models` because Fortify, Sanctum, Spatie Permission, and the auth configuration reference it.
+- Each context has a rule file in `.ai/rules/contexts/{context}.md` that lists its vocabulary, its invariants and where each is enforced, and its public surface. Update it when a context gains a term, an invariant, or a public class.
+- `tests/Unit/ArchitectureTest.php` enforces these boundaries and discovers contexts from `app/Domain/*`. Create a context with `php artisan make:context {Name}`, which also scaffolds its rule file and index row.
+
+Create a new context when a capability has its own vocabulary and invariants, such as `Billing` or `Catalog`. Do not create a context for a single class.
+
+`app/Domain/Shared` is the shared kernel, not a context: the base `DomainException` and the Eloquent support for guarded aggregates. It must not depend on any context or on `app/Http`. Add to it only infrastructure that every context needs.
+
+## Structure
 
 ```text
 app/
-├── Actions/
-│   └── {Feature}/
-│       ├── Create{Model}Action.php
-│       ├── Update{Model}Action.php
-│       └── Delete{Model}Action.php
-├── Enums/
-│   └── {Model}Status.php
-├── Events/
-│   └── {Model}Created.php
-├── Exceptions/
-│   └── {Model}CannotBeUpdated.php
+├── Domain/
+│   ├── Shared/
+│   │   ├── Eloquent/
+│   │   │   ├── GuardedBuilder.php
+│   │   │   └── GuardsBulkWrites.php
+│   │   └── Exceptions/
+│   │       ├── BulkWriteBypassesInvariants.php
+│   │       └── DomainException.php
+│   └── {Context}/
+│       ├── Actions/
+│       │   ├── Create{Model}Action.php
+│       │   ├── Update{Model}Action.php
+│       │   └── Delete{Model}Action.php
+│       ├── Enums/
+│       │   └── {Model}Status.php
+│       ├── Events/
+│       │   └── {Model}Created.php
+│       ├── Exceptions/
+│       │   └── {Model}CannotBeUpdated.php
+│       ├── Models/
+│       │   └── {Model}.php
+│       ├── Policies/
+│       │   └── {Model}Policy.php
+│       ├── Queries/
+│       │   └── {Model}ListQuery.php
+│       └── Services/
+│           └── {Model}CalculationService.php
 ├── Http/
 │   ├── Controllers/
 │   │   ├── Api/V1/{Model}Controller.php
-│   │   └── {Model}Controller.php
+│   │   └── {Context}/{Model}Controller.php
 │   ├── Requests/
 │   │   ├── Api/V1/Store{Model}Request.php
-│   │   └── {Feature}/
+│   │   └── {Context}/
 │   │       ├── Store{Model}Request.php
 │   │       └── Update{Model}Request.php
 │   └── Resources/
 │       └── Api/V1/{Model}Resource.php
-├── Models/
-│   └── {Model}.php
-├── Policies/
-│   └── {Model}Policy.php
-├── Queries/
-│   └── {Feature}/
-│       └── {Model}ListQuery.php
-└── Services/
-   └── {Feature}/
-       └── {Model}CalculationService.php
+└── Models/
+    └── User.php
 
 resources/js/
 ├── pages/
@@ -80,21 +106,21 @@ resources/js/
 
 tests/
 ├── Feature/
-│   └── {Feature}/
+│   └── {Context}/
 │       ├── {Model}ManagementTest.php
 │       ├── {Model}PolicyTest.php
 │       └── {Verb}{Model}ActionTest.php
 └── Unit/
-   └── Services/
+    └── ArchitectureTest.php
 ```
 
-Actions and Query objects are the standard homes for writes and reads. Create services, events, exceptions, resources, and policies only when they have a clear responsibility.
+Actions and Query objects are the standard homes for writes and reads. Create the other folders in a context only when they hold a class with a clear responsibility.
 
-Use a feature folder only when it groups several related files. For example, several requests for one feature belong in `Http/Requests/{Feature}/`; keep a lone controller or resource in its conventional folder rather than adding a directory solely for it.
+The delivery layer stays outside the domain: controllers, Form Requests, resources, and middleware live in `app/Http`. Web controllers and Form Requests go in a folder named exactly after their context, `app/Http/Controllers/{Context}/` and `app/Http/Requests/{Context}/`; versioned JSON API classes go under `Api/V{n}/`. Feature tests go in `tests/Feature/{Context}/`. One name per context everywhere means an agent can find every file for a context by its name, and `ArchitectureTest` fails on any folder that does not match a context. Policies live in their context and are discovered automatically; a policy for a model outside `app/Domain`, such as `User`, is attached with `#[UsePolicy]`.
 
 ## Actions
 
-An Action represents one named use case. It is an application-workflow layer over Active Record, not a second model or domain layer.
+An Action represents one named use case. It is the application-workflow layer of its context, sitting over the Eloquent aggregates; it is not a second model layer.
 
 Use names that state intent:
 
@@ -105,7 +131,7 @@ Use names that state intent:
 
 Avoid generic manager services such as `{Model}Service` with unrelated `create`, `update`, `delete`, and `publish` methods. Those operations should normally be separate Actions.
 
-Classes whose names and contracts are dictated by a package, such as the Fortify actions under `app/Actions/Fortify`, keep the package's conventions.
+Classes whose names and contracts are dictated by a package, such as the Fortify actions under `app/Actions/Fortify`, keep the package's conventions and location.
 
 An Action accepts the specific typed values its operation needs. Actions may query Eloquent, create or mutate models, invoke model behavior, coordinate several models, use transactions, call focused services, dispatch events, and call external-system abstractions. They may return an Eloquent model, collection, scalar, or result object.
 
@@ -125,13 +151,15 @@ Using Laravel and Eloquent inside an Action is intentional. The Action orchestra
 
 ### Invariants
 
-Actions enforce business invariants independently of actor authorization: protected records, required assignments, in-use deletion guards, ownership, and similar rules that must hold for every caller. A policy decides whether this actor may attempt the operation; the Action decides whether the operation is valid at all. Console commands, jobs, and other non-HTTP callers must not be able to bypass an invariant by skipping the controller.
+Business invariants hold for every caller, independently of actor authorization: protected records, required assignments, in-use deletion guards, ownership, and similar rules. A policy decides whether this actor may attempt the operation; the invariant decides whether the operation is valid at all. Console commands, jobs, and other non-HTTP callers must not be able to bypass an invariant by skipping the controller.
+
+Put an invariant that protects one aggregate's own state on the model as an `ensure...()` method, such as `{model}.ensureCanBeDeleted()`, and register it in the model's `booting()` method as an `updating` or `deleting` guard. The guard then runs on every save or delete, so no Action, job, seeder, or tinker session can skip it, and registering it while booting makes it run before package model events such as Spatie's pivot cleanup. Query-builder bulk updates, deletes, and upserts skip model events, so every guarded model also uses the `GuardsBulkWrites` trait: its `GuardedBuilder` lets single-record saves and deletes through and throws `BulkWriteBypassesInvariants` for bulk writes. To change many guarded records, load them and save or delete each one. Keep invariants that span several aggregates or systems in the Action. Every invariant throws a named exception that extends `App\Domain\Shared\Exceptions\DomainException`.
 
 ### Transactions, errors, and side effects
 
 - An Action owns the transaction boundary for a multi-step write that must commit or roll back as one operation.
 - Dispatch events and other side effects only after the primary state change succeeds. Use queued work when a side effect needs retries or durability.
-- Report business failures through validation exceptions or focused exceptions such as `{Model}CannotBeUpdated`.
+- Report business failures through named domain exceptions such as `{Model}CannotBeUpdated`. Each one extends `DomainException` and names the `field()` it is reported against; `bootstrap/app.php` renders it as a validation error, so the HTTP layer needs no try/catch.
 - Actions never accept a Form Request and never return an HTTP response.
 
 ## Controllers and Form Requests
@@ -178,9 +206,9 @@ Authorization happens at the HTTP delivery boundary:
 
 Route model binding constrains lookup; it does not replace authorization. A valid request is not necessarily authorized, and an authenticated actor is not automatically allowed to access every record.
 
-## Eloquent Models: the Active Record Layer
+## Eloquent Models: the Aggregates
 
-Eloquent models are the Active Record and persistence layer. They own table configuration, relationships, casts, scopes, and small model-local behavior. They may create, update, and delete their own records through normal Eloquent APIs.
+Eloquent models are the aggregate roots and the persistence layer. They own table configuration, relationships, casts, scopes, small model-local behavior, and the `ensure...()` invariants that protect their own state. They may create, update, and delete their own records through normal Eloquent APIs.
 
 The following is pseudocode:
 
@@ -206,7 +234,7 @@ Use focused names such as `{Model}CalculationService`, `{Model}IntegrationServic
 
 ## Queries
 
-A Query object owns one read: the Eloquent query behind a page, list, or API response. It lives in `app/Queries/{Feature}/`, is named for what it returns, such as `{Model}ListQuery`, and exposes a single `handle()` method.
+A Query object owns one read: the Eloquent query behind a page, list, or API response. It lives in `app/Domain/{Context}/Queries/`, is named for what it returns, such as `{Model}ListQuery`, and exposes a single `handle()` method.
 
 A Query object:
 
@@ -241,9 +269,9 @@ Resources and controller mapping transform already-loaded data. They do not quer
 
 - **Policies** answer authorization questions at the delivery boundary. Scope sensitive record lookups to the authenticated actor or tenant before mutation or disclosure.
 - **Events** represent meaningful completed facts, such as `{Model}Created` or `{Model}Updated`. An Action performs the primary operation; listeners may handle secondary reactions.
-- **Exceptions** communicate meaningful failures, such as `{Model}CannotBeUpdated`. Do not create custom exceptions for ordinary validation failures.
+- **Exceptions** communicate broken business rules, such as `{Model}CannotBeUpdated`, and extend `DomainException`. Input-format validation stays in Form Requests; do not create custom exceptions for it.
 
-Do not hide essential workflow in Eloquent observers. Keep critical behavior explicit in the Action.
+Do not hide essential workflow in Eloquent observers. Keep critical behavior explicit in the Action. The one exception is an aggregate's own invariant guards, which belong in its `booting()` method so they cannot be bypassed.
 
 ## Frontend Pages
 
@@ -268,7 +296,7 @@ Form Request validation
 Controller authorization
    ↓
 Action
-   ├── Eloquent Active Record
+   ├── Eloquent aggregate
    ├── Service
    ├── Transaction
    └── Event
@@ -299,35 +327,37 @@ Resource or Inertia props
 ```text
 HTTP
    ↓
-Actions / Queries
+{Context} Actions / Queries        ← a context's public surface
    ↓
-Models / Services / Laravel
+{Context} Models / Services / Laravel
 ```
 
-| Component  | May depend on                                                              |
-| ---------- | -------------------------------------------------------------------------- |
-| Controller | Requests, policies, Actions, Queries, resources, Laravel HTTP              |
-| Action     | Eloquent models, Queries, services, events, exceptions, Laravel facilities |
-| Query      | Eloquent models, relationships, scopes, and the query builder              |
-| Service    | Models, external SDK abstractions, Laravel facilities when appropriate     |
-| Model      | Eloquent, casts, relations, enums, small model-local behavior              |
-| Resource   | Models and Laravel resource APIs                                           |
-| Policy     | Models and the authenticated actor                                         |
+| Component  | May depend on                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| Controller | Requests, policies, Actions, Queries, resources, Laravel HTTP                                                        |
+| Action     | Its context's models, Queries, services, events, exceptions; other contexts' Actions and Queries; Laravel facilities |
+| Query      | Eloquent models, relationships, scopes, and the query builder                                                        |
+| Service    | Models, external SDK abstractions, Laravel facilities when appropriate                                               |
+| Model      | Eloquent, casts, relations, enums, small model-local behavior                                                        |
+| Resource   | Models and Laravel resource APIs                                                                                     |
+| Policy     | Models and the authenticated actor                                                                                   |
 
-The key restriction is simple: controllers should not become the application layer. Actions own workflows; Query objects own reads; Eloquent models remain the Active Record layer.
+The key restrictions: controllers do not become the application layer, the domain never depends on `app/Http`, and contexts reach each other only through Actions and Query objects. Actions own workflows; Query objects own reads; Eloquent models are the aggregates.
 
 ## Testing
 
-Use Laravel feature tests as the primary confidence layer. Organize them by feature in `tests/Feature/{Feature}/`, with no by-type folders: policy, Action, and Query tests sit beside the feature's HTTP tests.
+Use Laravel feature tests as the primary confidence layer. Organize them by context in `tests/Feature/{Context}/`, with no by-type folders: policy, Action, and Query tests sit beside the feature's HTTP tests.
 
 Use one file per resource, such as `{Model}ManagementTest`, with one behaviour per `it()` case and a `describe()` block per controller action when the file covers more than one. Single-purpose files, such as policy, Action, and Query tests, stay flat. When a file would cover several unrelated endpoints, split it into one file per flow. Within each action, order cases as guest, forbidden, validation, success, then invariants.
 
 Feature tests should cover authentication, authorization, validation, database state, relationships, response shape, important events, and cross-actor or tenant isolation.
 
-Test Actions and Query objects directly when it improves confidence, for example an invariant with several branches or a query with non-trivial filtering. Actions and Query objects that rely on Eloquent may use Laravel's database test support; do not introduce fake repositories merely to label the test a unit test. Keep fast unit tests for pure calculations and similar framework-independent logic.
+Test Actions and Query objects directly when it improves confidence, for example an invariant with several branches or a query with non-trivial filtering. Actions and Query objects that rely on Eloquent may use Laravel's database test support; do not introduce fake repositories merely to label the test a unit test. Keep fast unit tests for pure calculations and similar framework-independent logic. `tests/Unit/ArchitectureTest.php` holds the Pest `arch()` rules that enforce the context boundaries; extend it rather than relying on review to catch a boundary violation.
 
 ## Review Checklist
 
+- [ ] New code lives in the bounded context whose vocabulary it uses, under `app/Domain/{Context}`.
+- [ ] Contexts use each other only through Actions and Query objects; `ArchitectureTest` passes.
 - [ ] Each Action describes one clear use case.
 - [ ] Controllers coordinate HTTP rather than own application workflows.
 - [ ] Every protected controller action calls `Gate::authorize()` first.
@@ -335,12 +365,13 @@ Test Actions and Query objects directly when it improves confidence, for example
 - [ ] Routes carry no permission middleware.
 - [ ] Form Requests validate and normalize input only, with no authorization logic.
 - [ ] Actions receive only the explicit typed values they need.
-- [ ] Actions enforce invariants independently of actor authorization.
+- [ ] Invariants hold independently of actor authorization: aggregate rules as `ensure...()` model methods guarded in `booting()`, cross-aggregate rules in Actions, each throwing a named `DomainException`.
+- [ ] The context's `.ai/rules/contexts/{context}.md` lists any new term, invariant, or public class.
 - [ ] Multi-step writes run in one transaction, and side effects fire after it succeeds.
-- [ ] Eloquent models remain the Active Record layer, owning persistence configuration and small local behavior.
+- [ ] Eloquent models remain the aggregates, owning persistence configuration, small local behavior, and their own invariants.
 - [ ] Services have a focused, reusable responsibility.
 - [ ] API Resources and Inertia props expose only intentional, explicitly listed data.
 - [ ] Ownership and authorization boundaries are enforced.
-- [ ] Feature tests prove observable behavior and persisted state, grouped by feature with a `describe()` block per action.
+- [ ] Feature tests prove observable behavior and persisted state, grouped by context with a `describe()` block per action.
 - [ ] Pages compose partials named for their controller action; shared prop types live in `types/{feature}.ts`.
 - [ ] Supporting classes exist because they clarify a real responsibility.

@@ -7,7 +7,7 @@ paths:
 
 ## Group tests by feature
 
-Place feature tests in `tests/Feature/{Feature}/`, using the same feature name as `app/Actions/{Feature}`. Do not create by-type folders such as `Policies/` or `Actions/`; policy, Action, and Query tests live in their feature folder as `{Model}PolicyTest`, `{Verb}{Model}ActionTest`, and `{Model}ListQueryTest`.
+Place feature tests in `tests/Feature/{Context}/`, using the same context name as `app/Domain/{Context}`. Do not create by-type folders such as `Policies/` or `Actions/`; policy, Action, and Query tests live in their feature folder as `{Model}PolicyTest`, `{Verb}{Model}ActionTest`, and `{Model}ListQueryTest`.
 
 ## Use one file per resource with a describe block per action
 
@@ -19,7 +19,7 @@ Files that cover one action or one class, such as policy, Action, Query, seeder,
 
 ## Split by flow when a file covers several endpoints
 
-When a file would cover unrelated endpoints, create one file per flow, such as `Api/LoginTest`, `Api/RegistrationTest`, and `Api/PasswordResetTest`.
+When a file would cover unrelated endpoints, create one file per flow, such as `Authentication/LoginTest`, `Authentication/RegistrationTest`, and `Authentication/PasswordResetTest`.
 
 ## Cover the delivery boundary in order
 
@@ -28,3 +28,7 @@ Within each action, order cases as guest, forbidden, validation, success, then i
 ## Keep shared helpers in Pest.php
 
 Helpers used by more than one file belong in `tests/Pest.php`. Do not leave placeholder helpers or expectations.
+
+## Keep architecture rules in ArchitectureTest
+
+Boundary rules live as Pest `arch()` expectations in `tests/Unit/ArchitectureTest.php`. It discovers contexts from `app/Domain/*`, so a context created with `php artisan make:context` is covered without editing it. Assert invariant failures by their named domain exception, not `ValidationException`, when calling an Action directly.

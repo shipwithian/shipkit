@@ -1,13 +1,13 @@
 ---
 paths:
-    - 'app/Queries/**'
+    - 'app/Domain/*/Queries/**'
 ---
 
 # Queries
 
 ## Own one read per Query object
 
-A Query object lives in `app/Queries/{Feature}/`, is named for what it returns, such as `{Model}ListQuery`, and exposes a single `handle()` method. It builds the Eloquent query behind one page, list, or API response.
+A Query object lives in `app/Domain/{Context}/Queries/`, is named for what it returns, such as `{Model}ListQuery`, and exposes a single `handle()` method. It builds the Eloquent query behind one page, list, or API response.
 
 ## Accept trusted values and return models
 

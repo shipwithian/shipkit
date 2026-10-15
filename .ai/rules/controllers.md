@@ -11,7 +11,11 @@ Call `Gate::authorize()` explicitly at the beginning of every protected controll
 
 ## Keep Eloquent queries out of controllers
 
-Controllers do not call `{Model}::query()`, build relationship queries, or use `DB`. Reads go through a Query object in `app/Queries/{Feature}` and writes through an Action. Route model binding, and `loadMissing()` on an already-resolved model to shape a response, are allowed.
+Controllers do not call `{Model}::query()`, build relationship queries, or use `DB`. Reads go through a context's Query object in `app/Domain/{Context}/Queries` and writes through its Action in `app/Domain/{Context}/Actions`. Do not catch `DomainException`s; they render as validation errors. Route model binding, and `loadMissing()` on an already-resolved model to shape a response, are allowed.
+
+## Group controllers by context
+
+Place web controllers in `app/Http/Controllers/{Context}/`, named exactly after a folder in `app/Domain`, and versioned API controllers in `app/Http/Controllers/Api/V{n}/`. `ArchitectureTest` rejects any other folder.
 
 ## Shape Inertia props explicitly
 

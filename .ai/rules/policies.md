@@ -1,6 +1,6 @@
 ---
 paths:
-    - 'app/Policies/**'
+    - 'app/Domain/*/Policies/**'
 ---
 
 # Policies

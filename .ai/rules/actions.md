@@ -1,5 +1,6 @@
 ---
 paths:
+    - 'app/Domain/*/Actions/**'
     - 'app/Actions/**'
 ---
 
@@ -7,7 +8,7 @@ paths:
 
 ## Represent one named use case
 
-Each Action is one workflow named `{Verb}{Model}Action` in `app/Actions/{Feature}/`, with a single `handle()` method. Do not create catch-all classes with unrelated methods. Classes whose names and contracts are dictated by a package, such as `app/Actions/Fortify`, keep the package's conventions.
+Each Action is one workflow named `{Verb}{Model}Action` in `app/Domain/{Context}/Actions/`, with a single `handle()` method. Do not create catch-all classes with unrelated methods. Classes whose names and contracts are dictated by a package, such as `app/Actions/Fortify`, keep the package's conventions.
 
 ## Stay independent of HTTP
 
@@ -15,7 +16,7 @@ Accept the specific typed values and trusted models the operation needs; never a
 
 ## Enforce invariants independently of authorization
 
-Check protected-record, ownership, in-use, and similar business rules inside the Action so console commands, jobs, and other non-HTTP callers cannot bypass them. Policies decide whether the actor may attempt the operation; the Action decides whether it is valid.
+Check protected-record, ownership, in-use, and similar business rules before the change so console commands, jobs, and other non-HTTP callers cannot bypass them. A rule about one aggregate's own state is an `ensure...()` method on the model, guarded in its `booting()` so the Action only needs to save or delete; a rule spanning several aggregates stays in the Action. Throw a named exception extending `App\Domain\Shared\Exceptions\DomainException`, never `ValidationException`. Policies decide whether the actor may attempt the operation; the invariant decides whether it is valid.
 
 ## Own the transaction for multi-step writes
 
