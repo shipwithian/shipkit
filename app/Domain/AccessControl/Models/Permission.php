@@ -4,7 +4,7 @@ namespace App\Domain\AccessControl\Models;
 
 use App\Domain\AccessControl\Exceptions\PermissionIsInUse;
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
-use App\Domain\Shared\Eloquent\GuardsBulkWrites;
+use App\Domain\Shared\Eloquent\GuardsInvariants;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 /**
@@ -14,18 +14,7 @@ use Spatie\Permission\Models\Permission as SpatiePermission;
  */
 class Permission extends SpatiePermission
 {
-    use GuardsBulkWrites;
-
-    /**
-     * Guard the aggregate's invariants on every save and delete.
-     *
-     * Registered while booting so they run before Spatie's own model events.
-     */
-    protected static function booting(): void
-    {
-        static::updating(fn (self $permission) => $permission->ensureCanBeRenamedTo($permission->name));
-        static::deleting(fn (self $permission) => $permission->ensureCanBeDeleted());
-    }
+    use GuardsInvariants;
 
     /**
      * Get the attributes that should be cast.
@@ -62,5 +51,15 @@ class Permission extends SpatiePermission
         if ($this->roles()->exists() || $this->users()->exists()) {
             throw new PermissionIsInUse;
         }
+    }
+
+    protected function guardUpdate(): void
+    {
+        $this->ensureCanBeRenamedTo($this->name);
+    }
+
+    protected function guardDelete(): void
+    {
+        $this->ensureCanBeDeleted();
     }
 }

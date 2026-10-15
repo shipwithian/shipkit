@@ -42,3 +42,12 @@ it('refuses to bulk delete users past the account guards', function () {
 
     $this->assertModelExists($user);
 });
+
+it('refuses to delete a protected account even with model events silenced', function () {
+    $user = User::factory()->create();
+    $user->forceFill(['is_protected' => true])->save();
+
+    expect(fn () => $user->deleteQuietly())->toThrow(ProtectedAccountCannotBeDeleted::class);
+
+    $this->assertModelExists($user);
+});

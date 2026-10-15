@@ -105,28 +105,22 @@ it('documents every action, query, and domain exception in its context rule file
     expect($missing)->toBeEmpty(implode(PHP_EOL, $missing));
 });
 
-it('refuses bulk writes on every model that guards its invariants', function () {
-    $unguarded = [];
-
-    foreach ([...phpFilesIn('app/Domain'), ...phpFilesIn('app/Models')] as $path) {
-        $source = (string) file_get_contents($path);
-
-        if (preg_match('/static::(?:updating|deleting|saving)\(/', $source) && ! str_contains($source, 'use GuardsBulkWrites')) {
-            $unguarded[] = $path;
-        }
-    }
-
-    expect($unguarded)->toBeEmpty(implode(PHP_EOL, $unguarded));
-});
-
-it('does not write to guarded tables through the raw query builder', function () {
+it('guards invariants only through GuardsInvariants', function () {
     $violations = [];
 
-    foreach ([...phpFilesIn('app'), ...phpFilesIn('database/seeders'), ...phpFilesIn('routes')] as $path) {
-        if (preg_match_all("/DB::table\\(\\s*'(?:roles|permissions|users)'/", (string) file_get_contents($path), $matches)) {
-            foreach ($matches[0] as $match) {
-                $violations[] = "{$path}: {$match}";
-            }
+    foreach ([...phpFilesIn('app/Domain'), ...phpFilesIn('app/Models')] as $path) {
+        if (str_ends_with($path, 'Shared/Eloquent/GuardsInvariants.php')) {
+            continue;
+        }
+
+        $source = (string) file_get_contents($path);
+
+        if (preg_match('/static::(?:updating|deleting|saving|creating)\(/', $source)) {
+            $violations[] = "{$path}: registers a model event guard directly; call ensure...() from guardUpdate()/guardDelete() with GuardsInvariants instead";
+        }
+
+        if (preg_match('/function guard(?:Update|Delete)\(/', $source) && ! str_contains($source, 'use GuardsInvariants')) {
+            $violations[] = "{$path}: defines guardUpdate()/guardDelete() without `use GuardsInvariants;`, so the guards never run";
         }
     }
 

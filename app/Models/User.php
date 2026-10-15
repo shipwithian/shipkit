@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
 use App\Domain\Settings\Policies\UserPolicy;
-use App\Domain\Shared\Eloquent\GuardsBulkWrites;
+use App\Domain\Shared\Eloquent\GuardsInvariants;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -40,17 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use GuardsBulkWrites, HasApiTokens, HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
-
-    /**
-     * Guard the account's invariants on every delete.
-     *
-     * Registered while booting so it runs before Spatie's own model events.
-     */
-    protected static function booting(): void
-    {
-        static::deleting(fn (self $user) => $user->ensureCanBeDeleted());
-    }
+    use GuardsInvariants, HasApiTokens, HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -75,5 +65,10 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         if ($this->getOriginal('is_protected')) {
             throw new ProtectedAccountCannotBeDeleted;
         }
+    }
+
+    protected function guardDelete(): void
+    {
+        $this->ensureCanBeDeleted();
     }
 }

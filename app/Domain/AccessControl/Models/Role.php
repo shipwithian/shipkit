@@ -4,7 +4,7 @@ namespace App\Domain\AccessControl\Models;
 
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\AccessControl\Exceptions\RoleIsInUse;
-use App\Domain\Shared\Eloquent\GuardsBulkWrites;
+use App\Domain\Shared\Eloquent\GuardsInvariants;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 /**
@@ -14,18 +14,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
  */
 class Role extends SpatieRole
 {
-    use GuardsBulkWrites;
-
-    /**
-     * Guard the aggregate's invariants on every save and delete.
-     *
-     * Registered while booting so they run before Spatie's own model events.
-     */
-    protected static function booting(): void
-    {
-        static::updating(fn (self $role) => $role->ensureCanBeRenamedTo($role->name));
-        static::deleting(fn (self $role) => $role->ensureCanBeDeleted());
-    }
+    use GuardsInvariants;
 
     /**
      * Get the attributes that should be cast.
@@ -62,5 +51,15 @@ class Role extends SpatieRole
         if ($this->users()->exists()) {
             throw new RoleIsInUse;
         }
+    }
+
+    protected function guardUpdate(): void
+    {
+        $this->ensureCanBeRenamedTo($this->name);
+    }
+
+    protected function guardDelete(): void
+    {
+        $this->ensureCanBeDeleted();
     }
 }

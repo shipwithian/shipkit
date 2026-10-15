@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * Query builder for aggregates whose invariants run as model events.
  *
  * Bulk writes skip model events, so they are refused. Single-record saves
- * and deletes are marked by {@see GuardsBulkWrites} and pass through.
+ * and deletes are marked by {@see GuardsInvariants} and pass through.
  *
  * @template TModel of Model
  *

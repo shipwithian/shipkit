@@ -76,3 +76,32 @@ it('refuses bulk updates and upserts that would skip the invariant guards', func
 
     expect($permission->fresh()->name)->toBe('system permission');
 });
+
+it('refuses to rename a protected role even with model events silenced', function () {
+    $role = Role::create(['name' => 'system', 'guard_name' => 'web']);
+    $role->forceFill(['is_protected' => true])->save();
+
+    expect(fn () => $role->forceFill(['name' => 'renamed'])->saveQuietly())
+        ->toThrow(ProtectedRecordCannotBeChanged::class);
+
+    expect($role->fresh()->name)->toBe('system');
+});
+
+it('refuses to delete a protected role even with model events silenced', function () {
+    $role = Role::create(['name' => 'system', 'guard_name' => 'web']);
+    $role->forceFill(['is_protected' => true])->save();
+
+    expect(fn () => $role->deleteQuietly())->toThrow(ProtectedRecordCannotBeChanged::class)
+        ->and(fn () => Role::withoutEvents(fn () => $role->delete()))->toThrow(ProtectedRecordCannotBeChanged::class);
+
+    $this->assertModelExists($role);
+});
+
+it('refuses to delete an assigned permission even with model events silenced', function () {
+    $permission = Permission::findOrCreate('edit posts', 'web');
+    Role::create(['name' => 'editor', 'guard_name' => 'web'])->givePermissionTo($permission);
+
+    expect(fn () => $permission->deleteQuietly())->toThrow(PermissionIsInUse::class);
+
+    $this->assertModelExists($permission);
+});
