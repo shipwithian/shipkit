@@ -441,7 +441,7 @@ npm run build
 
 When working on a focused change, run the narrowest relevant Pest tests first, then run the complete checks before handing the work off.
 
-Rector is configured only for composer-version-aware Laravel upgrades. Run it deliberately after PHP or Laravel dependency upgrades, review every generated diff, and then run Pint, PHPStan, and the test suite. Rector is not used as an automatic formatter or as a replacement for code review.
+`composer fix` runs Rector, Pint, and the JS and markdown formatter in one step; review its diff, then run `composer ci:check`. Rector is configured only for composer-version-aware Laravel upgrades. Run it deliberately after PHP or Laravel dependency upgrades, review every generated diff, and then run Pint, PHPStan, and the test suite. Rector is not used as an automatic formatter or as a replacement for code review.
 
 ## Extending a generated project
 

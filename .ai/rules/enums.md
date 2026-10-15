@@ -7,4 +7,8 @@ paths:
 
 ## Reserve SystemPermission for access-control bootstrap
 
-Reserve `SystemPermission` for protected bootstrap permissions required to administer roles and permissions and prevent access-control deadlocks. Ordinary feature and project permissions belong to their owning feature seeders, not this enum.
+Reserve `SystemPermission` for the protected permissions without which nobody could recover or change who may do what: managing roles, managing permissions, and assigning permissions or roles. A permission that merely belongs to access control does not qualify: viewing an audit log, exporting a report, or any other feature permission is an ordinary permission, even when an access-control feature introduces it.
+
+Ordinary permissions belong to their owning feature's seeder, which creates the permission and grants it to the protected super-admin role with `givePermissionTo()`.
+
+`tests/Unit/ArchitectureTest.php` pins the list of cases. Adding one is deliberate: update the list there with the reason it qualifies.

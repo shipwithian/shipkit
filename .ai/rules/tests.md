@@ -36,3 +36,15 @@ Boundary rules live as Pest `arch()` expectations in `tests/Unit/ArchitectureTes
 ## Run the full suite yourself
 
 The whole suite runs in seconds. Run the narrowest tests while iterating, then `composer ci:check`, which runs the full suite with every other check, before handing work back; there is no need to ask the user to run it.
+
+## Fix formatting with composer fix
+
+When `composer ci:check` stops on formatting or Rector, run `composer fix` (Rector, Pint, and the JS and markdown formatter), review the diff, and run `composer ci:check` again. `ci:check` stops at its first failure, so expect to run it twice after a large change.
+
+## Reset the guard after revoking a bearer token
+
+A test that reuses a Sanctum bearer token after revoking it calls `Auth::forgetGuards()` first, so the guard authenticates again instead of returning its cached user.
+
+## Tests do not need built assets
+
+`tests/TestCase.php` calls `withoutVite()`, so tests pass without `npm run build`. Run the build only to check the app in a browser.

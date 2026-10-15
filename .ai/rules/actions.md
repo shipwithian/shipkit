@@ -10,6 +10,10 @@ paths:
 
 Each Action is one workflow named `{Verb}{Model}Action` in `app/Domain/{Context}/Actions/`, with a single `handle()` method. Do not create catch-all classes with unrelated methods. Classes whose names and contracts are dictated by a package, such as `app/Actions/Fortify`, keep the package's conventions.
 
+## Receive the acting user as a parameter
+
+An Action or Query that needs to know who is acting takes the user as an explicit first parameter named `$actor`, and the controller passes `$request->user()`. Domain code never reads `auth()`, `Auth::user()`, `request()`, or `session()`, so a console command, job, or test supplies the actor the same way a controller does.
+
 ## Stay independent of HTTP
 
 Accept the specific typed values and trusted models the operation needs; never a Form Request. Never return a redirect, JSON, or other HTTP response.

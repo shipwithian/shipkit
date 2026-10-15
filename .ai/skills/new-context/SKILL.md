@@ -15,9 +15,10 @@ A context earns its own folder when it has its own vocabulary and its own invari
 4. **Guard each invariant.** For every rule that must hold for every caller:
     - add an `ensure...()` method on the model that throws a named exception extending `App\Domain\Shared\Exceptions\DomainException`;
     - call it from the model's `guardUpdate()` or `guardDelete()` override, and add `use GuardsInvariants;` to the model;
-    - give foreign keys into the model's table `restrictOnDelete()`, so a database cascade can't skip the guard;
+    - give the model's table foreign keys `restrictOnDelete()` rather than `cascadeOnDelete()`, so a database cascade can't skip the guard (`GuardedTablesTest` fails otherwise unless you record why the parent owns the rows);
     - add a row to the rule file's Invariants table;
-    - add a feature test that calls the model directly and asserts the named exception.
+    - add a feature test that calls the model directly and asserts the named exception;
+    - for a rule about a relationship (an owner must remain, a protected record keeps its parts), put the guard on a pivot model with `GuardsPivotInvariants` and attach it with `->using()` on both sides, as `RolePermission` and `RoleAssignment` do.
 
     See `app/Domain/AccessControl/Models/Role.php` for the complete pattern.
 

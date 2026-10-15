@@ -11,4 +11,8 @@ Access-control seeders are idempotent, use the fixed `web` guard, protect system
 
 ## Let feature seeders own product permissions
 
-Each feature seeds its own permissions alongside its other defaults. Feature permissions do not belong in `SystemPermission` and are not protected unless they are genuinely required to administer access control and prevent a permission deadlock.
+Each feature seeds its own permissions alongside its other defaults, and grants them to the protected super-admin role there. Feature permissions do not belong in `SystemPermission` and are not protected unless they are genuinely required to administer access control and prevent a permission deadlock.
+
+## Seed defaults only when creating
+
+A seeder sets a default value, such as a role description, only on the record it just created (`wasRecentlyCreated`), so re-running it never overwrites what an admin has since edited. A seeder reaches guarded models only through their Eloquent models, and the guards apply to it like any other caller.

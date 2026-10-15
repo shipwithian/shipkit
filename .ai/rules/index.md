@@ -17,6 +17,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Http/Resources/**, app/Http/Middleware/HandleInertiaRequests.php | .ai/rules/responses.md               |
 | resources/js/**                                                      | .ai/rules/js.md                      |
 | database/migrations/**                                               | .ai/rules/migrations.md              |
+| database/factories/**                                                | .ai/rules/factories.md               |
 | database/seeders/**                                                  | .ai/rules/seeders.md                 |
 | routes/**                                                            | .ai/rules/routes.md                  |
 | tests/**                                                             | .ai/rules/tests.md                   |
