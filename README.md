@@ -222,7 +222,7 @@ The boundaries are checked by `tests/Unit/ArchitectureTest.php`, and each contex
 
 ## Agent skills
 
-ShipKit ships project skills in `.ai/skills/`, synced to Claude Code and Codex by `php artisan boost:update` alongside Laravel Boost's package skills:
+ShipKit ships project skills in `.ai/skills/`, synced to Claude Code and Codex by `php artisan boost:update` alongside Laravel Boost's package skills. `composer setup` runs it, so a fresh clone gets the skills along with the committed `boost.json`, `.mcp.json`, `CLAUDE.md`, and `AGENTS.md`. After editing `.ai/guidelines`, run `php artisan boost:update` and commit the regenerated `CLAUDE.md` and `AGENTS.md`; `AgentToolingTest` fails until you do.
 
 | Skill                                            | Use it to                                                                                      |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |

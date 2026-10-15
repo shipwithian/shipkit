@@ -141,6 +141,22 @@ it('maps every rule file in the rules index', function () {
     expect($unmapped)->toBeEmpty(implode(PHP_EOL, $unmapped));
 });
 
+it('keeps the committed CLAUDE.md and AGENTS.md in step with .ai/guidelines', function () {
+    $stale = [];
+
+    foreach (['CLAUDE.md', 'AGENTS.md'] as $generated) {
+        $compiled = is_file(base_path($generated)) ? (string) file_get_contents(base_path($generated)) : '';
+
+        foreach (glob(base_path('.ai/guidelines/*.md')) as $guideline) {
+            if (! str_contains($compiled, trim((string) file_get_contents($guideline)))) {
+                $stale[] = "{$generated} does not contain the current ".Str::after($guideline, base_path().'/').'; run `php artisan boost:update`';
+            }
+        }
+    }
+
+    expect($stale)->toBeEmpty(implode(PHP_EOL, $stale));
+});
+
 /**
  * @return array<string, mixed>|null
  */
