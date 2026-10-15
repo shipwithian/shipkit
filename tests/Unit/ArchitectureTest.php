@@ -61,6 +61,40 @@ foreach (domainContexts() as $context) {
     }
 }
 
+arch('form requests validate only, with no authorize() logic')
+    ->expect('App\Http\Requests')
+    ->not->toHaveMethod('authorize');
+
+it('authorizes policies through permissions, never role names', function () {
+    $violations = [];
+
+    foreach (contextNamespaces('Policies') as $namespace) {
+        foreach (phpFilesIn(str_replace(['App\\', '\\'], ['app/', '/'], $namespace)) as $path) {
+            if (preg_match_all('/->(?:hasRole|hasAnyRole|hasAllRoles|hasExactRoles)\(|\bSystemRole\b/', (string) file_get_contents($path), $matches)) {
+                foreach ($matches[0] as $match) {
+                    $violations[] = "{$path}: {$match} (check a permission with \$user->can() instead)";
+                }
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
+it('lists every exposed field instead of serializing whole models', function () {
+    $violations = [];
+
+    foreach (phpFilesIn('app/Http') as $path) {
+        if (preg_match_all('/->(?:toArray|attributesToArray|getAttributes)\(\)|parent::toArray\(/', (string) file_get_contents($path), $matches)) {
+            foreach ($matches[0] as $match) {
+                $violations[] = "{$path}: {$match} (map each field explicitly so new columns are never exposed by default)";
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
 it('keeps Eloquent queries out of controllers', function () {
     $violations = [];
 

@@ -7,7 +7,7 @@ paths:
 
 ## Centralize authorization in controllers and policies
 
-Call `Gate::authorize()` explicitly at the beginning of every protected controller action. Policies define the actor permission requirements; controllers remain the authorization entry point.
+Call `Gate::authorize()` explicitly at the beginning of every protected controller action. Reading the actor (`$user = $request->user();`) may come first; nothing else may. `tests/Feature/RouteAuthorizationTest.php` checks every action behind `auth` middleware. An authenticated action that genuinely needs no authorization goes in its `ACTIONS_WITHOUT_GATE` list with the reason. Policies define the actor permission requirements; controllers remain the authorization entry point.
 
 ## Keep Eloquent queries out of controllers
 
