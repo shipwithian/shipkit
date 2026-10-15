@@ -154,14 +154,14 @@ it('keeps Eloquent queries out of controllers', function () {
 
             $model = class_basename($import);
 
-            if (preg_match("/\\b{$model}::(?!class\\b)\\w+/", $source, $match)) {
-                $violations[] = "{$path}: {$match[0]}";
+            if (preg_match("/\\b{$model}::(?!class\\b)(?![A-Z][A-Z0-9_]*\\b)\\w+/", $source, $match)) {
+                $violations[] = "{$path}: {$match[0]} calls the {$model} model statically. A controller reads through a Query object and writes through an Action; constants such as {$model}::MAXIMUM and {$model}::class are fine";
             }
         }
 
         if (preg_match_all('/->\w+\(\)->(?:where\w*|orderBy\w*|latest|oldest|paginate)\(/', $source, $matches)) {
             foreach ($matches[0] as $match) {
-                $violations[] = "{$path}: {$match}";
+                $violations[] = "{$path}: {$match} builds a relationship query in a controller; move it into a Query object";
             }
         }
     }

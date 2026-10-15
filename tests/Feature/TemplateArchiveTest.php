@@ -17,7 +17,7 @@ const ARCHIVE_EXCLUDED = [
 ];
 
 it('ships every tracked file in the installer archive except the documented few', function () {
-    if (! is_dir(base_path('.git'))) {
+    if (! file_exists(base_path('.git'))) {
         $this->markTestSkipped('This is not a git checkout, so there are no archive attributes to read.');
     }
 
