@@ -42,9 +42,17 @@ arch('the shared kernel does not depend on any context')
     ->not->toUse([...array_map(fn (string $context): string => "App\\Domain\\{$context}", domainContexts()), 'App\Http']);
 
 foreach (domainContexts() as $context) {
-    arch("{$context} is only used by its own context, the shared identity model, seeders, and the delivery layer")
+    $internals = contextNamespaces(['Models', 'Enums', 'Policies', 'Services'], $context);
+
+    if ($internals !== []) {
+        arch("{$context} internals are only used by its own context, the shared identity model, factories, seeders, and the delivery layer")
+            ->expect($internals)
+            ->toOnlyBeUsedIn(["App\\Domain\\{$context}", 'App\Models', 'App\Http', 'Database\Factories', 'Database\Seeders']);
+    }
+
+    arch("{$context} public surface (Actions, Queries, Exceptions) is only used by the domain, the shared identity model, factories, seeders, and the delivery layer")
         ->expect("App\\Domain\\{$context}")
-        ->toOnlyBeUsedIn(["App\\Domain\\{$context}", 'App\Models', 'App\Http', 'Database\Seeders']);
+        ->toOnlyBeUsedIn(['App\Domain', 'App\Models', 'App\Http', 'Database\Factories', 'Database\Seeders']);
 
     if (! array_key_exists($context, $usesFrameworkExceptions)) {
         arch("{$context} reports broken rules as domain exceptions")
@@ -176,13 +184,17 @@ function domainContexts(): array
 }
 
 /**
+ * Namespaces of the given folders that exist, across every context or within one.
+ *
+ * @param  list<string>|string  $folders
  * @return list<string>
  */
-function contextNamespaces(string $folder): array
+function contextNamespaces(array|string $folders, ?string $onlyContext = null): array
 {
-    return collect(domainContexts())
-        ->filter(fn (string $context): bool => is_dir(repositoryPath("app/Domain/{$context}/{$folder}")))
-        ->map(fn (string $context): string => "App\\Domain\\{$context}\\{$folder}")
+    return collect($onlyContext === null ? domainContexts() : [$onlyContext])
+        ->crossJoin((array) $folders)
+        ->filter(fn (array $pair): bool => is_dir(repositoryPath("app/Domain/{$pair[0]}/{$pair[1]}")))
+        ->map(fn (array $pair): string => "App\\Domain\\{$pair[0]}\\{$pair[1]}")
         ->values()
         ->all();
 }
