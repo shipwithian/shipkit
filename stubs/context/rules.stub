@@ -1,0 +1,22 @@
+---
+paths:
+    - 'app/Domain/{{ context }}/**'
+---
+
+# {{ title }} context
+
+## Vocabulary
+
+_No terms yet. Add each business term with a one-line definition, using the exact names the code uses._
+
+## Invariants
+
+_No invariants yet. List each rule that must always hold, the `ensure...()` method or Action that enforces it, and the domain exception it throws._
+
+| Rule | Enforced by | Exception |
+| ---- | ----------- | --------- |
+
+## Public surface
+
+- Actions: none yet.
+- Queries: none yet.
