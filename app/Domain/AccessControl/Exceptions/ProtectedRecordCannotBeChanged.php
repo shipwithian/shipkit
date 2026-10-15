@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Domain\AccessControl\Exceptions;
+
+use App\Domain\Shared\Exceptions\DomainException;
+
+class ProtectedRecordCannotBeChanged extends DomainException
+{
+    public function __construct(string $message, private readonly string $field)
+    {
+        parent::__construct($message);
+    }
+
+    public static function roleRename(): self
+    {
+        return new self(__('Protected roles cannot be renamed.'), 'name');
+    }
+
+    public static function roleDeletion(): self
+    {
+        return new self(__('Protected roles cannot be deleted.'), 'role');
+    }
+
+    public static function permissionRename(): self
+    {
+        return new self(__('Protected permissions cannot be renamed.'), 'name');
+    }
+
+    public static function permissionDeletion(): self
+    {
+        return new self(__('Protected permissions cannot be deleted.'), 'permission');
+    }
+
+    public function field(): string
+    {
+        return $this->field;
+    }
+}

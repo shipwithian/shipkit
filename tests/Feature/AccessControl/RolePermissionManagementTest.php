@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Permission;
-use App\Models\Role;
+use App\Domain\AccessControl\Models\Permission;
+use App\Domain\AccessControl\Models\Role;
 use Inertia\Testing\AssertableInertia as Assert;
 
 describe('edit', function () {

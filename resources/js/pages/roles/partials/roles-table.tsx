@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { KeyRound } from 'lucide-react';
-import RolePermissionController from '@/actions/App/Http/Controllers/RolePermissionController';
+import RolePermissionController from '@/actions/App/Http/Controllers/AccessControl/RolePermissionController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DeleteRoleDialog } from '@/pages/roles/partials/delete-role-dialog';

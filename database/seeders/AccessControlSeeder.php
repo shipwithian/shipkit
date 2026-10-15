@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Enums\SystemPermission;
-use App\Enums\SystemRole;
-use App\Models\Permission;
-use App\Models\Role;
+use App\Domain\AccessControl\Enums\SystemPermission;
+use App\Domain\AccessControl\Enums\SystemRole;
+use App\Domain\AccessControl\Models\Permission;
+use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -68,6 +68,8 @@ class AccessControlSeeder extends Seeder
             ->where('guard_name', 'web')
             ->first();
 
+        $legacyPermission->forceFill(['is_protected' => false])->save();
+
         if (! $replacementPermission) {
             $legacyPermission->forceFill(['name' => $replacement->value])->save();
 
@@ -86,6 +88,8 @@ class AccessControlSeeder extends Seeder
             }
         }
 
+        $legacyPermission->roles()->detach();
+        $legacyPermission->users()->detach();
         $legacyPermission->delete();
     }
 

@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\SystemPermission;
-use App\Enums\SystemRole;
-use App\Models\Permission;
-use App\Models\Role;
+use App\Domain\AccessControl\Enums\SystemPermission;
+use App\Domain\AccessControl\Enums\SystemRole;
+use App\Domain\AccessControl\Models\Permission;
+use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Database\Seeders\AccessControlSeeder;
 

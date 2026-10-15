@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\AccessControl\PermissionController;
+use App\Http\Controllers\AccessControl\RoleController;
+use App\Http\Controllers\AccessControl\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {

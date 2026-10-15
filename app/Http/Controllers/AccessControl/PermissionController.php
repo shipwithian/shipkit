@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Http\Controllers\AccessControl;
+
+use App\Domain\AccessControl\Actions\CreatePermissionAction;
+use App\Domain\AccessControl\Actions\DeletePermissionAction;
+use App\Domain\AccessControl\Actions\UpdatePermissionAction;
+use App\Domain\AccessControl\Models\Permission;
+use App\Domain\AccessControl\Queries\PermissionListQuery;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\AccessControl\StorePermissionRequest;
+use App\Http\Requests\AccessControl\UpdatePermissionRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class PermissionController extends Controller
+{
+    public function index(PermissionListQuery $permissionList): Response
+    {
+        Gate::authorize('viewAny', Permission::class);
+
+        return Inertia::render('permissions/index', [
+            'permissions' => array_map(
+                fn (Permission $permission): array => [
+                    'id' => $permission->id,
+                    'name' => $permission->name,
+                    'is_protected' => $permission->is_protected,
+                    'roles_count' => $permission->roles_count,
+                    'users_count' => $permission->users_count,
+                ],
+                $permissionList->handle()->all(),
+            ),
+        ]);
+    }
+
+    public function store(
+        StorePermissionRequest $request,
+        CreatePermissionAction $createPermission,
+    ): RedirectResponse {
+        Gate::authorize('create', Permission::class);
+
+        $createPermission->handle($request->string('name')->toString());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Permission created.')]);
+
+        return to_route('permissions.index');
+    }
+
+    public function update(
+        UpdatePermissionRequest $request,
+        Permission $permission,
+        UpdatePermissionAction $updatePermission,
+    ): RedirectResponse {
+        Gate::authorize('update', $permission);
+
+        $updatePermission->handle($permission, $request->string('name')->toString());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Permission updated.')]);
+
+        return to_route('permissions.index');
+    }
+
+    public function destroy(
+        Permission $permission,
+        DeletePermissionAction $deletePermission,
+    ): RedirectResponse {
+        Gate::authorize('delete', $permission);
+
+        $deletePermission->handle($permission);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Permission deleted.')]);
+
+        return to_route('permissions.index');
+    }
+}

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Actions\Api\VerifyApiEmailAction;
+use App\Domain\Authentication\Actions\VerifyApiEmailAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\AccessControl;
 
-use App\Models\Permission;
+use App\Domain\AccessControl\Models\Permission;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

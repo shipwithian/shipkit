@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import PermissionController from '@/actions/App/Http/Controllers/PermissionController';
+import PermissionController from '@/actions/App/Http/Controllers/AccessControl/PermissionController';
 import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import {

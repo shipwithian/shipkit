@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import RolePermissionController from '@/actions/App/Http/Controllers/RolePermissionController';
+import RolePermissionController from '@/actions/App/Http/Controllers/AccessControl/RolePermissionController';
 import AlertError from '@/components/alert-error';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';

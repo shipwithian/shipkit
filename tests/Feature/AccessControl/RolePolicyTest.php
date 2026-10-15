@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Role;
+use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
