@@ -220,6 +220,8 @@ ShipKit deliberately stops short of full DDD: there are no separate domain entit
 
 The boundaries are checked by `tests/Unit/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
 
+For the story of how this architecture was chosen, and how it was evaluated by letting agents build real features unaided, see [How ShipKit was built](docs/how-shipkit-was-built.md).
+
 ## Agent skills
 
 ShipKit ships project skills in `.ai/skills/`, synced to Claude Code and Codex by `php artisan boost:update` alongside Laravel Boost's package skills. `composer setup` runs it, so a fresh clone gets the skills along with the committed `boost.json`, `.mcp.json`, `CLAUDE.md`, and `AGENTS.md`. After editing `.ai/guidelines`, run `php artisan boost:update` and commit the regenerated `CLAUDE.md` and `AGENTS.md`; `AgentToolingTest` fails until you do.
@@ -388,6 +390,7 @@ Before starting business features:
 - [ ] (Optional) Configure `TYPESAFE_API_KEY`, install the TypeSafe Codex skill, and verify the project-scoped Jev MCP server.
 - [ ] Run the automated quality checks and production build.
 - [ ] Update this README with the project's business purpose and capabilities.
+- [ ] (Optional) Delete or replace `docs/how-shipkit-was-built.md`; it tells ShipKit's own story, not your project's.
 
 ## Development commands
 
