@@ -32,7 +32,7 @@ Start development:
 composer dev
 ```
 
-The installer copies ShipKit into `my-app`, creates `.env`, generates the application key, and runs the migrations. Seeding adds the protected access-control defaults and a local Super Admin account.
+The installer copies ShipKit into `my-app`, creates `.env`, generates the application key, and runs the migrations. It also generates the agent skills for Claude Code and Codex into `.claude/skills` and `.agents/skills`. Boost detects the React skill only once `node_modules` exists, so run `php artisan boost:update` once after the first `npm install`; `composer setup` does it in that order for you. Seeding adds the protected access-control defaults and a local Super Admin account.
 
 Prefer to start from GitHub? Use the repository's **Use this template** button, or follow [Create a project from ShipKit](#create-a-project-from-shipkit) to clone it and start a fresh history. That section also covers environment configuration and the checklist to run through before building features.
 
