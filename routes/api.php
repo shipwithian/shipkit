@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\HealthCheckController;
+use App\Http\Controllers\Api\V1\ApiTokenController;
 use App\Http\Controllers\Api\V1\AuthenticationController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\EmailVerificationController;
@@ -42,6 +43,18 @@ Route::prefix('v1')
 
             Route::get('user', CurrentUserController::class)
                 ->name('api.v1.user');
+
+            Route::get('tokens', [ApiTokenController::class, 'index'])
+                ->name('api.v1.tokens.index');
+
+            Route::post('tokens', [ApiTokenController::class, 'store'])
+                ->middleware('throttle:api-write')
+                ->name('api.v1.tokens.store');
+
+            Route::delete('tokens/{token}', [ApiTokenController::class, 'destroy'])
+                ->whereNumber('token')
+                ->middleware('throttle:api-write')
+                ->name('api.v1.tokens.destroy');
 
             Route::post('email/verification-notification', [EmailVerificationController::class, 'send'])
                 ->middleware('throttle:api-verification')
