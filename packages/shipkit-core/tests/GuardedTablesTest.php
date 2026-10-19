@@ -7,6 +7,7 @@ use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 use ShipKit\Core\Architecture\ProjectLayout;
+use ShipKit\Core\Eloquent\BuilderMethods;
 use ShipKit\Core\Eloquent\GuardsInvariants;
 use ShipKit\Core\GuardedModelMap;
 
@@ -40,6 +41,22 @@ it('never writes a guarded table around its model', function () {
                 foreach ($matches[0] as $match) {
                     $violations[] = Str::after($path, $layout->path().'/').": {$match} (write through the model so GuardsInvariants runs)";
                 }
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
+it('never writes through the base query builder', function () {
+    $layout = ProjectLayout::current();
+    $writes = implode('|', [...BuilderMethods::GUARDED, ...BuilderMethods::REJECTED]);
+    $violations = [];
+
+    foreach ([...$layout->phpFiles('app'), ...$layout->phpFiles('database/seeders'), ...$layout->phpFiles('routes')] as $path) {
+        if (preg_match_all("/->(?:toBase|getQuery)\\(\\)\\s*->\\s*(?:{$writes})\\(/", (string) file_get_contents($path), $matches)) {
+            foreach ($matches[0] as $match) {
+                $violations[] = Str::after($path, $layout->path().'/').": {$match} writes through the base query builder, which skips a guarded model's invariants. Load the record and save or delete it through the model; for an unguarded model, call the write on its Eloquent query directly";
             }
         }
     }

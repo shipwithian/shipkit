@@ -2,8 +2,8 @@
 
 namespace ShipKit\Core\Eloquent;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use LogicException;
 
 /**
  * Guard invariants that depend on a relationship, such as "a protected role keeps its protected
@@ -28,27 +28,27 @@ trait GuardsPivotInvariants
      */
     public function delete()
     {
-        return DB::transaction(fn () => parent::delete());
+        return DB::transaction(fn () => $this->runGuardedWrite('delete', fn () => parent::delete()));
     }
 
     /**
      * Pivot rows without a primary key delete through a bare query that fires `deleting` but never
      * reaches `performDeleteOnModel()`, so the guard also runs here when model events are silenced.
      *
-     * @return GuardedBuilder<static>
+     * @return Builder<static>
      */
     protected function getDeleteQuery()
     {
-        if (self::modelEventsAreSilenced()) {
-            $this->guardDelete();
-        }
-
         $query = parent::getDeleteQuery();
 
-        if (! $query instanceof GuardedBuilder) {
-            throw new LogicException(static::class.' must use GuardsPivotInvariants so its queries refuse bulk writes.');
+        if ($this->guardedWrite === 'delete') {
+            if (self::modelEventsAreSilenced()) {
+                $this->guardDelete();
+            }
+
+            $this->openSingleRecordWrite($query);
         }
 
-        return $query->forSingleRecordWrite();
+        return $query;
     }
 }
