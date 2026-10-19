@@ -4,9 +4,9 @@ namespace App\Domain\AccessControl\Models;
 
 use App\Domain\AccessControl\Exceptions\PermissionIsInUse;
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
-use App\Domain\Shared\Eloquent\GuardsInvariants;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use ShipKit\Core\Eloquent\GuardsInvariants;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 /**

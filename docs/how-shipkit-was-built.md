@@ -96,9 +96,10 @@ The code is grouped by what it is about, not by what kind of file it is:
 app/Domain/
 ├── AccessControl/    roles, permissions, protected system records
 ├── Settings/         profile, password, passkeys, account deletion
-├── Authentication/   API login, two-factor, tokens, verification
-└── Shared/           the kernel: DomainException and the guard traits
+└── Authentication/   API login, two-factor, tokens, verification
 ```
+
+The shared kernel (`DomainException` and the guard traits) lives in the `shipwithian/shipkit-core` package, so projects get its fixes with `composer update`.
 
 Each context holds its own Actions (writes), Queries (reads), Models, Policies, and Exceptions. A context's Actions, Queries, and exceptions are its **public surface**: other contexts may call them. Its models, enums, policies, and services are **internal**.
 

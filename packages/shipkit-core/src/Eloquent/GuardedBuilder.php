@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Shared\Eloquent;
+namespace ShipKit\Core\Eloquent;
 
-use App\Domain\Shared\Exceptions\BulkWriteBypassesInvariants;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 
 /**
  * Query builder for aggregates whose invariants run as model events.

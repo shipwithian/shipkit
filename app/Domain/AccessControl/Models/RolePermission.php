@@ -3,8 +3,8 @@
 namespace App\Domain\AccessControl\Models;
 
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
-use App\Domain\Shared\Eloquent\GuardsPivotInvariants;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use ShipKit\Core\Eloquent\GuardsPivotInvariants;
 use Spatie\Permission\PermissionRegistrar;
 
 /**

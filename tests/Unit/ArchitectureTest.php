@@ -36,11 +36,7 @@ arch('queries are named reads with a handle method')
 
 arch('domain exceptions extend the base domain exception')
     ->expect(contextNamespaces('Exceptions'))
-    ->toExtend('App\Domain\Shared\Exceptions\DomainException');
-
-arch('the shared kernel does not depend on any context')
-    ->expect('App\Domain\Shared')
-    ->not->toUse([...array_map(fn (string $context): string => "App\\Domain\\{$context}", domainContexts()), 'App\Http']);
+    ->toExtend('ShipKit\Core\Exceptions\DomainException');
 
 foreach (domainContexts() as $context) {
     $internals = contextNamespaces(['Models', 'Enums', 'Policies', 'Services'], $context);
@@ -195,10 +191,6 @@ it('guards invariants only through GuardsInvariants', function () {
     $violations = [];
 
     foreach ([...phpFilesIn('app/Domain'), ...phpFilesIn('app/Models')] as $path) {
-        if (str_contains($path, 'Shared/Eloquent/')) {
-            continue;
-        }
-
         $source = (string) file_get_contents($path);
         $isPivot = (bool) preg_match('/\bextends\s+(?:Morph)?Pivot\b/', $source);
         $usesTrait = (bool) preg_match('/\buse\s+(?:[^;{]*,\s*)?GuardsInvariants\b/', $source);
@@ -263,7 +255,6 @@ function domainContexts(): array
 {
     return collect(glob(repositoryPath('app/Domain/*'), GLOB_ONLYDIR))
         ->map(fn (string $path): string => basename($path))
-        ->reject(fn (string $name): bool => $name === 'Shared')
         ->values()
         ->all();
 }

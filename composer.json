@@ -18,6 +18,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "shipwithian/shipkit-core": "@dev",
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
@@ -72,6 +73,7 @@
             "npm run check",
             "@php artisan wayfinder:generate --with-form --no-interaction",
             "npm run types:check",
+            "@php artisan shipkit:verify --ansi",
             "@test"
         ],
         "fix": [
@@ -133,5 +135,13 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [{
+        "name": "shipkit-core",
+        "type": "path",
+        "url": "packages/shipkit-core",
+        "options": {
+            "symlink": true
+        }
+    }]
 }

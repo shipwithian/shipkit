@@ -1,0 +1,30 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "shipwithian/shipkit-core",
+    "type": "library",
+    "description": "The guards and checks that keep a ShipKit application's architecture enforceable.",
+    "keywords": [
+        "shipkit",
+        "laravel",
+        "architecture"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^13.17"
+    },
+    "autoload": {
+        "psr-4": {
+            "ShipKit\\Core\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ShipKit\\Core\\ShipKitServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

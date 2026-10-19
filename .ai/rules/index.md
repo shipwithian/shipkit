@@ -4,7 +4,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to                                                           | Rule file                            |
 | -------------------------------------------------------------------- | ------------------------------------ |
-| app/Domain/**                                                        | .ai/rules/domain.md                  |
+| app/Domain/**, packages/shipkit-core/**                              | .ai/rules/domain.md                  |
 | app/Domain/AccessControl/**                                          | .ai/rules/contexts/access-control.md |
 | app/Domain/Settings/**                                               | .ai/rules/contexts/settings.md       |
 | app/Domain/Authentication/**                                         | .ai/rules/contexts/authentication.md |

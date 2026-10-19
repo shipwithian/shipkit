@@ -11,6 +11,7 @@ return RectorConfig::configure()
         __DIR__.'/bootstrap/providers.php',
         __DIR__.'/config',
         __DIR__.'/database',
+        __DIR__.'/packages/shipkit-core',
         __DIR__.'/routes',
         __DIR__.'/tests',
     ])

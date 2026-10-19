@@ -5,8 +5,8 @@ use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\AccessControl\Exceptions\RoleIsInUse;
 use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
-use App\Domain\Shared\Exceptions\BulkWriteBypassesInvariants;
 use App\Models\User;
+use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 
 it('refuses to rename a protected role saved directly on the model', function () {
     $role = Role::create(['name' => 'system', 'guard_name' => 'web']);

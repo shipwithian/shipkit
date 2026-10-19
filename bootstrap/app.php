@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Shared\Exceptions\DomainException;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -9,6 +8,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use ShipKit\Core\Exceptions\DomainException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

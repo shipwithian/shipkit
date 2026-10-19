@@ -3,8 +3,8 @@
 use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use App\Domain\AccessControl\Models\RolePermission;
-use App\Domain\Shared\Exceptions\BulkWriteBypassesInvariants;
-use App\Domain\Shared\Exceptions\DomainException;
+use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
+use ShipKit\Core\Exceptions\DomainException;
 
 /**
  * A role table limited to two rows, to exercise a creation guard on a real guarded table.

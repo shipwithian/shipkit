@@ -2,7 +2,7 @@
 
 namespace App\Domain\Settings\Exceptions;
 
-use App\Domain\Shared\Exceptions\DomainException;
+use ShipKit\Core\Exceptions\DomainException;
 
 class ProtectedAccountCannotBeDeleted extends DomainException
 {

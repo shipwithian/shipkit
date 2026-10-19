@@ -1,11 +1,11 @@
 <?php
 
-use App\Domain\Shared\Eloquent\GuardsInvariants;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
+use ShipKit\Core\Eloquent\GuardsInvariants;
 
 /**
  * Cascading deletes on guarded tables that are deliberate, with the reason.

@@ -9,5 +9,7 @@ parameters:
         - config/
         - database/
         - routes/
+        - packages/shipkit-core/config/
+        - packages/shipkit-core/src/
 
     level: 7

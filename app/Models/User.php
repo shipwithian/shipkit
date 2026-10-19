@@ -8,7 +8,6 @@ use App\Domain\AccessControl\Models\Role;
 use App\Domain\AccessControl\Models\RoleAssignment;
 use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
 use App\Domain\Settings\Policies\UserPolicy;
-use App\Domain\Shared\Eloquent\GuardsInvariants;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,6 +23,7 @@ use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use ShipKit\Core\Eloquent\GuardsInvariants;
 use Spatie\Permission\Traits\HasRoles;
 
 /**

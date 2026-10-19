@@ -2,8 +2,8 @@
 
 use App\Domain\Settings\Actions\DeleteAccountAction;
 use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
-use App\Domain\Shared\Exceptions\BulkWriteBypassesInvariants;
 use App\Models\User;
+use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 
 it('deletes an ordinary account', function () {
     $user = User::factory()->create();

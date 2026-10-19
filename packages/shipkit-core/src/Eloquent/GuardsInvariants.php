@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Shared\Eloquent;
+namespace ShipKit\Core\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Events\NullDispatcher;

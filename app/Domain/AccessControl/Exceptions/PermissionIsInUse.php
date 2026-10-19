@@ -2,7 +2,7 @@
 
 namespace App\Domain\AccessControl\Exceptions;
 
-use App\Domain\Shared\Exceptions\DomainException;
+use ShipKit\Core\Exceptions\DomainException;
 
 class PermissionIsInUse extends DomainException
 {

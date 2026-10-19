@@ -3,9 +3,9 @@
 namespace App\Domain\AccessControl\Models;
 
 use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
-use App\Domain\Shared\Eloquent\GuardsPivotInvariants;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphPivot;
+use ShipKit\Core\Eloquent\GuardsPivotInvariants;
 use Spatie\Permission\PermissionRegistrar;
 
 /**

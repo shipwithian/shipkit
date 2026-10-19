@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Shared\Eloquent;
+namespace ShipKit\Core\Eloquent;
 
 use Illuminate\Support\Facades\DB;
 use LogicException;

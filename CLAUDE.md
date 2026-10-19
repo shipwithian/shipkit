@@ -28,16 +28,17 @@ A bounded context groups everything that shares one business vocabulary and one 
 - `App\Models\User` is the shared identity model. It stays in `app/Models` because Fortify, Sanctum, Spatie Permission, and the auth configuration reference it.
 - Each context has a rule file, `.ai/rules/contexts/{context}.md`, listing its vocabulary, its invariants and where each is enforced, and its public surface. Update it when a context gains a term, an invariant, or a public class.
 - `tests/Unit/ArchitectureTest.php` enforces these boundaries and discovers contexts from `app/Domain/*`. Create a context with `php artisan make:context {Name}`, which also scaffolds its rule file and index row. Do that when a capability has its own vocabulary and invariants, such as `Billing`; not for a single class.
-- `app/Domain/Shared` is the shared kernel, not a context: `DomainException` and the guard traits. It depends on no context and not on `app/Http`.
+- The shared kernel is the `shipwithian/shipkit-core` package (`ShipKit\Core`, developed in `packages/shipkit-core`), not a context: `DomainException` and the guard traits. Projects update it with Composer; it never depends on the application, and reads the guarded models from `config/shipkit.php`.
 
 ## Structure
 
 ```text
+packages/shipkit-core/src/
+├── Eloquent/              GuardedBuilder, GuardsInvariants, GuardsPivotInvariants
+└── Exceptions/            DomainException, BulkWriteBypassesInvariants
+
 app/
 ├── Domain/
-│   ├── Shared/
-│   │   ├── Eloquent/      GuardedBuilder, GuardsInvariants, GuardsPivotInvariants
-│   │   └── Exceptions/    DomainException, BulkWriteBypassesInvariants
 │   └── {Context}/
 │       ├── Actions/       Create{Model}Action, Update{Model}Action, Delete{Model}Action
 │       ├── Queries/       {Model}ListQuery
