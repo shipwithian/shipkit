@@ -15,14 +15,14 @@ Assume every contributor is an agent that sees only the files it opened, copies 
 
 ## Find the mistake classes
 
-Read recent commits, reverts, review comments, `.ai/guidelines/architecture.md`, the `.ai/rules` files, and comments that explain workarounds. If the user named a mistake, start there. Group the mistakes into classes. A class counts once it has happened twice.
+Read recent commits, reverts, review comments, `vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md`, the `.ai/rules` files, and comments that explain workarounds. If the user named a mistake, start there. Group the mistakes into classes. A class counts once it has happened twice.
 
 ## Fix each class at the highest level that works
 
 1. **Eliminate it with architecture.** Give each piece of state one owner and each task one supported way. Put aggregate invariants in the model's `guardCreate()`/`guardUpdate()`/`guardDelete()` with `GuardsInvariants` so no caller can skip them. Hide context internals so the wrong import fails `ArchitectureTest`. Replace hand-synced lists with discovery (see `ProjectLayout::contexts()` in `vendor/shipwithian/shipkit-core/src/Architecture/ProjectLayout.php`). Delete old ways and dead code an agent would copy.
 2. **Fail the build.** Make the bad state unwritable with PHP types and PHPStan (`composer types:check`). If bad code still passes, add a Pest `arch()` rule or a check under `tests/` whose failure message names the file and the class or method to use instead. A rule every ShipKit project needs belongs in `shipkit-core`'s checks (`vendor/shipwithian/shipkit-core/tests/`), changed in ShipKit itself, never in `vendor/`.
 3. **Test the behavior.** Add a feature test under `tests/Feature/{Context}/`. Fix or delete any test that would still pass if every function it calls returned nothing.
-4. **Write a rule last, only for judgment calls.** Add it to the matching `.ai/rules` file or the context's `.ai/rules/contexts/{context}.md`. Nothing fails when an agent skips a rule.
+4. **Write a rule last, only for judgment calls.** Add it to the matching rule file mapped in `.ai/rules/index.md` (a project rule in `.ai/rules`, or a shared one in `shipkit-core`'s `resources/rules`, changed in ShipKit itself) or the context's `.ai/rules/contexts/{context}.md`. Nothing fails when an agent skips a rule.
 
 ## Fix and prove
 

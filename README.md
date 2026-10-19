@@ -218,13 +218,13 @@ Responsibilities are intentionally separated:
 
 ShipKit deliberately stops short of full DDD: there are no separate domain entities, repositories, or mappers, because Fortify, Sanctum, Spatie Permission, and the Gate all work with Eloquent models.
 
-The boundaries are checked by `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
+The boundaries are checked by `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md`](vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md).
 
 For the story of how this architecture was chosen, and how it was evaluated by letting agents build real features unaided, see [How ShipKit was built](docs/how-shipkit-was-built.md).
 
 ## Agent skills
 
-ShipKit ships project skills in `.ai/skills/`, synced to Claude Code and Codex by `php artisan boost:update` alongside Laravel Boost's package skills. `composer setup` runs it, so a fresh clone gets the skills along with the committed `boost.json`, `.mcp.json`, `CLAUDE.md`, and `AGENTS.md`. After editing `.ai/guidelines`, run `php artisan boost:update` and commit the regenerated `CLAUDE.md` and `AGENTS.md`; `AgentToolingTest` fails until you do.
+ShipKit's shared skills, path rules, and architecture guideline ship with `shipkit-core` (`vendor/shipwithian/shipkit-core/resources/`), so `composer update` brings their improvements; project-specific skills live in `.ai/skills/`. `php artisan boost:update` syncs both to Claude Code and Codex alongside Laravel Boost's package skills. `composer setup` runs it, so a fresh clone gets the skills along with the committed `boost.json`, `.mcp.json`, `CLAUDE.md`, and `AGENTS.md`. After editing `.ai/guidelines`, run `php artisan boost:update` and commit the regenerated `CLAUDE.md` and `AGENTS.md`; `AgentToolingTest` fails until you do.
 
 | Skill                                            | Use it to                                                                                      |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |

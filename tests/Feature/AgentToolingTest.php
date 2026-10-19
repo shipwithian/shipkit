@@ -10,12 +10,17 @@ use Symfony\Component\Yaml\Yaml;
  *
  * @var list<string>
  */
-const CHECKED_ROOTS = ['.ai/', 'app/', 'bootstrap/', 'config/', 'database/factories/', 'database/migrations/', 'database/seeders/', 'resources/js/', 'routes/', 'stubs/', 'tests/', '.github/'];
+const CHECKED_ROOTS = ['.ai/', 'app/', 'bootstrap/', 'config/', 'database/factories/', 'database/migrations/', 'database/seeders/', 'resources/js/', 'routes/', 'stubs/', 'tests/', '.github/', 'vendor/shipwithian/'];
+
+/**
+ * Where shipkit-core keeps the agent guidance every ShipKit project shares.
+ */
+const CORE_GUIDANCE = 'vendor/shipwithian/shipkit-core/resources';
 
 it('gives every skill frontmatter whose name matches its folder', function () {
     $problems = [];
 
-    foreach (glob(base_path('.ai/skills/*'), GLOB_ONLYDIR) as $skillPath) {
+    foreach (skillFolders() as $skillPath) {
         $folder = basename($skillPath);
         $frontmatter = skillFrontmatter("{$skillPath}/SKILL.md");
 
@@ -40,7 +45,7 @@ it('gives every skill frontmatter whose name matches its folder', function () {
 it('ships the upstream license with every vendored skill', function () {
     $missing = [];
 
-    foreach (glob(base_path('.ai/skills/*/SKILL.md')) as $skillFile) {
+    foreach (array_map(fn (string $folder): string => "{$folder}/SKILL.md", skillFolders()) as $skillFile) {
         $frontmatter = skillFrontmatter($skillFile) ?? [];
 
         if (isset($frontmatter['metadata']['source']) && ! is_file(dirname($skillFile).'/LICENSE')) {
@@ -130,7 +135,7 @@ it('maps every rule file in the rules index', function () {
     $index = (string) file_get_contents(base_path('.ai/rules/index.md'));
     $unmapped = [];
 
-    foreach ([...glob(base_path('.ai/rules/*.md')), ...glob(base_path('.ai/rules/contexts/*.md'))] as $ruleFile) {
+    foreach ([...glob(base_path('.ai/rules/*.md')), ...glob(base_path('.ai/rules/contexts/*.md')), ...glob(base_path(CORE_GUIDANCE.'/rules/*.md'))] as $ruleFile) {
         $relative = Str::after($ruleFile, base_path().'/');
 
         if ($relative !== '.ai/rules/index.md' && ! str_contains($index, $relative)) {
@@ -147,7 +152,7 @@ it('keeps the committed CLAUDE.md and AGENTS.md in step with .ai/guidelines', fu
     foreach (['CLAUDE.md', 'AGENTS.md'] as $generated) {
         $compiled = is_file(base_path($generated)) ? (string) file_get_contents(base_path($generated)) : '';
 
-        foreach (glob(base_path('.ai/guidelines/*.md')) as $guideline) {
+        foreach ([...glob(base_path('.ai/guidelines/*.md')), ...glob(base_path(CORE_GUIDANCE.'/boost/guidelines/*.md'))] as $guideline) {
             if (! str_contains($compiled, trim((string) file_get_contents($guideline)))) {
                 $stale[] = "{$generated} does not contain the current ".Str::after($guideline, base_path().'/').'; run `php artisan boost:update`';
             }
@@ -156,6 +161,31 @@ it('keeps the committed CLAUDE.md and AGENTS.md in step with .ai/guidelines', fu
 
     expect($stale)->toBeEmpty(implode(PHP_EOL, $stale));
 });
+
+it('takes the shared guidance from shipkit-core instead of copying it', function () {
+    $coreRules = array_map(basename(...), glob(base_path(CORE_GUIDANCE.'/rules/*.md')));
+    $coreSkills = array_map(basename(...), glob(base_path(CORE_GUIDANCE.'/boost/skills/*'), GLOB_ONLYDIR));
+    $coreGuidelines = array_map(basename(...), glob(base_path(CORE_GUIDANCE.'/boost/guidelines/*.md')));
+    $boost = json_decode((string) file_get_contents(base_path('boost.json')), true);
+
+    expect($coreRules)->not->toBeEmpty('shipkit-core ships no rule files')
+        ->and($coreSkills)->not->toBeEmpty('shipkit-core ships no skills')
+        ->and($coreGuidelines)->not->toBeEmpty('shipkit-core ships no guidelines')
+        ->and(in_array('shipwithian/shipkit-core', $boost['packages'] ?? [], true))->toBeTrue('boost.json must list shipwithian/shipkit-core under packages, or boost:update ignores its guidelines and skills')
+        ->and(array_intersect($coreRules, array_map(basename(...), glob(base_path('.ai/rules/*.md')))))->toBeEmpty('These rule files are copies of shipkit-core\'s; delete the project copy')
+        ->and(array_intersect($coreSkills, array_map(basename(...), glob(base_path('.ai/skills/*'), GLOB_ONLYDIR))))->toBeEmpty('These skills are copies of shipkit-core\'s; delete the project copy')
+        ->and(array_intersect($coreGuidelines, array_map(basename(...), glob(base_path('.ai/guidelines/*.md')))))->toBeEmpty('These guidelines are copies of shipkit-core\'s; delete the project copy');
+});
+
+/**
+ * Every skill folder: the project's own and the ones shipkit-core ships.
+ *
+ * @return list<string>
+ */
+function skillFolders(): array
+{
+    return [...glob(base_path('.ai/skills/*'), GLOB_ONLYDIR), ...glob(base_path(CORE_GUIDANCE.'/boost/skills/*'), GLOB_ONLYDIR)];
+}
 
 /**
  * @return array<string, mixed>|null
@@ -172,13 +202,20 @@ function skillFrontmatter(string $skillFile): ?array
 }
 
 /**
- * The project's own agent documents: guidelines, rules, the issue tracker reference, and custom skills.
+ * Every agent document: the project's guidelines, rules, issue tracker reference, and custom skills,
+ * plus the guidance shipkit-core ships.
  *
  * @return list<string>
  */
 function agentDocuments(): array
 {
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path('.ai'), FilesystemIterator::SKIP_DOTS));
+    $files = new AppendIterator;
+
+    foreach (['.ai', CORE_GUIDANCE] as $root) {
+        if (is_dir(base_path($root))) {
+            $files->append(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($root), FilesystemIterator::SKIP_DOTS)));
+        }
+    }
 
     return collect($files)
         ->map(fn (SplFileInfo $file): string => $file->getPathname())

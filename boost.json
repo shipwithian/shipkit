@@ -8,6 +8,7 @@
     "mcp": true,
     "nightwatch": false,
     "packages": [
+        "shipwithian/shipkit-core",
         "spatie/laravel-permission"
     ],
     "sail": false,
@@ -20,7 +21,6 @@
         "wayfinder-development",
         "inertia-react-development",
         "tailwindcss-development",
-        "laravel-permission-development",
         "correct",
         "diagnosing-bugs",
         "domain-modeling",
@@ -33,7 +33,8 @@
         "review-diff",
         "to-spec",
         "to-tickets",
-        "verify-app",
-        "writing-for-agents"
+        "writing-for-agents",
+        "laravel-permission-development",
+        "verify-app"
     ]
 }

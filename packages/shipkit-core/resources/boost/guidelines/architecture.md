@@ -49,15 +49,15 @@ app/
 │   └── Resources/         Api/V1/{Model}Resource
 └── Models/User.php
 
-resources/js/pages/{feature}/    pages and partials, see .ai/rules/js.md
-tests/Feature/{Context}/         feature tests, see .ai/rules/tests.md
+resources/js/pages/{feature}/    pages and partials, see vendor/shipwithian/shipkit-core/resources/rules/js.md
+tests/Feature/{Context}/         feature tests, see vendor/shipwithian/shipkit-core/resources/rules/tests.md
 ```
 
 A context has one name everywhere (`app/Domain/Settings`, `app/Http/Controllers/Settings`, `tests/Feature/Settings`), and `ArchitectureTest` fails on a folder that matches no context. Policies live in their context and are discovered automatically; a policy for a model outside `app/Domain`, such as `User`, is attached with `#[UsePolicy]`. Classes whose names and contracts a package dictates, such as the Fortify actions in `app/Actions/Fortify`, keep the package's conventions.
 
 ## Actions and invariants
 
-An Action is one named use case, `{Verb}{Model}Action`, with a single `handle()` method. It takes the typed values it needs, and when it needs to know who is acting, the actor is an explicit first parameter named `$actor` that the controller passes as `$request->user()`; domain code never reads `auth()` or `request()`. It never accepts a Form Request or returns an HTTP response. It owns the transaction for a multi-step write, and dispatches events and other side effects only after the write succeeds. Details: `.ai/rules/actions.md`.
+An Action is one named use case, `{Verb}{Model}Action`, with a single `handle()` method. It takes the typed values it needs, and when it needs to know who is acting, the actor is an explicit first parameter named `$actor` that the controller passes as `$request->user()`; domain code never reads `auth()` or `request()`. It never accepts a Form Request or returns an HTTP response. It owns the transaction for a multi-step write, and dispatches events and other side effects only after the write succeeds. Details: `vendor/shipwithian/shipkit-core/resources/rules/actions.md`.
 
 Business invariants hold for every caller, independently of actor authorization. A policy decides whether this actor may attempt the operation; the invariant decides whether the operation is valid at all.
 
@@ -66,7 +66,7 @@ Business invariants hold for every caller, independently of actor authorization.
 - A rule that spans several aggregates or systems stays in the Action.
 - Every invariant throws a named exception extending `DomainException`; `bootstrap/app.php` renders it as a validation error.
 
-Cascades, row locks, and the full pattern: `.ai/rules/domain.md`.
+Cascades, row locks, and the full pattern: `vendor/shipwithian/shipkit-core/resources/rules/domain.md`.
 
 ## HTTP boundary
 
@@ -75,24 +75,24 @@ Cascades, row locks, and the full pattern: `.ai/rules/domain.md`.
 - Routes apply authentication, verification, and throttling, never permission middleware.
 - API resources and Inertia props list every exposed field and never a secret.
 
-Details: `.ai/rules/controllers.md`, `requests.md`, `routes.md`, `policies.md`, `responses.md`.
+Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requests.md`, `routes.md`, `policies.md`, `responses.md`.
 
 ## Reads, models, services, events
 
-- A Query object lives in `app/Domain/{Context}/Queries/`, exposes one `handle()`, takes the trusted actor and typed filters, eager loads what the response needs, returns models or a paginator, and never writes. Details: `.ai/rules/queries.md`.
+- A Query object lives in `app/Domain/{Context}/Queries/`, exposes one `handle()`, takes the trusted actor and typed filters, eager loads what the response needs, returns models or a paginator, and never writes. Details: `vendor/shipwithian/shipkit-core/resources/rules/queries.md`.
 - Eloquent models own persistence, relationships, casts, scopes, small model-local behavior, and their `ensure...()` invariants.
 - Services are for logic shared across Actions, a named calculation, or an external capability. Avoid catch-all `{Model}Service` classes.
 - Events represent completed facts, such as `{Model}Created`. Do not hide workflow in observers; the one exception is an aggregate's own guards.
 
 ## Testing and checks
 
-Feature tests are the main confidence layer, organized by context. Test Actions and Query objects directly for invariants with several branches or non-trivial filtering. Details: `.ai/rules/tests.md`.
+Feature tests are the main confidence layer, organized by context. Test Actions and Query objects directly for invariants with several branches or non-trivial filtering. Details: `vendor/shipwithian/shipkit-core/resources/rules/tests.md`.
 
 Before handing work back, run `composer ci:check`, which runs every check including the full suite; `composer fix` repairs formatting and Rector findings. The boundary rules live in `shipkit-core` (`vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`) and update with the package; never edit them in `vendor/`. Add a check for a project-specific rule under `tests/` rather than relying on review, and record a deliberate exception in `config/shipkit.php` with its reason.
 
 ## Agent Workflow
 
-Project skills live in `.ai/skills/` and are synced to every agent by `php artisan boost:update`. Reach for them by situation:
+ShipKit's path rules ship with `shipkit-core` in `vendor/shipwithian/shipkit-core/resources/rules/`, mapped by `.ai/rules/index.md` next to the project's own context rules; when you search the rules for a keyword, search that folder as well as `.ai/rules`. Its workflow skills ship in `vendor/shipwithian/shipkit-core/resources/boost/skills/` and the project's own in `.ai/skills/`; `php artisan boost:update` syncs both to every agent. Never edit `shipkit-core`'s guidance in `vendor/`, where `composer update` overwrites it: propose the change to ShipKit, override a guideline at `.ai/guidelines/shipwithian/shipkit-core/{name}.md`, which Boost uses in its place, or add a project rule in `.ai/rules/`. Reach for the skills by situation:
 
 - **New capability with its own vocabulary:** `new-context`, which runs `php artisan make:context {Name}`.
 - **Feature work:** `to-spec` → `to-tickets` → `implement`, tracked in GitHub Issues as described in `.ai/issue-tracker.md`. `review-diff` reviews a branch against these rules and its own checklist.

@@ -12,9 +12,9 @@ When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-M
 
 ## Where agent documents live in this repo
 
-- `.ai/guidelines/*.md`: compiled into `CLAUDE.md` and `AGENTS.md` by `php artisan boost:update`, so always loaded. Never edit `CLAUDE.md` or `AGENTS.md` directly; they are regenerated.
-- `.ai/rules/*.md`: loaded by path through the `paths:` globs and `.ai/rules/index.md`. Add a row to the index for every new rule file. Context models live in `.ai/rules/contexts/`; rule-to-check pairings in `.ai/rules/enforcement.md`.
-- `.ai/skills/{name}/SKILL.md`: synced to every agent by `php artisan boost:update`. The folder name must equal the frontmatter `name`, and every repo path a skill names must exist; `tests/Feature/AgentToolingTest.php` checks both.
+- `.ai/guidelines/*.md`, and `shipkit-core`'s `resources/boost/guidelines/*.md` for guidance every project shares: compiled into `CLAUDE.md` and `AGENTS.md` by `php artisan boost:update`, so always loaded. Never edit `CLAUDE.md` or `AGENTS.md` directly; they are regenerated.
+- `.ai/rules/*.md`, and `shipkit-core`'s `resources/rules/*.md` for rules every project shares: loaded by path through the `paths:` globs and `.ai/rules/index.md`. Add a row to the index for every new rule file, in either place. Context models live in `.ai/rules/contexts/`; rule-to-check pairings in `.ai/rules/enforcement.md`.
+- `.ai/skills/{name}/SKILL.md`, or `shipkit-core`'s `resources/boost/skills/{name}/SKILL.md` for a skill every project shares: synced to every agent by `php artisan boost:update`. The folder name must equal the frontmatter `name`, and every repo path a skill names must exist; `tests/Feature/AgentToolingTest.php` checks both.
 
 Prefer a check over a document: if a rule can fail a test, write the test and list it in `.ai/rules/enforcement.md` (see `/correct`).
 

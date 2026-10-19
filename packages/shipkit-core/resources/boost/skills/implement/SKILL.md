@@ -19,4 +19,4 @@ Run `composer types:check` and the single test files you touch regularly (`php a
 
 Then call the Skill tool with "review-diff" to review the work against the spec and the `.ai` rules.
 
-Leave the work uncommitted for the user to review unless they asked you to commit, as `.ai/rules/general.md` requires.
+Leave the work uncommitted for the user to review unless they asked you to commit, as `vendor/shipwithian/shipkit-core/resources/rules/general.md` requires.
