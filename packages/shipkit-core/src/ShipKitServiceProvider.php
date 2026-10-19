@@ -3,6 +3,7 @@
 namespace ShipKit\Core;
 
 use Illuminate\Support\ServiceProvider;
+use ShipKit\Core\Console\MakeContextCommand;
 use ShipKit\Core\Console\VerifyCommand;
 
 class ShipKitServiceProvider extends ServiceProvider
@@ -22,7 +23,7 @@ class ShipKitServiceProvider extends ServiceProvider
         $this->app->make(GuardedModelMap::class)->ensureMappedModelsAreGuarded();
 
         if ($this->app->runningInConsole()) {
-            $this->commands([VerifyCommand::class]);
+            $this->commands([MakeContextCommand::class, VerifyCommand::class]);
 
             $this->publishes([
                 __DIR__.'/../config/shipkit.php' => config_path('shipkit.php'),

@@ -29,9 +29,9 @@ Within each action, order cases as guest, forbidden, validation, success, then i
 
 Helpers used by more than one file belong in `tests/Pest.php`. Do not leave placeholder helpers or expectations.
 
-## Keep architecture rules in ArchitectureTest
+## Leave the architecture checks to shipkit-core
 
-Boundary rules live as Pest `arch()` expectations in `tests/Unit/ArchitectureTest.php`. It discovers contexts from `app/Domain/*`, so a context created with `php artisan make:context` is covered without editing it. Assert invariant failures by their named domain exception, not `ValidationException`, when calling an Action directly.
+Boundary rules live as Pest `arch()` expectations in `shipkit-core` (`vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`), run through the `ShipKit` testsuite. They discover contexts from `app/Domain/*`, so a context created with `php artisan make:context` is covered without editing them. Never edit them in `vendor/`: record a deliberate exception in `config/shipkit.php` with its reason, and put a check for a project-specific rule under `tests/`. Assert invariant failures by their named domain exception, not `ValidationException`, when calling an Action directly.
 
 ## Run the full suite yourself
 

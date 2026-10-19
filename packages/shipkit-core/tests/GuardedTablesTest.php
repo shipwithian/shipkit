@@ -1,26 +1,29 @@
 <?php
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Str;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
+use ShipKit\Core\Architecture\ProjectLayout;
 use ShipKit\Core\Eloquent\GuardsInvariants;
+use ShipKit\Core\GuardedModelMap;
 
-/**
- * Cascading deletes on guarded tables that are deliberate, with the reason.
- * Keyed by "table.column". A cascade deletes rows without running their guards, so it is only
- * safe when the parent owns those rows as parts of itself (a team and its memberships).
- *
- * @var array<string, string>
- */
-const GUARDED_CASCADES = [];
+uses(TestCase::class);
 
 it('finds the guarded aggregates it protects', function () {
-    expect(guardedTables())->toContain('roles', 'permissions', 'users', 'model_has_roles', 'role_has_permissions');
+    $models = app(GuardedModelMap::class);
+
+    expect(guardedTables())->toContain(
+        (new ($models->role()))->getTable(),
+        (new ($models->permission()))->getTable(),
+        (new ($models->user()))->getTable(),
+    );
 });
 
 it('never writes a guarded table around its model', function () {
+    $layout = ProjectLayout::current();
     $tables = implode('|', array_map(fn (string $table): string => preg_quote($table, '/'), guardedTables()));
     $patterns = [
         "/DB::table\\(\\s*['\"](?:{$tables})['\"]/",
@@ -29,13 +32,13 @@ it('never writes a guarded table around its model', function () {
     ];
     $violations = [];
 
-    foreach ([...phpFiles('app'), ...phpFiles('database/seeders'), ...phpFiles('routes')] as $path) {
+    foreach ([...$layout->phpFiles('app'), ...$layout->phpFiles('database/seeders'), ...$layout->phpFiles('routes')] as $path) {
         $source = (string) file_get_contents($path);
 
         foreach ($patterns as $pattern) {
             if (preg_match_all($pattern, $source, $matches)) {
                 foreach ($matches[0] as $match) {
-                    $violations[] = Str::after($path, base_path().'/').": {$match} (write through the model so GuardsInvariants runs)";
+                    $violations[] = Str::after($path, $layout->path().'/').": {$match} (write through the model so GuardsInvariants runs)";
                 }
             }
         }
@@ -46,11 +49,14 @@ it('never writes a guarded table around its model', function () {
 
 it('never lets a database cascade delete guarded rows without a recorded reason', function () {
     $guarded = guardedTables();
+
+    /** @var array<string, string> $recordedCascades */
+    $recordedCascades = (array) config('shipkit.guarded_cascades', []);
     $parser = (new ParserFactory)->createForHostVersion();
     $finder = new NodeFinder;
     $violations = [];
 
-    foreach (glob(base_path('database/migrations/*.php')) as $migration) {
+    foreach (glob(ProjectLayout::current()->path('database/migrations/*.php')) ?: [] as $migration) {
         $statements = $parser->parse((string) file_get_contents($migration)) ?? [];
 
         $schemaCalls = $finder->find($statements, fn (Node $node): bool => $node instanceof Node\Expr\StaticCall
@@ -67,8 +73,8 @@ it('never lets a database cascade delete guarded rows without a recorded reason'
             foreach ($finder->find([$call->args[1]->value ?? $call], fn (Node $node): bool => $node instanceof Node\Expr\MethodCall && cascadesOnDelete($node)) as $cascade) {
                 $column = cascadeColumn($cascade);
 
-                if (! array_key_exists("{$table}.{$column}", GUARDED_CASCADES)) {
-                    $violations[] = basename($migration).": {$table}.{$column} cascades deletes into a guarded table, so deleting the parent skips the guards. Use restrictOnDelete() (or nullOnDelete() when a null column cannot break the invariant), or list \"{$table}.{$column}\" in GUARDED_CASCADES with the reason the parent owns these rows";
+                if (! array_key_exists("{$table}.{$column}", $recordedCascades)) {
+                    $violations[] = basename($migration).": {$table}.{$column} cascades deletes into a guarded table, so deleting the parent skips the guards. Use restrictOnDelete() (or nullOnDelete() when a null column cannot break the invariant), or list \"{$table}.{$column}\" in shipkit.guarded_cascades in config/shipkit.php with the reason the parent owns these rows";
                 }
             }
         }
@@ -78,37 +84,23 @@ it('never lets a database cascade delete guarded rows without a recorded reason'
 });
 
 /**
- * Tables of every model that uses GuardsInvariants.
+ * Tables of every guarded model: the ones mapped in config/shipkit.php, and every model under
+ * the application's Domain and Models folders that uses GuardsInvariants.
  *
  * @return list<string>
  */
 function guardedTables(): array
 {
-    return collect([...phpFiles('app/Domain'), ...phpFiles('app/Models')])
-        ->map(function (string $path): ?string {
-            $relative = Str::of($path)->after(base_path('app').'/')->beforeLast('.php')->replace('/', '\\');
+    $layout = ProjectLayout::current();
+    $models = app(GuardedModelMap::class);
+    $discovered = array_map($layout->classForAppFile(...), [...$layout->phpFiles('app/Domain'), ...$layout->phpFiles('app/Models')]);
 
-            return 'App\\'.$relative;
-        })
+    return collect([$models->role(), $models->permission(), $models->user(), ...$discovered])
         ->filter(fn (string $class): bool => class_exists($class)
             && is_subclass_of($class, Model::class)
             && in_array(GuardsInvariants::class, class_uses_recursive($class), true))
         ->map(fn (string $class): string => (new $class)->getTable())
         ->unique()
-        ->values()
-        ->all();
-}
-
-/**
- * @return list<string>
- */
-function phpFiles(string $directory): array
-{
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($directory), FilesystemIterator::SKIP_DOTS));
-
-    return collect($files)
-        ->map(fn (SplFileInfo $file): string => $file->getPathname())
-        ->filter(fn (string $path): bool => str_ends_with($path, '.php'))
         ->values()
         ->all();
 }

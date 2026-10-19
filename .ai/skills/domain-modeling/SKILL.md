@@ -22,7 +22,7 @@ This repo has one bounded context per folder in `app/Domain/`, and each context'
 docs/adr/                  ← decisions, created lazily
 ```
 
-A new context starts with `php artisan make:context {Name}`, which scaffolds its rule file. The context rule file is the single source of truth for the context's language, and `tests/Unit/ArchitectureTest.php` fails when an Action, Query, or domain exception is missing from it.
+A new context starts with `php artisan make:context {Name}`, which scaffolds its rule file. The context rule file is the single source of truth for the context's language, and `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php` fails when an Action, Query, or domain exception is missing from it.
 
 ## During the session
 

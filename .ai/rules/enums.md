@@ -11,4 +11,4 @@ Reserve `SystemPermission` for the protected permissions without which nobody co
 
 Ordinary permissions belong to their owning feature's seeder, which creates the permission and grants it to the protected super-admin role with `givePermissionTo()`.
 
-`tests/Unit/ArchitectureTest.php` pins the list of cases. Adding one is deliberate: update the list there with the reason it qualifies.
+`tests/Feature/AccessControl/SystemPermissionTest.php` pins the list of cases. Adding one is deliberate: update the list there with the reason it qualifies.

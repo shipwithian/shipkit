@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Str;
+
+uses(TestCase::class);
 
 beforeEach(function () {
     $this->projectPath = base_path();
@@ -9,9 +12,7 @@ beforeEach(function () {
 
     $files = new Filesystem;
     $files->ensureDirectoryExists($this->scratchPath.'/.ai/rules');
-    $files->ensureDirectoryExists($this->scratchPath.'/stubs/context');
     $files->copy(base_path('.ai/rules/index.md'), $this->scratchPath.'/.ai/rules/index.md');
-    $files->copy(base_path('stubs/context/rules.stub'), $this->scratchPath.'/stubs/context/rules.stub');
 
     app()->setBasePath($this->scratchPath);
 });
@@ -31,7 +32,11 @@ it('rejects a name that is not StudlyCase', function () {
 });
 
 it('refuses to treat the shared kernel as a context', function () {
-    $this->artisan('make:context', ['name' => 'Shared'])->assertFailed();
+    $this->artisan('make:context', ['name' => 'Shared'])
+        ->expectsOutputToContain('shipwithian/shipkit-core')
+        ->assertFailed();
+
+    expect(is_dir($this->scratchPath.'/app/Domain/Shared'))->toBeFalse();
 });
 
 it('refuses to overwrite an existing context', function () {

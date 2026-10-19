@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace ShipKit\Core\Console;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -30,7 +30,7 @@ class MakeContextCommand extends Command
         }
 
         if ($context === 'Shared') {
-            $this->components->error('Shared is the shared kernel, not a context.');
+            $this->components->error('Shared is not a context: the shared kernel lives in shipwithian/shipkit-core. Name the context after its business capability.');
 
             return self::FAILURE;
         }
@@ -53,7 +53,7 @@ class MakeContextCommand extends Command
         $files->put(base_path(".ai/rules/contexts/{$slug}.md"), str_replace(
             ['{{ context }}', '{{ title }}'],
             [$context, Str::headline($context)],
-            $files->get(base_path('stubs/context/rules.stub')),
+            $files->get(__DIR__.'/../../stubs/context/rules.stub'),
         ));
 
         $this->addIndexRow($files, $context, $slug);
@@ -64,7 +64,7 @@ class MakeContextCommand extends Command
             "Add Actions and Queries under app/Domain/{$context}; list each one in the rule file.",
             'Guard aggregate invariants with ensure...() methods called from guardCreate()/guardUpdate()/guardDelete(), and use GuardsInvariants.',
             "Put web controllers and requests in app/Http/Controllers/{$context} and app/Http/Requests/{$context}.",
-            'tests/Unit/ArchitectureTest.php already covers the new context. Delete a folder\'s .gitkeep once it holds a class.',
+            'ShipKit\'s architecture checks already cover the new context. Delete a folder\'s .gitkeep once it holds a class.',
         ]);
 
         return self::SUCCESS;

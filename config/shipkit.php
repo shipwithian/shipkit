@@ -22,4 +22,38 @@ return [
         'user' => User::class,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Architecture exceptions
+    |--------------------------------------------------------------------------
+    |
+    | Deliberate departures from ShipKit's architecture checks, each with the reason, so they stay
+    | visible and reviewable instead of being hidden by editing a check.
+    |
+    */
+
+    'architecture' => [
+        'contexts_using_framework_exceptions' => [
+            'Authentication' => 'mirrors Fortify, which reports with validation and authorization exceptions',
+        ],
+        'non_context_folders' => [
+            'app/Http/Controllers' => ['Api' => 'versioned API controllers, grouped by version'],
+            'app/Http/Requests' => ['Api' => 'versioned API requests, grouped by version'],
+            'tests/Feature' => ['Auth' => "the upstream starter kit's authentication tests, kept as shipped"],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guarded cascades
+    |--------------------------------------------------------------------------
+    |
+    | Cascading deletes on guarded tables that are deliberate, keyed by "table.column", with the
+    | reason. A cascade deletes rows without running their guards, so it is only safe when the
+    | parent owns those rows as parts of itself (a team and its memberships).
+    |
+    */
+
+    'guarded_cascades' => [],
+
 ];

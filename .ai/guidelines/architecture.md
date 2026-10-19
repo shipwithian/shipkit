@@ -24,7 +24,7 @@ A bounded context groups everything that shares one business vocabulary and one 
 - A context's Models, Enums, Policies, and Services are internal. Its public surface is its Actions, Query objects, domain exceptions, and events, which other contexts may call, catch, and declare. The delivery layer (`app/Http`) may use any context.
 - `App\Models\User` is the shared identity model. It stays in `app/Models` because Fortify, Sanctum, Spatie Permission, and the auth configuration reference it.
 - Each context has a rule file, `.ai/rules/contexts/{context}.md`, listing its vocabulary, its invariants and where each is enforced, and its public surface. Update it when a context gains a term, an invariant, or a public class.
-- `tests/Unit/ArchitectureTest.php` enforces these boundaries and discovers contexts from `app/Domain/*`. Create a context with `php artisan make:context {Name}`, which also scaffolds its rule file and index row. Do that when a capability has its own vocabulary and invariants, such as `Billing`; not for a single class.
+- `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php` enforces these boundaries and discovers contexts from `app/Domain/*`. Create a context with `php artisan make:context {Name}`, which also scaffolds its rule file and index row. Do that when a capability has its own vocabulary and invariants, such as `Billing`; not for a single class.
 - The shared kernel is the `shipwithian/shipkit-core` package (`ShipKit\Core`, developed in `packages/shipkit-core`), not a context: `DomainException` and the guard traits. Projects update it with Composer; it never depends on the application, and reads the guarded models from `config/shipkit.php`.
 
 ## Structure
@@ -88,7 +88,7 @@ Details: `.ai/rules/controllers.md`, `requests.md`, `routes.md`, `policies.md`, 
 
 Feature tests are the main confidence layer, organized by context. Test Actions and Query objects directly for invariants with several branches or non-trivial filtering. Details: `.ai/rules/tests.md`.
 
-Before handing work back, run `composer ci:check`, which runs every check including the full suite; `composer fix` repairs formatting and Rector findings. `tests/Unit/ArchitectureTest.php` holds the rules that enforce the boundaries; extend it rather than relying on review.
+Before handing work back, run `composer ci:check`, which runs every check including the full suite; `composer fix` repairs formatting and Rector findings. The boundary rules live in `shipkit-core` (`vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`) and update with the package; never edit them in `vendor/`. Add a check for a project-specific rule under `tests/` rather than relying on review, and record a deliberate exception in `config/shipkit.php` with its reason.
 
 ## Agent Workflow
 

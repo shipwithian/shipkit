@@ -218,7 +218,7 @@ Responsibilities are intentionally separated:
 
 ShipKit deliberately stops short of full DDD: there are no separate domain entities, repositories, or mappers, because Fortify, Sanctum, Spatie Permission, and the Gate all work with Eloquent models.
 
-The boundaries are checked by `tests/Unit/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
+The boundaries are checked by `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`.ai/guidelines/architecture.md`](.ai/guidelines/architecture.md).
 
 For the story of how this architecture was chosen, and how it was evaluated by letting agents build real features unaided, see [How ShipKit was built](docs/how-shipkit-was-built.md).
 
@@ -448,7 +448,7 @@ When working on a focused change, run the narrowest relevant Pest tests first, t
 
 ## Extending a generated project
 
-Start with the application's business capabilities rather than adding more foundation layers. Give each capability with its own vocabulary and invariants a bounded context in `app/Domain/{Context}`, a rule file in `.ai/rules/contexts/`, and a boundary rule in `tests/Unit/ArchitectureTest.php`.
+Start with the application's business capabilities rather than adding more foundation layers. Give each capability with its own vocabulary and invariants a bounded context in `app/Domain/{Context}`, a rule file in `.ai/rules/contexts/`, and let `shipkit-core`'s architecture checks, which discover every context, enforce its boundaries.
 
 For example, an ecommerce project might add products, orders, payments, and inventory. A community-management project might add residents, households, certificates, and programs. Those features belong to their individual applications, not to ShipKit.
 
