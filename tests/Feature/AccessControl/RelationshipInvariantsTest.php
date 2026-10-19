@@ -1,7 +1,5 @@
 <?php
 
-use App\Domain\AccessControl\Enums\SystemPermission;
-use App\Domain\AccessControl\Enums\SystemRole;
 use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\AccessControl\Models\Permission;
@@ -9,6 +7,8 @@ use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Database\Seeders\AccessControlSeeder;
 use Illuminate\Support\Facades\DB;
+use ShipKit\Core\AccessControl\SystemPermission;
+use ShipKit\Core\AccessControl\SystemRole;
 
 beforeEach(function () {
     $this->seed(AccessControlSeeder::class);
@@ -64,14 +64,20 @@ describe('the last super admin keeps the role', function () {
         'role users()->detach' => fn (User $user, Role $role) => $role->users()->detach($user->id),
         'syncRoles' => fn (User $user) => $user->syncRoles([]),
         'with model events silenced' => fn (User $user, Role $role) => User::withoutEvents(fn () => $user->removeRole($role)),
-        'deleting the user' => function (User $user) {
-            $user->forceFill(['is_protected' => false])->save();
-            $user->delete();
-        },
-        'deleting the user with model events silenced' => function (User $user) {
-            $user->forceFill(['is_protected' => false])->save();
-            $user->deleteQuietly();
-        },
+    ]);
+
+    it('refuses to delete an unprotected user who is the last super admin', function (Closure $delete) {
+        $successor = User::factory()->create();
+        $successor->assignRole($this->superAdminRole);
+        $this->soleAdmin->removeRole($this->superAdminRole);
+
+        expect(fn () => $delete($successor))->toThrow(LastSuperAdminCannotBeRemoved::class);
+
+        $this->assertModelExists($successor);
+        expect($successor->fresh()->hasRole(SystemRole::SuperAdmin->value))->toBeTrue();
+    })->with([
+        'delete' => fn (User $user) => $user->delete(),
+        'deleteQuietly' => fn (User $user) => $user->deleteQuietly(),
     ]);
 
     it('lets a super admin go while another one remains', function () {

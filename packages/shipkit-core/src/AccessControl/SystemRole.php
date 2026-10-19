@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\AccessControl\Enums;
+namespace ShipKit\Core\AccessControl;
 
 enum SystemRole: string
 {

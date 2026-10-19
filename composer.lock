@@ -4170,11 +4170,12 @@
             "dist": {
                 "type": "path",
                 "url": "packages/shipkit-core",
-                "reference": "4ce95b95b889b6b06fdcc72bc978eace9e3f5995"
+                "reference": "b8afff7b469536f50934c7354d68847ebc8db320"
             },
             "require": {
                 "laravel/framework": "^13.17",
-                "php": "^8.3"
+                "php": "^8.3",
+                "spatie/laravel-permission": "^8.3"
             },
             "type": "library",
             "extra": {

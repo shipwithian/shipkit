@@ -2,9 +2,9 @@
 
 namespace App\Domain\AccessControl\Policies;
 
-use App\Domain\AccessControl\Enums\SystemPermission;
 use App\Domain\AccessControl\Models\Permission;
 use App\Models\User;
+use ShipKit\Core\AccessControl\SystemPermission;
 
 class PermissionPolicy
 {

@@ -14,8 +14,7 @@ it('deletes an ordinary account', function () {
 });
 
 it('refuses to delete a protected account for any caller', function () {
-    $user = User::factory()->create();
-    $user->forceFill(['is_protected' => true])->save();
+    $user = protectedUser();
 
     expect(fn () => app(DeleteAccountAction::class)->handle($user))
         ->toThrow(ProtectedAccountCannotBeDeleted::class);
@@ -24,8 +23,7 @@ it('refuses to delete a protected account for any caller', function () {
 });
 
 it('refuses to delete a protected account through the model and keeps its roles', function () {
-    $user = userWithPermissions(['edit posts']);
-    $user->forceFill(['is_protected' => true])->save();
+    $user = protectedUser();
 
     expect(fn () => $user->delete())->toThrow(ProtectedAccountCannotBeDeleted::class);
 
@@ -34,8 +32,7 @@ it('refuses to delete a protected account through the model and keeps its roles'
 });
 
 it('refuses to bulk delete users past the account guards', function () {
-    $user = User::factory()->create();
-    $user->forceFill(['is_protected' => true])->save();
+    $user = protectedUser();
 
     expect(fn () => User::query()->whereKey($user->id)->delete())
         ->toThrow(BulkWriteBypassesInvariants::class);
@@ -44,8 +41,7 @@ it('refuses to bulk delete users past the account guards', function () {
 });
 
 it('refuses to delete a protected account even with model events silenced', function () {
-    $user = User::factory()->create();
-    $user->forceFill(['is_protected' => true])->save();
+    $user = protectedUser();
 
     expect(fn () => $user->deleteQuietly())->toThrow(ProtectedAccountCannotBeDeleted::class);
 

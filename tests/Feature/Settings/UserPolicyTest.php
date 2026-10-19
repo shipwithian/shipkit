@@ -10,8 +10,7 @@ it('allows an ordinary user to delete their own account', function () {
 });
 
 it('forbids deletion of a protected account', function () {
-    $user = User::factory()->create();
-    $user->forceFill(['is_protected' => true])->save();
+    $user = protectedUser();
 
     expect(Gate::forUser($user)->allows('delete', $user))->toBeFalse();
 });

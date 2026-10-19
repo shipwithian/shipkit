@@ -28,7 +28,7 @@ An invariant about a relationship, such as "a protected role keeps its protected
 
 ## Keep the shared kernel in shipkit-core
 
-The shared kernel lives in the `shipwithian/shipkit-core` package (`ShipKit\Core`, developed in `packages/shipkit-core`): `DomainException`, `BulkWriteBypassesInvariants`, the guarded Eloquent builder, and the guard traits. Projects update it with Composer, so never copy its classes into `app/`. It never depends on the application (`ShipKit\Core` must not use `App\`), and it reads the guarded `Role`, `Permission`, and `User` models from `config/shipkit.php`. `php artisan shipkit:verify`, run by `composer ci:check`, fails when its testsuite is missing from `phpunit.xml` or a mapped model does not use `GuardsInvariants`.
+The shared kernel lives in the `shipwithian/shipkit-core` package (`ShipKit\Core`, developed in `packages/shipkit-core`): `DomainException`, `BulkWriteBypassesInvariants`, the guarded Eloquent builder, and the guard traits. Projects update it with Composer, so never copy its classes into `app/`. It never depends on the application (`ShipKit\Core` must not use `App\`), and it reads the guarded `Role`, `Permission`, and `User` models from `config/shipkit.php`. `php artisan shipkit:verify`, run by `composer ci:check`, fails when its testsuite is missing from `phpunit.xml` or a mapped model does not use `GuardsInvariants`. Core also owns the access-control system records (`SystemRole`, `SystemPermission`) and `BootstrapAccessControlAction`, the only code that creates a protected record, because whoever defines a protected record must be able to evolve it with a data migration.
 
 ## Guard creation, and lock what you count
 

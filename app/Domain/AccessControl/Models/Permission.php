@@ -65,8 +65,19 @@ class Permission extends SpatiePermission
         }
     }
 
+    /**
+     * @throws ProtectedRecordCannotBeChanged
+     */
+    public function ensureProtectionIsUnchanged(): void
+    {
+        if ($this->isDirty('is_protected')) {
+            throw ProtectedRecordCannotBeChanged::protectionMarker();
+        }
+    }
+
     protected function guardUpdate(): void
     {
+        $this->ensureProtectionIsUnchanged();
         $this->ensureCanBeRenamedTo($this->name);
     }
 

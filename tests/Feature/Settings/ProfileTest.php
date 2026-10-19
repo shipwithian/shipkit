@@ -92,8 +92,7 @@ describe('destroy', function () {
     });
 
     it('forbids protected users from deleting their account', function () {
-        $user = User::factory()->create();
-        $user->forceFill(['is_protected' => true])->save();
+        $user = protectedUser();
 
         $this->actingAs($user)
             ->delete(route('profile.destroy'), ['password' => 'password'])

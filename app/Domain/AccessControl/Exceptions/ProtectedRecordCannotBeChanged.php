@@ -36,6 +36,11 @@ class ProtectedRecordCannotBeChanged extends DomainException
         return new self(__('Protected permissions cannot be deleted.'), 'permission');
     }
 
+    public static function protectionMarker(): self
+    {
+        return new self(__('Protection is set when a system record is created and can never change.'), 'is_protected');
+    }
+
     public function field(): string
     {
         return $this->field;

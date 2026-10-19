@@ -2,12 +2,12 @@
 
 namespace App\Domain\AccessControl\Models;
 
-use App\Domain\AccessControl\Enums\SystemRole;
 use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
 use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\AccessControl\Exceptions\RoleIsInUse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use ShipKit\Core\AccessControl\SystemRole;
 use ShipKit\Core\Eloquent\GuardsInvariants;
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -77,8 +77,19 @@ class Role extends SpatieRole
         }
     }
 
+    /**
+     * @throws ProtectedRecordCannotBeChanged
+     */
+    public function ensureProtectionIsUnchanged(): void
+    {
+        if ($this->isDirty('is_protected')) {
+            throw ProtectedRecordCannotBeChanged::protectionMarker();
+        }
+    }
+
     protected function guardUpdate(): void
     {
+        $this->ensureProtectionIsUnchanged();
         $this->ensureCanBeRenamedTo($this->name);
     }
 

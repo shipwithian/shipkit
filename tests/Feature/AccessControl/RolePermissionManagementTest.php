@@ -3,6 +3,7 @@
 use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use Inertia\Testing\AssertableInertia as Assert;
+use ShipKit\Core\AccessControl\SystemPermission;
 
 describe('edit', function () {
     it('requires the assignment permission to edit role assignments', function (array $permissions) {
@@ -25,7 +26,7 @@ describe('edit', function () {
             ->assertInertia(fn (Assert $page) => $page
                 ->component('roles/permissions')
                 ->where('role.name', 'editor')
-                ->has('permissions', 1));
+                ->has('permissions', count(SystemPermission::cases())));
     });
 });
 
@@ -49,14 +50,8 @@ describe('update', function () {
 
     it('retains protected permissions on a protected role', function () {
         $user = userWithPermissions(['assign permissions']);
-        $role = Role::create([
-            'name' => 'system-role',
-            'guard_name' => 'web',
-            'is_protected' => true,
-        ]);
-        $protectedPermission = Permission::findByName('assign permissions');
-        $protectedPermission->forceFill(['is_protected' => true])->save();
-        $role->givePermissionTo($protectedPermission);
+        $role = protectedRole();
+        $protectedPermission = protectedPermission();
 
         $this->actingAs($user)
             ->put(route('roles.permissions.update', $role), ['permissions' => []])

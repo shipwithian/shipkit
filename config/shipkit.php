@@ -41,6 +41,9 @@ return [
             'app/Http/Requests' => ['Api' => 'versioned API requests, grouped by version'],
             'tests/Feature' => ['Auth' => "the upstream starter kit's authentication tests, kept as shipped"],
         ],
+        'protected_marker_exceptions' => [
+            'tests/Feature/AccessControl/AccessControlInvariantsTest.php' => 'attempts to change the marker to prove the models refuse it',
+        ],
     ],
 
     /*

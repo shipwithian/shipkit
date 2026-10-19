@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Domain\AccessControl\Enums\SystemRole;
 use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
+use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
 use App\Domain\AccessControl\Models\Role;
 use App\Domain\AccessControl\Models\RoleAssignment;
 use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
@@ -23,6 +23,7 @@ use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use ShipKit\Core\AccessControl\SystemRole;
 use ShipKit\Core\Eloquent\GuardsInvariants;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -91,6 +92,21 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             ->where('name', SystemRole::SuperAdmin->value)
             ->get()
             ->each(fn (Role $role) => $role->ensureCanLoseHolder($this->getKey()));
+    }
+
+    /**
+     * @throws ProtectedRecordCannotBeChanged
+     */
+    public function ensureProtectionIsUnchanged(): void
+    {
+        if ($this->isDirty('is_protected')) {
+            throw ProtectedRecordCannotBeChanged::protectionMarker();
+        }
+    }
+
+    protected function guardUpdate(): void
+    {
+        $this->ensureProtectionIsUnchanged();
     }
 
     protected function guardDelete(): void

@@ -32,11 +32,15 @@ return [
     | non_context_folders: folders under app/Http/Controllers, app/Http/Requests, and tests/Feature
     | that are not named after a bounded context, keyed by parent directory, then folder.
     |
+    | protected_marker_exceptions: files allowed to write is_protected, keyed by path, such as a test
+    | that proves the marker cannot change. Application code never belongs here.
+    |
     */
 
     'architecture' => [
         'contexts_using_framework_exceptions' => [],
         'non_context_folders' => [],
+        'protected_marker_exceptions' => [],
     ],
 
     /*

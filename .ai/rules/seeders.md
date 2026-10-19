@@ -7,7 +7,7 @@ paths:
 
 ## Seed protected access-control defaults safely
 
-Access-control seeders are idempotent, use the fixed `web` guard, protect system defaults, and preserve additional assignments. Rename legacy permissions without losing existing role or user assignments. Seeders go through the same model guards as every other caller: to remove a protected or assigned record, clear `is_protected` and detach its assignments first rather than bypassing model events.
+`AccessControlSeeder` only reads the super-admin credentials and calls `ShipKit\Core\AccessControl\BootstrapAccessControlAction`, which creates the missing protected records with the fixed `web` guard and keeps additional assignments. No seeder writes `is_protected`: it is set when bootstrap creates a record and never changes, so a protected record is never renamed, unprotected, or deleted by a seeder. Seeders go through the same model guards as every other caller.
 
 ## Let feature seeders own product permissions
 

@@ -4,6 +4,7 @@ use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
+use ShipKit\Core\AccessControl\SystemPermission;
 
 describe('index', function () {
     it('redirects guests to the login page', function () {
@@ -24,7 +25,7 @@ describe('index', function () {
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('permissions/index')
-                ->has('permissions', 2));
+                ->has('permissions', count(SystemPermission::cases()) + 1));
     });
 });
 
@@ -68,17 +69,14 @@ describe('update', function () {
     });
 
     it('does not rename a protected permission', function () {
-        $permission = Permission::create([
-            'name' => 'system permission',
-            'guard_name' => 'web',
-            'is_protected' => true,
-        ]);
+        $permission = protectedPermission();
+        $name = $permission->name;
 
         $this->actingAs(userWithPermissions(['manage permissions resource']))
             ->put(route('permissions.update', $permission), ['name' => 'renamed'])
             ->assertSessionHasErrors('name');
 
-        expect($permission->refresh()->name)->toBe('system permission');
+        expect($permission->refresh()->name)->toBe($name);
     });
 });
 
@@ -95,11 +93,7 @@ describe('destroy', function () {
     });
 
     it('does not delete a protected permission', function () {
-        $permission = Permission::create([
-            'name' => 'system permission',
-            'guard_name' => 'web',
-            'is_protected' => true,
-        ]);
+        $permission = protectedPermission();
 
         $this->actingAs(userWithPermissions(['manage permissions resource']))
             ->delete(route('permissions.destroy', $permission))

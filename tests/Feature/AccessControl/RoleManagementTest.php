@@ -23,7 +23,7 @@ describe('index', function () {
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('roles/index')
-                ->has('roles', 2));
+                ->has('roles', 3));
     });
 
     it('lets assignment-only users list roles', function () {
@@ -93,17 +93,13 @@ describe('update', function () {
     });
 
     it('does not rename a protected role', function () {
-        $role = Role::create([
-            'name' => 'system-role',
-            'guard_name' => 'web',
-            'is_protected' => true,
-        ]);
+        $role = protectedRole();
 
         $this->actingAs(userWithPermissions(['manage roles resource']))
             ->put(route('roles.update', $role), ['name' => 'renamed'])
             ->assertSessionHasErrors('name');
 
-        expect($role->refresh()->name)->toBe('system-role');
+        expect($role->refresh()->name)->toBe('super-admin');
     });
 });
 
@@ -130,11 +126,7 @@ describe('destroy', function () {
     });
 
     it('does not delete a protected role', function () {
-        $role = Role::create([
-            'name' => 'system-role',
-            'guard_name' => 'web',
-            'is_protected' => true,
-        ]);
+        $role = protectedRole();
 
         $this->actingAs(userWithPermissions(['manage roles resource']))
             ->delete(route('roles.destroy', $role))

@@ -3,8 +3,11 @@
 use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
+use Database\Seeders\AccessControlSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use ShipKit\Core\AccessControl\SystemPermission;
+use ShipKit\Core\AccessControl\SystemRole;
 use Tests\TestCase;
 
 /*
@@ -45,10 +48,44 @@ pest()->extend(TestCase::class)
 */
 
 /**
+ * Protected records are created only by ShipKit's access-control bootstrap, so tests get them by
+ * running the same seeder the application runs.
+ */
+function seedProtectedRecords(): void
+{
+    if (! Role::query()->where('name', SystemRole::SuperAdmin->value)->exists()) {
+        test()->seed(AccessControlSeeder::class);
+    }
+}
+
+function protectedRole(): Role
+{
+    seedProtectedRecords();
+
+    return Role::query()->where('name', SystemRole::SuperAdmin->value)->firstOrFail();
+}
+
+function protectedPermission(): Permission
+{
+    seedProtectedRecords();
+
+    return Permission::query()->where('name', SystemPermission::ManageRolesResource->value)->firstOrFail();
+}
+
+function protectedUser(): User
+{
+    return protectedRole()->users()->firstOrFail();
+}
+
+/**
  * @param  array<int, string>  $permissions
  */
 function userWithPermissions(array $permissions): User
 {
+    if (array_intersect($permissions, array_column(SystemPermission::cases(), 'value')) !== []) {
+        seedProtectedRecords();
+    }
+
     $role = Role::create([
         'name' => 'test-role-'.Str::uuid(),
         'guard_name' => 'web',
