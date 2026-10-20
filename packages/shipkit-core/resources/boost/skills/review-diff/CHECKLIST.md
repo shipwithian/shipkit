@@ -13,6 +13,7 @@ The reviewer's standards beyond what `composer ci:check` already enforces. Rows 
 - [ ] Eloquent models remain the aggregates; services have a focused, reusable responsibility.
 - [ ] API resources and Inertia props expose only intentional, explicitly listed data.
 - [ ] Ownership and authorization boundaries are enforced, and tests prove another actor cannot reach the record.
+- [ ] Every invariant change and bug fix has a regression test recorded as failing without the production change.
 - [ ] Feature tests prove observable behavior and persisted state, grouped by context with a `describe()` block per action.
 - [ ] Pages compose partials named for their controller action; payload types come from `app/Http/Props` through `composer types:generate`, never hand-written.
 - [ ] Supporting classes exist because they clarify a real responsibility.

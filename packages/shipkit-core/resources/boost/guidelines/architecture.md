@@ -102,3 +102,16 @@ ShipKit's path rules ship with `shipkit-core` in `vendor/shipwithian/shipkit-cor
 - **Proving behaviour in the running app:** `verify-app`.
 - **Shaping the domain language:** `domain-modeling` or `grill-with-docs`.
 - **After a session, or when the same correction repeats:** `retro` and `correct`. `.ai/rules/enforcement.md` pairs every rule with the check that enforces it; prefer adding a check over adding a rule.
+
+### What agents may merge
+
+Agents may merge project-owned feature code alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code.
+
+A change to the checks themselves needs the maintainer. The repository's CODEOWNERS file lists those paths, and branch protection requires the maintainer's review on them. Without a CODEOWNERS file, these are maintainer-owned:
+
+- the `shipkit-core` version, and `config/shipkit.php`, where check exceptions are recorded;
+- agent guidance (`.ai/`, `boost.json`, and the `CLAUDE.md` and `AGENTS.md` compiled from them);
+- CI workflows, and the configuration of every check (PHPUnit, PHPStan, Rector, Pint, TypeScript, Vite, and the Composer and npm scripts);
+- the guarded models of protected records, and the tests that enforce a rule in `.ai/rules/enforcement.md`.
+
+Never weaken, skip, or work around a check to get a change merged.

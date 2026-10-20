@@ -87,6 +87,21 @@ Present the two reports under `## Standards` and `## Spec` headings, verbatim or
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
 
+### 6. Handoff verdict
+
+Close the report with a `## Handoff` section that decides whether an agent may merge the work under the merge rule in the `implement` skill. Check each item and say what you found:
+
+- **Independence:** did this session write any of the diff? If it did, say so. The report then cannot serve as the independent review.
+- **Regression test:** if the diff changes an invariant or fixes a bug, is there a test recorded as failing without the production change and passing with it? Missing evidence is a hard finding.
+- **Checks:** did `composer ci:check` pass on this HEAD? Run it if nobody has.
+- **Maintainer-owned paths:** list every changed file that matches the repository's CODEOWNERS file (without one, the list in the architecture guideline's agent workflow section). Do this with `git diff --name-only <fixed-point>...HEAD`.
+
+Give one verdict:
+
+- **Agent may merge:** independent, no hard findings on either axis, the evidence is present, and no maintainer-owned path is touched.
+- **Needs the maintainer:** everything else is in order, but a maintainer-owned path is touched.
+- **Not ready:** a hard finding or a missing piece of evidence remains. Name it.
+
 ## Why two axes
 
 A change can pass one axis and fail the other:

@@ -11,3 +11,5 @@
 .github/workflows/browser-tests.yml export-ignore
 /.github/workflows/fresh-project.yml export-ignore
 /.github/scripts/fresh-project.sh export-ignore
+/.github/CODEOWNERS export-ignore
+/docs/branch-protection.md export-ignore

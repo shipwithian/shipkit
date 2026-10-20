@@ -1,0 +1,52 @@
+# The checks that make agent merges safe, and the places their exceptions are recorded.
+# A pull request that touches any of these needs the maintainer's review; branch protection
+# enforces it (docs/branch-protection.md). Everything else is project-owned feature code that
+# agents may merge on the handoff evidence in the `implement` skill.
+#
+# tests/Feature/CodeOwnersTest.php fails when a path here no longer exists.
+
+# shipkit-core: the shared kernel, guards, architecture checks, rules, skills, and guidelines.
+/packages/shipkit-core/                                  @ianlabicani
+
+# Agent guidance, and the files Boost compiles from it.
+/.ai/                                                    @ianlabicani
+/AGENTS.md                                               @ianlabicani
+/CLAUDE.md                                               @ianlabicani
+/boost.json                                              @ianlabicani
+
+# CI, its scripts, Dependabot, and this file.
+/.github/                                                @ianlabicani
+/docs/branch-protection.md                               @ianlabicani
+
+# The configuration of every check, and where check exceptions are recorded.
+/config/shipkit.php                                      @ianlabicani
+/composer.json                                           @ianlabicani
+/composer.lock                                           @ianlabicani
+/package.json                                            @ianlabicani
+/package-lock.json                                       @ianlabicani
+/phpunit.xml                                             @ianlabicani
+/phpstan.neon                                            @ianlabicani
+/rector.php                                              @ianlabicani
+/pint.json                                               @ianlabicani
+/tsconfig.json                                           @ianlabicani
+/vite.config.ts                                          @ianlabicani
+/.gitattributes                                          @ianlabicani
+
+# The guarded models whose invariants ShipKit's protected records rely on.
+/app/Domain/AccessControl/Models/                        @ianlabicani
+/app/Models/User.php                                     @ianlabicani
+
+# The project's own checks and invariant tests.
+/tests/Pest.php                                          @ianlabicani
+/tests/TestCase.php                                      @ianlabicani
+/tests/Feature/AgentToolingTest.php                      @ianlabicani
+/tests/Feature/ApiRouteConventionsTest.php               @ianlabicani
+/tests/Feature/CodeOwnersTest.php                        @ianlabicani
+/tests/Feature/CreationInvariantsTest.php                @ianlabicani
+/tests/Feature/DomainFactoryResolutionTest.php           @ianlabicani
+/tests/Feature/FrontendPermissionsTest.php               @ianlabicani
+/tests/Feature/RouteAuthorizationTest.php                @ianlabicani
+/tests/Feature/TemplateArchiveTest.php                   @ianlabicani
+/tests/Feature/AccessControl/AccessControlInvariantsTest.php    @ianlabicani
+/tests/Feature/AccessControl/LastSuperAdminConcurrencyTest.php  @ianlabicani
+/tests/Feature/AccessControl/RelationshipInvariantsTest.php     @ianlabicani

@@ -16,6 +16,8 @@ const ARCHIVE_EXCLUDED = [
     '.github/workflows/browser-tests.yml' => 'a workflow for the template itself',
     '.github/workflows/fresh-project.yml' => 'a workflow for the template itself',
     '.github/scripts/fresh-project.sh' => 'the script behind the template\'s fresh-project workflow',
+    '.github/CODEOWNERS' => 'names the template\'s maintainer; a new project names its own',
+    'docs/branch-protection.md' => 'the template maintainer\'s runbook for protecting its main branch',
 ];
 
 it('ships every tracked file in the installer archive except the documented few', function () {
