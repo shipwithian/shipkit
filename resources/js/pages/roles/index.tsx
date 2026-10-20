@@ -2,10 +2,10 @@ import { Head, usePage } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import { CreateRoleDialog } from '@/pages/roles/partials/create-role-dialog';
 import { RolesTable } from '@/pages/roles/partials/roles-table';
-import type { Auth, RoleListItem } from '@/types';
+import type { RoleIndexProps } from '@/types';
 
-export default function RolesIndex({ roles }: { roles: RoleListItem[] }) {
-    const { auth } = usePage<{ auth: Auth }>().props;
+export default function RolesIndex({ roles }: RoleIndexProps) {
+    const { auth } = usePage().props;
     const canManageRoles = auth.permissions.includes('manage roles resource');
     const canAssignPermissions =
         auth.permissions.includes('assign permissions');

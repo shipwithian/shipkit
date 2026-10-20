@@ -7,18 +7,11 @@ import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
-import type { Props as ManagePasskeysProps } from '@/pages/settings/partials/manage-passkeys';
 import { ManagePasskeys } from '@/pages/settings/partials/manage-passkeys';
-import type { Props as ManageTwoFactorProps } from '@/pages/settings/partials/manage-two-factor';
 import { ManageTwoFactor } from '@/pages/settings/partials/manage-two-factor';
+import type { SecurityEditProps } from '@/types';
 
-// oxfmt-ignore
-type Props = {
-    passwordRules: string;
-} & ManagePasskeysProps &
-    ManageTwoFactorProps;
-
-export default function Security(props: Props) {
+export default function Security(props: SecurityEditProps) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 

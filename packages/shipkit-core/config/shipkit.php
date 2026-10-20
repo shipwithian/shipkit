@@ -29,7 +29,7 @@ return [
     | contexts_using_framework_exceptions: contexts that report failures with Laravel's own
     | exceptions instead of named domain exceptions, keyed by context.
     |
-    | non_context_folders: folders under app/Http/Controllers, app/Http/Requests, and tests/Feature
+    | non_context_folders: folders under app/Http/Controllers, app/Http/Requests, app/Http/Props, and tests/Feature
     | that are not named after a bounded context, keyed by parent directory, then folder.
     |
     | protected_marker_exceptions: files allowed to write is_protected, keyed by path, such as a test

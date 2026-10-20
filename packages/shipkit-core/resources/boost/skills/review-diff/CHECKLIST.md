@@ -14,5 +14,5 @@ The reviewer's standards beyond what `composer ci:check` already enforces. Rows 
 - [ ] API resources and Inertia props expose only intentional, explicitly listed data.
 - [ ] Ownership and authorization boundaries are enforced, and tests prove another actor cannot reach the record.
 - [ ] Feature tests prove observable behavior and persisted state, grouped by context with a `describe()` block per action.
-- [ ] Pages compose partials named for their controller action; shared prop types live in `types/{feature}.ts`.
+- [ ] Pages compose partials named for their controller action; payload types come from `app/Http/Props` through `composer types:generate`, never hand-written.
 - [ ] Supporting classes exist because they clarify a real responsibility.

@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
+import type { VerifyEmailProps } from '@/types';
 
-export default function VerifyEmail({ status }: { status?: string }) {
+export default function VerifyEmail({ status }: VerifyEmailProps) {
     return (
         <>
             <Head title="Email verification" />

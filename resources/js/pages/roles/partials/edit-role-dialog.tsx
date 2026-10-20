@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Role } from '@/types';
+import type { RoleListItem } from '@/types';
 
-export function EditRoleDialog({ role }: { role: Role }) {
+export function EditRoleDialog({ role }: { role: RoleListItem }) {
     const [open, setOpen] = useState(false);
 
     return (

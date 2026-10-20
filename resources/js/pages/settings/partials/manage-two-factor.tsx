@@ -7,16 +7,15 @@ import { TwoFactorSetupModal } from '@/pages/settings/partials/two-factor-setup-
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { disable, enable } from '@/routes/two-factor';
+import type { SecurityEditProps } from '@/types';
 
-export type Props = {
-    canManageTwoFactor?: boolean;
-    requiresConfirmation?: boolean;
-    twoFactorEnabled?: boolean;
-};
+type Props = Pick<
+    SecurityEditProps,
+    'canManageTwoFactor' | 'requiresConfirmation' | 'twoFactorEnabled'
+>;
 
 export function ManageTwoFactor(props: Props) {
-    const requiresConfirmation = props.requiresConfirmation ?? false;
-    const twoFactorEnabled = props.twoFactorEnabled ?? false;
+    const { requiresConfirmation, twoFactorEnabled } = props;
 
     const {
         qrCodeSvg,
@@ -40,7 +39,7 @@ export function ManageTwoFactor(props: Props) {
         prevTwoFactorEnabled.current = twoFactorEnabled;
     }, [twoFactorEnabled, clearTwoFactorAuthData]);
 
-    if (!(props.canManageTwoFactor ?? false)) {
+    if (!props.canManageTwoFactor) {
         return null;
     }
 

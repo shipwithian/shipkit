@@ -7,16 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { index as rolesIndex } from '@/routes/roles';
-import type { Permission, RoleWithPermissionIds } from '@/types';
+import type { RolePermissionsEditProps } from '@/types';
 
 export default function RolePermissions({
     role,
     permissions,
-}: {
-    role: RoleWithPermissionIds;
-    permissions: Permission[];
-}) {
-    const form = useForm({ permissions: role.permission_ids });
+}: RolePermissionsEditProps) {
+    const form = useForm({ permissions: [...role.permission_ids] });
 
     function togglePermission(permissionId: number, enabled: boolean): void {
         form.setData(

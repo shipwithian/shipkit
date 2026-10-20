@@ -51,6 +51,7 @@ it('shares only the listed user fields', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user.id', $user->id)
             ->where('auth.user.email', $user->email)
+            ->where('auth.user.is_protected', false)
             ->where('auth.user', fn ($shared): bool => collect($shared)->keys()->sort()->values()->all() === [
                 'created_at',
                 'email',

@@ -14,9 +14,9 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import type { Role } from '@/types';
+import type { RoleListItem } from '@/types';
 
-export function DeleteRoleDialog({ role }: { role: Role }) {
+export function DeleteRoleDialog({ role }: { role: RoleListItem }) {
     const [open, setOpen] = useState(false);
 
     return (

@@ -11,13 +11,9 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import PasskeyVerify from '@/components/passkey-verify';
+import type { LoginProps } from '@/types';
 
-type Props = {
-    status?: string;
-    canResetPassword: boolean;
-};
-
-export default function Login({ status, canResetPassword }: Props) {
+export default function Login({ status, canResetPassword }: LoginProps) {
     return (
         <>
             <Head title="Log in" />

@@ -14,12 +14,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import type { Permission } from '@/types';
+import type { PermissionListItem } from '@/types';
 
 export function DeletePermissionDialog({
     permission,
 }: {
-    permission: Permission;
+    permission: PermissionListItem;
 }) {
     const [open, setOpen] = useState(false);
 

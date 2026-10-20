@@ -63,8 +63,8 @@ describe('edit', function () {
                 ->where('canManagePasskeys', false)
                 ->where('passkeys', [])
                 ->where('canManageTwoFactor', false)
-                ->missing('twoFactorEnabled')
-                ->missing('requiresConfirmation'),
+                ->where('twoFactorEnabled', false)
+                ->where('requiresConfirmation', false),
             );
     });
 });

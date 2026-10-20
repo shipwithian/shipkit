@@ -16,12 +16,12 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Permission } from '@/types';
+import type { PermissionListItem } from '@/types';
 
 export function EditPermissionDialog({
     permission,
 }: {
-    permission: Permission;
+    permission: PermissionListItem;
 }) {
     const [open, setOpen] = useState(false);
 

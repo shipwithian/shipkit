@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Settings;
 use App\Domain\Settings\Actions\UpdatePasswordAction;
 use App\Domain\Settings\Queries\PasskeyListQuery;
 use App\Http\Controllers\Controller;
+use App\Http\Props\Settings\PasskeyListItem;
+use App\Http\Props\Settings\SecurityEditProps;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use App\Models\User;
@@ -27,32 +29,23 @@ class SecurityController extends Controller
 
         Gate::authorize('view', $user);
 
-        $props = [
-            'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
-            'canManagePasskeys' => Features::canManagePasskeys(),
-            'passkeys' => Features::canManagePasskeys()
-                ? $passkeyList->handle($user)
-                    ->map(fn ($passkey) => [
-                        'id' => $passkey->id,
-                        'name' => $passkey->name,
-                        'authenticator' => $passkey->authenticator,
-                        'created_at_diff' => $passkey->created_at->diffForHumans(),
-                        'last_used_at_diff' => $passkey->last_used_at?->diffForHumans(),
-                    ])
-                    ->values()
-                    ->all()
-                : [],
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
-        ];
+        $canManageTwoFactor = Features::canManageTwoFactorAuthentication();
+        $canManagePasskeys = Features::canManagePasskeys();
 
-        if (Features::canManageTwoFactorAuthentication()) {
+        if ($canManageTwoFactor) {
             $request->ensureStateIsValid();
-
-            $props['twoFactorEnabled'] = $user->hasEnabledTwoFactorAuthentication();
-            $props['requiresConfirmation'] = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm');
         }
 
-        return Inertia::render('settings/security', $props);
+        return Inertia::render('settings/security', new SecurityEditProps(
+            canManageTwoFactor: $canManageTwoFactor,
+            twoFactorEnabled: $canManageTwoFactor && $user->hasEnabledTwoFactorAuthentication(),
+            requiresConfirmation: $canManageTwoFactor && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm'),
+            canManagePasskeys: $canManagePasskeys,
+            passkeys: $canManagePasskeys
+                ? array_values(array_map(PasskeyListItem::from(...), $passkeyList->handle($user)->all()))
+                : [],
+            passwordRules: Password::defaults()->toPasswordRulesString(),
+        ));
     }
 
     /**

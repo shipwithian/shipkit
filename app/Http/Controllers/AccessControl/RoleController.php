@@ -8,6 +8,8 @@ use App\Domain\AccessControl\Actions\UpdateRoleAction;
 use App\Domain\AccessControl\Models\Role;
 use App\Domain\AccessControl\Queries\RoleListQuery;
 use App\Http\Controllers\Controller;
+use App\Http\Props\AccessControl\RoleIndexProps;
+use App\Http\Props\AccessControl\RoleListItem;
 use App\Http\Requests\AccessControl\StoreRoleRequest;
 use App\Http\Requests\AccessControl\UpdateRoleRequest;
 use Illuminate\Http\RedirectResponse;
@@ -21,18 +23,9 @@ class RoleController extends Controller
     {
         Gate::authorize('viewAny', Role::class);
 
-        return Inertia::render('roles/index', [
-            'roles' => array_map(
-                fn (Role $role): array => [
-                    'id' => $role->id,
-                    'name' => $role->name,
-                    'is_protected' => $role->is_protected,
-                    'permissions_count' => $role->permissions_count,
-                    'users_count' => $role->users_count,
-                ],
-                $roleList->handle()->all(),
-            ),
-        ]);
+        return Inertia::render('roles/index', new RoleIndexProps(
+            roles: array_values(array_map(RoleListItem::from(...), $roleList->handle()->all())),
+        ));
     }
 
     public function store(StoreRoleRequest $request, CreateRoleAction $createRole): RedirectResponse

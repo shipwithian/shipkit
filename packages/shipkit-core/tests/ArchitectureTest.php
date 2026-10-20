@@ -109,10 +109,10 @@ it('receives the acting user instead of reading ambient request state', function
     expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
 });
 
-it('never lists secrets in resources or shared props', function () {
+it('never lists secrets in resources or Inertia props', function () {
     $layout = ProjectLayout::current();
     $violations = [];
-    $files = [...$layout->phpFiles('app/Http/Resources'), ...array_filter([$layout->appPath('Http/Middleware/HandleInertiaRequests.php')], is_file(...))];
+    $files = [...$layout->phpFiles('app/Http/Resources'), ...$layout->phpFiles('app/Http/Props'), ...array_filter([$layout->appPath('Http/Middleware/HandleInertiaRequests.php')], is_file(...))];
 
     foreach ($files as $path) {
         $source = (string) file_get_contents($path);
@@ -213,7 +213,7 @@ it('names HTTP and feature test folders after a bounded context', function () {
     $nonContextFolders = (array) $layout->config('architecture.non_context_folders', []);
     $strays = [];
 
-    foreach (['app/Http/Controllers', 'app/Http/Requests', 'tests/Feature'] as $directory) {
+    foreach (['app/Http/Controllers', 'app/Http/Requests', 'app/Http/Props', 'tests/Feature'] as $directory) {
         $allowed = [...$contexts, ...array_keys($nonContextFolders[$directory] ?? [])];
 
         foreach (glob($layout->path($directory.'/*'), GLOB_ONLYDIR) ?: [] as $folder) {
