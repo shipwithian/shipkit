@@ -9,15 +9,9 @@ import type { RoleListItem } from '@/types';
 
 type Props = {
     roles: RoleListItem[];
-    canManageRoles: boolean;
-    canAssignPermissions: boolean;
 };
 
-export function RolesTable({
-    roles,
-    canManageRoles,
-    canAssignPermissions,
-}: Props) {
+export function RolesTable({ roles }: Props) {
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
@@ -55,7 +49,7 @@ export function RolesTable({
                                 </td>
                                 <td className="px-4 py-3">
                                     <div className="flex justify-end gap-2">
-                                        {canAssignPermissions && (
+                                        {role.can.assignPermissions && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -71,11 +65,11 @@ export function RolesTable({
                                                 </Link>
                                             </Button>
                                         )}
-                                        {canManageRoles &&
+                                        {role.can.update &&
                                             !role.is_protected && (
                                                 <EditRoleDialog role={role} />
                                             )}
-                                        {canManageRoles &&
+                                        {role.can.delete &&
                                             !role.is_protected && (
                                                 <DeleteRoleDialog role={role} />
                                             )}

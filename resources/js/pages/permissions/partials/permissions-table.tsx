@@ -47,16 +47,18 @@ export function PermissionsTable({
                                 </td>
                                 <td className="px-4 py-3">
                                     <div className="flex justify-end gap-2">
-                                        {!permission.is_protected && (
-                                            <EditPermissionDialog
-                                                permission={permission}
-                                            />
-                                        )}
-                                        {!permission.is_protected && (
-                                            <DeletePermissionDialog
-                                                permission={permission}
-                                            />
-                                        )}
+                                        {permission.can.update &&
+                                            !permission.is_protected && (
+                                                <EditPermissionDialog
+                                                    permission={permission}
+                                                />
+                                            )}
+                                        {permission.can.delete &&
+                                            !permission.is_protected && (
+                                                <DeletePermissionDialog
+                                                    permission={permission}
+                                                />
+                                            )}
                                     </div>
                                 </td>
                             </tr>

@@ -18,20 +18,17 @@ import { index as rolesIndex } from '@/routes/roles';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
-    const { auth } = usePage().props;
-    const canAccessRoles = auth.permissions.some((permission) =>
-        ['manage roles resource', 'assign permissions'].includes(permission),
-    );
+    const { can } = usePage().props.auth;
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
             href: dashboard(),
             icon: LayoutGrid,
         },
-        ...(canAccessRoles
+        ...(can.viewRoles
             ? [{ title: 'Roles', href: rolesIndex(), icon: ShieldCheck }]
             : []),
-        ...(auth.permissions.includes('manage permissions resource')
+        ...(can.viewPermissions
             ? [
                   {
                       title: 'Permissions',

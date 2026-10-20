@@ -1,46 +1,56 @@
 <?php
 
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-it('shares permissions inherited through roles', function () {
-    $user = userWithPermissions([
-        'manage roles resource',
-        'manage permissions resource',
-        'assign permissions',
-    ]);
-
-    $this->actingAs($user)
-        ->get(route('dashboard'))
+it('shares no navigation abilities with a guest', function () {
+    $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('auth.permissions', [
-                'assign permissions',
-                'manage permissions resource',
-                'manage roles resource',
-            ]));
+            ->where('auth.user', null)
+            ->where('auth.can', ['viewRoles' => false, 'viewPermissions' => false]));
 });
 
-it('shares only currently assigned permissions', function () {
-    $user = User::factory()->create();
-    $role = Role::create(['name' => 'editor', 'guard_name' => 'web']);
-    $permission = Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
-    $role->givePermissionTo($permission);
-    $user->assignRole($role);
+it('shares no navigation abilities with a user without access control permissions', function () {
+    $this->actingAs(User::factory()->create())
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.can', ['viewRoles' => false, 'viewPermissions' => false]));
+});
+
+it('shares the navigation abilities each permission grants through a role', function (array $permissions, array $abilities) {
+    $this->actingAs(userWithPermissions($permissions))
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.can', $abilities));
+})->with([
+    'role resource management' => [['manage roles resource'], ['viewRoles' => true, 'viewPermissions' => false]],
+    'permission assignment' => [['assign permissions'], ['viewRoles' => true, 'viewPermissions' => false]],
+    'permission resource management' => [['manage permissions resource'], ['viewRoles' => false, 'viewPermissions' => true]],
+]);
+
+it('stops sharing an ability once its permission is revoked', function () {
+    $user = userWithPermissions(['manage permissions resource']);
+    $role = $user->roles()->sole();
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('auth.permissions', ['publish posts']));
+            ->where('auth.can.viewPermissions', true));
 
-    $role->revokePermissionTo($permission);
+    $role->revokePermissionTo('manage permissions resource');
     $user->unsetRelation('roles')->unsetRelation('permissions');
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('auth.permissions', []));
+            ->where('auth.can.viewPermissions', false));
+});
+
+it('never shares permission names', function () {
+    $this->actingAs(userWithPermissions(['manage roles resource']))
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth', fn ($auth): bool => collect($auth)->keys()->sort()->values()->all() === ['can', 'user']));
 });
 
 it('shares only the listed user fields', function () {

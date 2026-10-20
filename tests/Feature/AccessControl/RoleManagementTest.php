@@ -33,6 +33,34 @@ describe('index', function () {
             ->get(route('roles.index'))
             ->assertOk();
     });
+
+    it('gives a role resource manager the role abilities but not assignment', function () {
+        $editor = Role::create(['name' => 'editor', 'guard_name' => 'web']);
+
+        $this->actingAs(userWithPermissions(['manage roles resource']))
+            ->get(route('roles.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('can', ['create' => true])
+                ->where('roles', fn ($roles): bool => collect($roles)->firstWhere('id', $editor->id)['can'] === [
+                    'update' => true,
+                    'delete' => true,
+                    'assignPermissions' => false,
+                ]));
+    });
+
+    it('gives an assignment-only user assignment but not the role abilities', function () {
+        $editor = Role::create(['name' => 'editor', 'guard_name' => 'web']);
+
+        $this->actingAs(userWithPermissions(['assign permissions']))
+            ->get(route('roles.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('can', ['create' => false])
+                ->where('roles', fn ($roles): bool => collect($roles)->firstWhere('id', $editor->id)['can'] === [
+                    'update' => false,
+                    'delete' => false,
+                    'assignPermissions' => true,
+                ]));
+    });
 });
 
 describe('store', function () {

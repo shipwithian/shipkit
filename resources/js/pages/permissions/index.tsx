@@ -6,6 +6,7 @@ import type { PermissionIndexProps } from '@/types';
 
 export default function PermissionsIndex({
     permissions,
+    can,
 }: PermissionIndexProps) {
     return (
         <>
@@ -18,7 +19,7 @@ export default function PermissionsIndex({
                         description="Manage the abilities that can be assigned to roles."
                     />
 
-                    <CreatePermissionDialog />
+                    {can.create && <CreatePermissionDialog />}
                 </div>
 
                 <PermissionsTable permissions={permissions} />

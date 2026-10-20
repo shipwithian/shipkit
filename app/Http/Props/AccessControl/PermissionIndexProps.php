@@ -16,5 +16,6 @@ final readonly class PermissionIndexProps extends PageProps
      */
     public function __construct(
         public array $permissions,
+        public PermissionIndexAbilities $can,
     ) {}
 }

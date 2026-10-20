@@ -17,6 +17,10 @@ Every page with props of its own receives a `{Page}Props` class from `app/Http/P
 
 `composer types:generate` writes the TypeScript types to `resources/js/types/generated.ts`. Run it after changing a props class and commit the result; `composer ci:check` regenerates the file and fails when it differs from what is committed.
 
+## Send abilities as typed props
+
+Abilities are `#[TypeScript]` classes of booleans named for the policy abilities they mirror: `{Page}Abilities` as the page's `can` prop for page-level controls such as `create`, `{Model}Abilities` as a list item's `can` for row controls such as `update` and `delete`, and `NavigationAbilities` as `auth.can` in the shared props. The controller, or `HandleInertiaRequests` for shared props, computes them with the Gate and passes them in; a list item's `from()` takes its abilities as a second argument, so the list is built with a closure. Prop classes never call the Gate themselves.
+
 ## Shape already-loaded data only
 
 Resources and prop mapping do not query the database or trigger lazy loading. The controller, Action, or Query object loads what the response needs first.

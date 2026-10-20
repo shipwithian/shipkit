@@ -2,9 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\AccessControl\Models\Permission;
+use App\Domain\AccessControl\Models\Role;
 use App\Http\Props\AuthProps;
+use App\Http\Props\NavigationAbilities;
 use App\Http\Props\SharedProps;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -34,7 +38,8 @@ class HandleInertiaRequests extends Middleware
      * @see https://inertiajs.com/shared-data
      *
      * The typed `SharedProps` sits in the list next to Inertia's own shared props, and Inertia
-     * expands it into its public properties.
+     * expands it into its public properties. The navigation abilities come from the same `viewAny`
+     * policy abilities the access control controllers authorize.
      *
      * @return array<array-key, mixed>
      */
@@ -44,7 +49,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             new SharedProps(
                 name: config()->string('app.name'),
-                auth: AuthProps::for($request->user()),
+                auth: AuthProps::for($request->user(), new NavigationAbilities(
+                    viewRoles: Gate::allows('viewAny', Role::class),
+                    viewPermissions: Gate::allows('viewAny', Permission::class),
+                )),
                 sidebarOpen: ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             ),
         ];

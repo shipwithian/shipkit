@@ -8,6 +8,8 @@ use App\Domain\AccessControl\Actions\UpdateRoleAction;
 use App\Domain\AccessControl\Models\Role;
 use App\Domain\AccessControl\Queries\RoleListQuery;
 use App\Http\Controllers\Controller;
+use App\Http\Props\AccessControl\RoleAbilities;
+use App\Http\Props\AccessControl\RoleIndexAbilities;
 use App\Http\Props\AccessControl\RoleIndexProps;
 use App\Http\Props\AccessControl\RoleListItem;
 use App\Http\Requests\AccessControl\StoreRoleRequest;
@@ -24,7 +26,15 @@ class RoleController extends Controller
         Gate::authorize('viewAny', Role::class);
 
         return Inertia::render('roles/index', new RoleIndexProps(
-            roles: array_values(array_map(RoleListItem::from(...), $roleList->handle()->all())),
+            roles: array_values(array_map(
+                fn (Role $role): RoleListItem => RoleListItem::from($role, new RoleAbilities(
+                    update: Gate::allows('update', $role),
+                    delete: Gate::allows('delete', $role),
+                    assignPermissions: Gate::allows('assignPermissions', $role),
+                )),
+                $roleList->handle()->all(),
+            )),
+            can: new RoleIndexAbilities(create: Gate::allows('create', Role::class)),
         ));
     }
 

@@ -27,6 +27,19 @@ describe('index', function () {
                 ->component('permissions/index')
                 ->has('permissions', count(SystemPermission::cases()) + 1));
     });
+
+    it('gives a permission resource manager every permission ability', function () {
+        $publish = Permission::create(['name' => 'publish posts', 'guard_name' => 'web']);
+
+        $this->actingAs(userWithPermissions(['manage permissions resource']))
+            ->get(route('permissions.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('can', ['create' => true])
+                ->where('permissions', fn ($permissions): bool => collect($permissions)->firstWhere('id', $publish->id)['can'] === [
+                    'update' => true,
+                    'delete' => true,
+                ]));
+    });
 });
 
 describe('store', function () {

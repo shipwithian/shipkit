@@ -16,5 +16,6 @@ final readonly class RoleIndexProps extends PageProps
      */
     public function __construct(
         public array $roles,
+        public RoleIndexAbilities $can,
     ) {}
 }

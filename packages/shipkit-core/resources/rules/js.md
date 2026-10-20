@@ -5,13 +5,13 @@ paths:
 
 # Js
 
-## Drive frontend access control from auth permissions
+## Gate controls on server-computed abilities
 
-Use `auth.permissions` for navigation and control visibility; never infer access from role names. Treat frontend checks as interface behavior only, with backend policies remaining authoritative.
+Show a control only when the page's props say the actor may use it: `can.create` on the page, `role.can.update` on a row, `auth.can.viewRoles` in the shared props. The server computes each ability with the Gate from the same policy ability the controller authorizes, so the UI never shows a control the server refuses. Never decide visibility from permission or role names; the server does not send them, and `FrontendAbilitiesTest` fails on `permissions.includes('...')` and its variants. A control the server refuses for a reason outside the policy, such as a protected record's invariant, may also hide on the record's own fields (`!role.is_protected`).
 
-## Use the shared Auth permission contract
+## Use the shared Auth contract
 
-The shared `auth` prop (`AuthProps`) exposes the signed-in user, `null` for a guest, and direct plus role-inherited permission names in `permissions: string[]`. A page a guest can reach handles `auth.user === null`; a page behind `auth` reads the user with `useAuthUser()`. Frontend checks use the exact permission names supplied by the backend. Feature permission names may originate from feature seeders and are not expected to exist in `SystemPermission`.
+The shared `auth` prop (`AuthProps`) holds the signed-in user, `null` for a guest, and `can`, the navigation abilities. A page a guest can reach handles `auth.user === null`; a page behind `auth` reads the user with `useAuthUser()`.
 
 ## Organize pages by controller action
 

@@ -24,3 +24,7 @@ Abilities that depend on the actor's relationship to one record may check that r
 ## Hide records the actor may not know about
 
 When a record's existence is private to its members or tenant, deny outsiders with `Response::denyAsNotFound()` so they receive a 404 and cannot probe for it. A private, user-owned resource follows this pattern: `viewAny` and `create` return `true` for any authenticated user, and `view`, `update`, and `delete` return `Response::denyAsNotFound()` unless the actor owns the record. Use the default 403 when the actor may know the record exists but may not act on it, such as an administrator resource without the needed permission, or a member who is not an owner.
+
+## Hand the UI the abilities the controller authorizes
+
+A page with a gated control receives each ability as a boolean computed with `Gate::allows()` against the same policy ability, and the same model or class, that the controller authorizes for that control: `Gate::allows('update', $role)` for a row's edit button, `Gate::allows('create', Role::class)` for the page's create button. The policy stays the only place the rule lives; never recompute it from permission names in the controller or the UI.

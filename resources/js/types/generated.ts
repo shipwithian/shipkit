@@ -7,7 +7,7 @@ export type AssignablePermission = {
 };
 export type AuthProps = {
     readonly user: AuthUser | null;
-    readonly permissions: string[];
+    readonly can: NavigationAbilities;
 };
 export type AuthUser = {
     readonly id: number;
@@ -25,6 +25,10 @@ export type LoginProps = {
     readonly canResetPassword: boolean;
     readonly status: string | null;
 };
+export type NavigationAbilities = {
+    readonly viewRoles: boolean;
+    readonly viewPermissions: boolean;
+};
 export type PasskeyListItem = {
     readonly id: number;
     readonly name: string;
@@ -32,8 +36,16 @@ export type PasskeyListItem = {
     readonly created_at_diff: string | null;
     readonly last_used_at_diff: string | null;
 };
+export type PermissionAbilities = {
+    readonly update: boolean;
+    readonly delete: boolean;
+};
+export type PermissionIndexAbilities = {
+    readonly create: boolean;
+};
 export type PermissionIndexProps = {
     readonly permissions: PermissionListItem[];
+    readonly can: PermissionIndexAbilities;
 };
 export type PermissionListItem = {
     readonly id: number;
@@ -41,6 +53,7 @@ export type PermissionListItem = {
     readonly is_protected: boolean;
     readonly roles_count: number;
     readonly users_count: number;
+    readonly can: PermissionAbilities;
 };
 export type ProfileEditProps = {
     readonly mustVerifyEmail: boolean;
@@ -54,8 +67,17 @@ export type ResetPasswordProps = {
     readonly token: string;
     readonly passwordRules: string;
 };
+export type RoleAbilities = {
+    readonly update: boolean;
+    readonly delete: boolean;
+    readonly assignPermissions: boolean;
+};
+export type RoleIndexAbilities = {
+    readonly create: boolean;
+};
 export type RoleIndexProps = {
     readonly roles: RoleListItem[];
+    readonly can: RoleIndexAbilities;
 };
 export type RoleListItem = {
     readonly id: number;
@@ -63,6 +85,7 @@ export type RoleListItem = {
     readonly is_protected: boolean;
     readonly permissions_count: number;
     readonly users_count: number;
+    readonly can: RoleAbilities;
 };
 export type RolePermissionsEditProps = {
     readonly role: RoleWithPermissionIds;
