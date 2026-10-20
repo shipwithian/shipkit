@@ -42,7 +42,7 @@ Use the fixed `web` guard for all roles and permissions.
 ## Requirements for features built on this context
 
 - **Privilege escalation.** A feature that lets someone assign roles must not let them grant permissions they do not hold themselves (for example by granting `super-admin` to themselves). Check that the roles being granted hold only permissions the actor already has, and test it. ShipKit ships no role-assignment UI, so nothing enforces this yet.
-- **Concurrency.** A guard that counts what remains ("another super admin exists") locks those rows with `lockForUpdate()`; `GuardsInvariants` runs the guard and the write in one transaction so the lock holds.
+- **Concurrency.** A guard that counts what remains ("another super admin exists") locks those rows with `lockForUpdate()`; `GuardsInvariants` runs the guard and the write in one transaction so the lock holds. The evidence is the `concurrency` group, `tests/Feature/AccessControl/LastSuperAdminConcurrencyTest.php`, which CI runs on MySQL and Postgres: one connection removes a super admin and holds the lock, the other must time out removing the second, and after the first commits the guard refuses the second. It covers losing the role and deleting the user, and fails when the lock is removed. SQLite ignores `FOR UPDATE`, so the default suite excludes the group.
 
 ## Public surface
 
