@@ -14,6 +14,8 @@ const ARCHIVE_EXCLUDED = [
     'README.md' => 'the template README; a new project writes its own',
     'CHANGELOG.md' => 'the template changelog; a new project starts its own',
     '.github/workflows/browser-tests.yml' => 'a workflow for the template itself',
+    '.github/workflows/fresh-project.yml' => 'a workflow for the template itself',
+    '.github/scripts/fresh-project.sh' => 'the script behind the template\'s fresh-project workflow',
 ];
 
 it('ships every tracked file in the installer archive except the documented few', function () {
