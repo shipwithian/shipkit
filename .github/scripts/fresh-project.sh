@@ -4,11 +4,13 @@
 # `composer ci:check` passes, and fails when ShipKit's testsuite is unregistered or a guarded
 # model is swapped for an unguarded one.
 #
-# The project requires shipkit-core from this checkout through a path repository, never Packagist.
+# By default the project requires shipkit-core from this checkout through a path repository, never
+# Packagist. With SHIPKIT_CORE_SOURCE=packagist it installs the published package instead, which is
+# how a release is proven before its tag is pushed.
 #
 # Usage: .github/scripts/fresh-project.sh [project-directory]
 # SHIPKIT_ARCHIVE_REF picks the commit to archive (default HEAD); `git stash create` archives
-# uncommitted changes to tracked files.
+# uncommitted changes to tracked files. For a release, it is the release commit.
 
 set -euo pipefail
 
@@ -16,6 +18,7 @@ checkout="$(git rev-parse --show-toplevel)"
 core="$checkout/packages/shipkit-core"
 project="${1:-$(mktemp -d)/fresh-project}"
 ref="${SHIPKIT_ARCHIVE_REF:-HEAD}"
+source="${SHIPKIT_CORE_SOURCE:-checkout}"
 
 step() {
     printf '\n\033[1m==> %s\033[0m\n' "$1"
@@ -54,20 +57,35 @@ cd "$project"
 step "Creating the project the way composer create-project does"
 php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-# Copy rather than symlink, as a Packagist install does: Pest cannot register arch() tests from a
-# file that resolves outside the project.
-jq --arg url "$core" '.repositories = [{"name": "shipkit-core", "type": "path", "url": $url, "options": {"symlink": false}}]' \
-    composer.json >composer.json.tmp
-mv composer.json.tmp composer.json
+if [ "$source" = "packagist" ]; then
+    # The archive is a release: its composer.json and lock file already name the published package.
+    jq -e '.repositories == null' composer.json >/dev/null || fail "The archive still lists a repository for shipkit-core."
+    [ ! -e packages ] || fail "The archive still contains packages/."
+    composer install --no-interaction --no-progress
+    composer run-script post-create-project-cmd --no-interaction
 
-# The lock file records the archive's own packages/ copy, so resolve shipkit-core again from the checkout.
-composer update shipwithian/shipkit-core --no-interaction --no-progress
-composer run-script post-create-project-cmd --no-interaction
+    installed="$(jq -r '.packages[] | select(.name == "shipwithian/shipkit-core") | "\(.version) \(.dist.type) \(.dist.url)"' composer.lock)"
+    case "$installed" in
+        *" path "*) fail "shipkit-core is locked to a path repository: $installed" ;;
+        "") fail "shipkit-core is not in composer.lock." ;;
+    esac
+    echo "shipkit-core is installed from Packagist: $installed"
+else
+    # Copy rather than symlink, as a Packagist install does: Pest cannot register arch() tests from a
+    # file that resolves outside the project.
+    jq --arg url "$core" '.repositories = [{"name": "shipkit-core", "type": "path", "url": $url, "options": {"symlink": false}}]' \
+        composer.json >composer.json.tmp
+    mv composer.json.tmp composer.json
 
-installed="$(jq -r '.packages[] | select(.name == "shipwithian/shipkit-core") | .dist.url' composer.lock)"
-[ "$installed" = "$core" ] || fail "shipkit-core is installed from $installed, not from this checkout ($core)."
-diff -rq "$core" vendor/shipwithian/shipkit-core || fail "vendor/shipwithian/shipkit-core differs from $core."
-echo "shipkit-core is installed from $installed"
+    # The lock file records the archive's own packages/ copy, so resolve shipkit-core again from the checkout.
+    composer update shipwithian/shipkit-core --no-interaction --no-progress
+    composer run-script post-create-project-cmd --no-interaction
+
+    installed="$(jq -r '.packages[] | select(.name == "shipwithian/shipkit-core") | .dist.url' composer.lock)"
+    [ "$installed" = "$core" ] || fail "shipkit-core is installed from $installed, not from this checkout ($core)."
+    diff -rq "$core" vendor/shipwithian/shipkit-core || fail "vendor/shipwithian/shipkit-core differs from $core."
+    echo "shipkit-core is installed from $installed"
+fi
 
 npm ci --no-audit --no-fund
 npm run build

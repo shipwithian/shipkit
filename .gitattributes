@@ -13,3 +13,8 @@
 /.github/scripts/fresh-project.sh export-ignore
 /.github/CODEOWNERS export-ignore
 /docs/branch-protection.md export-ignore
+/.github/workflows/release.yml export-ignore
+/.github/workflows/split-core.yml export-ignore
+/.github/scripts/prepare-release.sh export-ignore
+/.github/scripts/split-core.sh export-ignore
+/docs/releasing.md export-ignore
