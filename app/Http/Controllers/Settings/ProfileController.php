@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Domain\Settings\Actions\DeleteAccountAction;
 use App\Domain\Settings\Actions\UpdateProfileAction;
 use App\Http\Controllers\Controller;
+use App\Http\Props\Settings\ProfileEditProps;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Models\User;
@@ -28,10 +29,10 @@ class ProfileController extends Controller
 
         Gate::authorize('view', $user);
 
-        return Inertia::render('settings/profile', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => $request->session()->get('status'),
-        ]);
+        return Inertia::render('settings/profile', new ProfileEditProps(
+            mustVerifyEmail: $request->user() instanceof MustVerifyEmail,
+            status: $request->session()->get('status'),
+        ));
     }
 
     /**

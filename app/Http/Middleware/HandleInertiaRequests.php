@@ -2,7 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
+use App\Http\Props\AuthProps;
+use App\Http\Props\SharedProps;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -32,40 +33,20 @@ class HandleInertiaRequests extends Middleware
      *
      * @see https://inertiajs.com/shared-data
      *
-     * @return array<string, mixed>
+     * The typed `SharedProps` sits in the list next to Inertia's own shared props, and Inertia
+     * expands it into its public properties.
+     *
+     * @return array<array-key, mixed>
      */
     public function share(Request $request): array
     {
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
-            'auth' => [
-                'user' => $this->sharedUser($request->user()),
-                'permissions' => fn (): array => $request->user()
-                    ? $request->user()->getAllPermissions()->pluck('name')->sort()->values()->all()
-                    : [],
-            ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-        ];
-    }
-
-    /**
-     * @return array{id: int, name: string, email: string, email_verified_at: string|null, is_protected: bool, created_at: string|null, updated_at: string|null}|null
-     */
-    private function sharedUser(?User $user): ?array
-    {
-        if ($user === null) {
-            return null;
-        }
-
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'email_verified_at' => $user->email_verified_at?->toJSON(),
-            'is_protected' => $user->is_protected,
-            'created_at' => $user->created_at?->toJSON(),
-            'updated_at' => $user->updated_at?->toJSON(),
+            new SharedProps(
+                name: config()->string('app.name'),
+                auth: AuthProps::for($request->user()),
+                sidebarOpen: ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            ),
         ];
     }
 }

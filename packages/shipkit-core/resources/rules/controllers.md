@@ -19,4 +19,4 @@ Place web controllers in `app/Http/Controllers/{Context}/`, named exactly after 
 
 ## Shape Inertia props explicitly
 
-Map models to arrays that list each field before passing them to `Inertia::render()`. Never pass a raw model as a prop.
+Pass `Inertia::render()` a typed props object, `new {Page}Props(...)`, whose item classes map each model field explicitly; `responses.md` describes the classes. Never pass an array or a raw model as props.

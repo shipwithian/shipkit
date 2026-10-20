@@ -6,14 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { update } from '@/routes/password';
+import type { ResetPasswordProps } from '@/types';
 
-type Props = {
-    token: string;
-    email: string;
-    passwordRules: string;
-};
-
-export default function ResetPassword({ token, email, passwordRules }: Props) {
+export default function ResetPassword({
+    token,
+    email,
+    passwordRules,
+}: ResetPasswordProps) {
     return (
         <>
             <Head title="Reset password" />
@@ -32,7 +31,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 type="email"
                                 name="email"
                                 autoComplete="email"
-                                value={email}
+                                value={email ?? ''}
                                 className="mt-1 block w-full"
                                 readOnly
                             />

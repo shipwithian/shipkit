@@ -8,6 +8,8 @@ use App\Domain\AccessControl\Actions\UpdatePermissionAction;
 use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Queries\PermissionListQuery;
 use App\Http\Controllers\Controller;
+use App\Http\Props\AccessControl\PermissionIndexProps;
+use App\Http\Props\AccessControl\PermissionListItem;
 use App\Http\Requests\AccessControl\StorePermissionRequest;
 use App\Http\Requests\AccessControl\UpdatePermissionRequest;
 use Illuminate\Http\RedirectResponse;
@@ -21,18 +23,9 @@ class PermissionController extends Controller
     {
         Gate::authorize('viewAny', Permission::class);
 
-        return Inertia::render('permissions/index', [
-            'permissions' => array_map(
-                fn (Permission $permission): array => [
-                    'id' => $permission->id,
-                    'name' => $permission->name,
-                    'is_protected' => $permission->is_protected,
-                    'roles_count' => $permission->roles_count,
-                    'users_count' => $permission->users_count,
-                ],
-                $permissionList->handle()->all(),
-            ),
-        ]);
+        return Inertia::render('permissions/index', new PermissionIndexProps(
+            permissions: array_values(array_map(PermissionListItem::from(...), $permissionList->handle()->all())),
+        ));
     }
 
     public function store(

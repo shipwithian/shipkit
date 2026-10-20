@@ -10,10 +10,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import type { Passkey } from '@/types/auth';
+import type { PasskeyListItem } from '@/types';
 
 type Props = {
-    passkey: Passkey;
+    passkey: PasskeyListItem;
     onDelete: (id: number, onError: () => void) => void;
 };
 

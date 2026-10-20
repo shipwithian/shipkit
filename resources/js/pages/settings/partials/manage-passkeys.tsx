@@ -4,12 +4,9 @@ import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegi
 import Heading from '@/components/heading';
 import { PasskeyItem } from '@/pages/settings/partials/passkey-item';
 import { PasskeyRegistration } from '@/pages/settings/partials/passkey-register';
-import type { Passkey } from '@/types/auth';
+import type { SecurityEditProps } from '@/types';
 
-export type Props = {
-    canManagePasskeys?: boolean;
-    passkeys?: Passkey[];
-};
+type Props = Pick<SecurityEditProps, 'canManagePasskeys' | 'passkeys'>;
 
 const EmptyState = () => {
     return (
@@ -26,7 +23,7 @@ const EmptyState = () => {
 };
 
 export function ManagePasskeys(props: Props) {
-    const passkeys = props.passkeys ?? [];
+    const passkeys = props.passkeys;
 
     const handleDelete = (id: number, onError: () => void) => {
         router.delete(destroy.url(id), {
@@ -39,7 +36,7 @@ export function ManagePasskeys(props: Props) {
         router.reload();
     };
 
-    if (!(props.canManagePasskeys ?? false)) {
+    if (!props.canManagePasskeys) {
         return null;
     }
 

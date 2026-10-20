@@ -8,12 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
+import type { RegisterProps } from '@/types';
 
-type Props = {
-    passwordRules: string;
-};
-
-export default function Register({ passwordRules }: Props) {
+export default function Register({ passwordRules }: RegisterProps) {
     return (
         <>
             <Head title="Register" />

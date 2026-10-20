@@ -10,6 +10,7 @@ use ShipKit\Core\Eloquent\GuardsInvariants;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 /**
+ * @property int $id
  * @property bool $is_protected
  * @property int $roles_count
  * @property int $users_count

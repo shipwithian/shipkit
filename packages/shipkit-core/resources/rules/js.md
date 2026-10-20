@@ -11,7 +11,7 @@ Use `auth.permissions` for navigation and control visibility; never infer access
 
 ## Use the shared Auth permission contract
 
-The shared `Auth` contract exposes the authenticated user and direct plus role-inherited permission names in `permissions: string[]`. Frontend checks use the exact permission names supplied by the backend. Feature permission names may originate from feature seeders and are not expected to exist in `SystemPermission`.
+The shared `auth` prop (`AuthProps`) exposes the signed-in user, `null` for a guest, and direct plus role-inherited permission names in `permissions: string[]`. A page a guest can reach handles `auth.user === null`; a page behind `auth` reads the user with `useAuthUser()`. Frontend checks use the exact permission names supplied by the backend. Feature permission names may originate from feature seeders and are not expected to exist in `SystemPermission`.
 
 ## Organize pages by controller action
 
@@ -25,6 +25,6 @@ A feature that creates and edits on dedicated screens instead of in dialogs uses
 
 Place a feature's pieces in `pages/{feature}/partials/`, named for the action they submit to: `create-{model}-dialog.tsx` (store), `edit-{model}-dialog.tsx` (update), `delete-{model}-dialog.tsx` (destroy), and `{models}-table.tsx` (index list). A partial for a non-CRUD route is named for its action, such as `leave-team-dialog.tsx`, and a shared piece within the feature for what it shows, such as `team-role-select.tsx`. Partials use named exports and are never passed to `Inertia::render()`. A component used by a single page or feature lives in that feature's `partials/`. Move it to `components/` only when a second feature uses it; `components/ui` is for primitives.
 
-## Share prop types per feature
+## Import payload types generated from PHP
 
-Declare the types of server-provided props in `resources/js/types/{feature}.ts` and export them through `@/types`. Do not redeclare a model's type in each page.
+Every server-provided prop type is generated from its PHP props class into `resources/js/types/generated.ts` and exported through `@/types`. A page types its props as `{Page}Props` and reads shared props from `usePage().props`, which is typed as `SharedProps`. Hand-written files in `resources/js/types` hold only client-side types, such as layout props or a JSON response from a Fortify endpoint. To change a payload, change the PHP class and run `composer types:generate`; a partial that needs part of a payload takes a `Pick<>` of the generated type.

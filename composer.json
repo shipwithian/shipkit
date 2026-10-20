@@ -19,7 +19,8 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "shipwithian/shipkit-core": "@dev",
-        "spatie/laravel-permission": "^8.3"
+        "spatie/laravel-permission": "^8.3",
+        "spatie/laravel-typescript-transformer": "^3.3"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.6",
@@ -72,6 +73,8 @@
             "@rector:check",
             "npm run check",
             "@php artisan wayfinder:generate --with-form --no-interaction",
+            "@types:generate",
+            "git diff --exit-code -- resources/js/types/generated.ts",
             "npm run types:check",
             "@php artisan shipkit:verify --ansi",
             "@test"
@@ -80,6 +83,9 @@
             "@rector",
             "@lint",
             "npm run check:fix"
+        ],
+        "types:generate": [
+            "@php artisan typescript:transform --ansi"
         ],
         "types:check": [
             "phpstan analyse --memory-limit=1G"

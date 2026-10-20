@@ -54,6 +54,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
+     * The column defaults, so a user created in memory reports the same values as one read back.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_protected' => false,
+    ];
+
+    /**
      * The user's roles, attached through {@see RoleAssignment} so removals run the role guards.
      *
      * @return BelongsToMany<Model, Model, RoleAssignment, 'pivot'>

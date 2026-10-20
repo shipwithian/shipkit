@@ -15,10 +15,10 @@ import {
 import { dashboard } from '@/routes';
 import { index as permissionsIndex } from '@/routes/permissions';
 import { index as rolesIndex } from '@/routes/roles';
-import type { Auth, NavItem } from '@/types';
+import type { NavItem } from '@/types';
 
 export function AppSidebar() {
-    const { auth } = usePage<{ auth: Auth }>().props;
+    const { auth } = usePage().props;
     const canAccessRoles = auth.permissions.some((permission) =>
         ['manage roles resource', 'assign permissions'].includes(permission),
     );

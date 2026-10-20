@@ -46,10 +46,12 @@ app/
 ├── Http/
 │   ├── Controllers/       {Context}/{Model}Controller, Api/V1/{Model}Controller
 │   ├── Requests/          {Context}/Store{Model}Request, Api/V1/...
+│   ├── Props/             SharedProps, {Context}/{Page}Props, {Context}/{Model}ListItem
 │   └── Resources/         Api/V1/{Model}Resource
 └── Models/User.php
 
 resources/js/pages/{feature}/    pages and partials, see vendor/shipwithian/shipkit-core/resources/rules/js.md
+resources/js/types/generated.ts  payload types generated from app/Http/Props
 tests/Feature/{Context}/         feature tests, see vendor/shipwithian/shipkit-core/resources/rules/tests.md
 ```
 
@@ -73,7 +75,7 @@ Cascades, row locks, and the full pattern: `vendor/shipwithian/shipkit-core/reso
 - Controllers coordinate HTTP: `Gate::authorize()` as the first statement, then one Action for a write or one Query object for a read, then the response. They do not query models or use `DB`. Route model binding does not replace authorization.
 - Form Requests validate and normalize input only. They never authorize.
 - Routes apply authentication, verification, and throttling, never permission middleware.
-- API resources and Inertia props list every exposed field and never a secret.
+- API resources and Inertia props list every exposed field and never a secret. Inertia props are typed PHP classes in `app/Http/Props`, and the frontend imports the TypeScript types `composer types:generate` produces from them; payload types are generated, never hand-written.
 
 Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requests.md`, `routes.md`, `policies.md`, `responses.md`.
 

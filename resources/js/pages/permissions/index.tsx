@@ -2,13 +2,11 @@ import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import { CreatePermissionDialog } from '@/pages/permissions/partials/create-permission-dialog';
 import { PermissionsTable } from '@/pages/permissions/partials/permissions-table';
-import type { PermissionListItem } from '@/types';
+import type { PermissionIndexProps } from '@/types';
 
 export default function PermissionsIndex({
     permissions,
-}: {
-    permissions: PermissionListItem[];
-}) {
+}: PermissionIndexProps) {
     return (
         <>
             <Head title="Permissions" />

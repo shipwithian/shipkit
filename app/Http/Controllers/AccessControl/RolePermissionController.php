@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\AccessControl;
 
 use App\Domain\AccessControl\Actions\SyncRolePermissionsAction;
-use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use App\Domain\AccessControl\Queries\AssignablePermissionListQuery;
 use App\Http\Controllers\Controller;
+use App\Http\Props\AccessControl\AssignablePermission;
+use App\Http\Props\AccessControl\RolePermissionsEditProps;
+use App\Http\Props\AccessControl\RoleWithPermissionIds;
 use App\Http\Requests\AccessControl\UpdateRolePermissionsRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -21,22 +23,10 @@ class RolePermissionController extends Controller
 
         $role->loadMissing('permissions');
 
-        return Inertia::render('roles/permissions', [
-            'role' => [
-                'id' => $role->id,
-                'name' => $role->name,
-                'is_protected' => $role->is_protected,
-                'permission_ids' => $role->permissions->modelKeys(),
-            ],
-            'permissions' => array_map(
-                fn (Permission $permission): array => [
-                    'id' => $permission->id,
-                    'name' => $permission->name,
-                    'is_protected' => $permission->is_protected,
-                ],
-                $assignablePermissionList->handle()->all(),
-            ),
-        ]);
+        return Inertia::render('roles/permissions', new RolePermissionsEditProps(
+            role: RoleWithPermissionIds::from($role),
+            permissions: array_values(array_map(AssignablePermission::from(...), $assignablePermissionList->handle()->all())),
+        ));
     }
 
     public function update(
