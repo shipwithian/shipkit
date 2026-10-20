@@ -21,6 +21,7 @@ const ARCHIVE_EXCLUDED = [
     '.github/scripts/prepare-release.sh' => 'the script behind the template\'s release workflow',
     '.github/scripts/split-core.sh' => 'the script behind the template\'s split-core and release workflows',
     'docs/releasing.md' => 'the template maintainer\'s release runbook',
+    'tests/Feature/ReleasePreparationTest.php' => 'tests the release scripts, which a new project does not receive',
     '.github/CODEOWNERS' => 'names the template\'s maintainer; a new project names its own',
     'docs/branch-protection.md' => 'the template maintainer\'s runbook for protecting its main branch',
 ];

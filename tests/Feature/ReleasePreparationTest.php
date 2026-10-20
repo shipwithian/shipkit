@@ -22,30 +22,39 @@ afterEach(function () {
     File::deleteDirectory($this->checkout);
 });
 
-it('turns main into a release commit that requires the published shipkit-core', function () {
-    commitCheckoutOfProject($this->checkout);
-    $main = runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD']);
+describe('a prepared release', function () {
+    beforeEach(function () {
+        commitCheckoutOfProject($this->checkout);
+        $this->main = runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD']);
 
-    $release = releaseScript('1.4.2', $this->checkout);
-    $release->mustRun();
+        releaseScript('1.4.2', $this->checkout)->mustRun();
+    });
 
-    $composer = json_decode((string) file_get_contents($this->checkout.'/composer.json'), true);
+    it('requires the published shipkit-core instead of the path repository', function () {
+        $composer = json_decode((string) file_get_contents($this->checkout.'/composer.json'), true);
 
-    expect($composer['require']['shipwithian/shipkit-core'])->toBe('^1.4')
-        ->and($composer)->not->toHaveKey('repositories')
-        ->and(is_dir($this->checkout.'/packages'))->toBeFalse()
-        ->and(runInCheckout($this->checkout, ['git', 'rev-parse', 'v1.4.2^{commit}']))->toBe(runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD']))
-        ->and(runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD~1']))->toBe($main)
-        ->and(runInCheckout($this->checkout, ['git', 'status', '--porcelain']))->toBe('');
+        expect($composer['require']['shipwithian/shipkit-core'])->toBe('^1.4')
+            ->and($composer)->not->toHaveKey('repositories')
+            ->and(is_dir($this->checkout.'/packages'))->toBeFalse();
+    });
 
-    foreach (['phpstan.neon', 'rector.php', 'phpunit.xml'] as $configuration) {
-        expect((string) file_get_contents($this->checkout.'/'.$configuration))->not->toContain('packages/shipkit-core');
-    }
+    it('tags one commit on top of main and leaves nothing uncommitted', function () {
+        expect(runInCheckout($this->checkout, ['git', 'rev-parse', 'v1.4.2^{commit}']))->toBe(runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD']))
+            ->and(runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD~1']))->toBe($this->main)
+            ->and(runInCheckout($this->checkout, ['git', 'status', '--porcelain']))->toBe('');
+    });
 
-    expect((string) file_get_contents($this->checkout.'/phpstan.neon'))->toContain('app/')
-        ->and((string) file_get_contents($this->checkout.'/rector.php'))->toContain("__DIR__.'/app'")
-        ->and(simplexml_load_file($this->checkout.'/phpunit.xml'))->not->toBeFalse()
-        ->and((new Process(['php', '-l', 'rector.php'], $this->checkout))->run())->toBe(0);
+    it('removes the package folder from the checks that listed it and keeps the rest', function () {
+        foreach (['phpstan.neon', 'rector.php', 'phpunit.xml'] as $configuration) {
+            expect((string) file_get_contents($this->checkout.'/'.$configuration))->not->toContain('packages/shipkit-core');
+        }
+
+        expect((string) file_get_contents($this->checkout.'/phpstan.neon'))->toContain('app/')
+            ->and((string) file_get_contents($this->checkout.'/rector.php'))->toContain("__DIR__.'/app'")
+            ->and((string) file_get_contents($this->checkout.'/phpunit.xml'))->toContain('vendor/shipwithian/shipkit-core/tests')
+            ->and(simplexml_load_file($this->checkout.'/phpunit.xml'))->not->toBeFalse()
+            ->and((new Process(['php', '-l', 'rector.php'], $this->checkout))->run())->toBe(0);
+    });
 });
 
 it('refuses a version that is not major.minor.patch', function (string $version) {
@@ -80,6 +89,33 @@ it('refuses to release from a checkout with uncommitted changes', function () {
     expect($release->isSuccessful())->toBeFalse()
         ->and($release->getErrorOutput())->toContain('uncommitted changes');
 });
+
+it('refuses to split the package without a token', function () {
+    $split = new Process([base_path('.github/scripts/split-core.sh'), '1.0.0'], base_path(), ['SHIPKIT_CORE_SPLIT_TOKEN' => '']);
+    $split->run();
+
+    expect($split->isSuccessful())->toBeFalse()
+        ->and($split->getErrorOutput())->toContain('SHIPKIT_CORE_SPLIT_TOKEN is not set');
+});
+
+it('refuses to tag the split with a version that is not major.minor.patch', function () {
+    $split = new Process([base_path('.github/scripts/split-core.sh'), 'v1.0'], base_path(), ['SHIPKIT_CORE_SPLIT_TOKEN' => 'unused']);
+    $split->run();
+
+    expect($split->isSuccessful())->toBeFalse()
+        ->and($split->getErrorOutput())->toContain('The version must look like 1.0.0');
+});
+
+it('refuses a core source the fresh-project script does not know', function (array $environment, string $message) {
+    $project = new Process([base_path('.github/scripts/fresh-project.sh'), sys_get_temp_dir().'/never-created-'.Str::uuid()], base_path(), $environment);
+    $project->run();
+
+    expect($project->isSuccessful())->toBeFalse()
+        ->and($project->getErrorOutput())->toContain($message);
+})->with([
+    'a misspelled source' => [['SHIPKIT_CORE_SOURCE' => 'Packagist'], "Unknown SHIPKIT_CORE_SOURCE 'Packagist'"],
+    'a split with no folder' => [['SHIPKIT_CORE_SOURCE' => 'split', 'SHIPKIT_CORE_VERSION' => '1.0.0'], 'SHIPKIT_CORE_PATH must name the split package'],
+]);
 
 /**
  * Copy the project's files, including ones not committed yet, into a fresh repository with one commit.

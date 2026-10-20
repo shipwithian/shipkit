@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: split-core
+  group: publish-shipkit-core
   cancel-in-progress: false
 
 jobs:

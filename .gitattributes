@@ -18,3 +18,4 @@
 /.github/scripts/prepare-release.sh export-ignore
 /.github/scripts/split-core.sh export-ignore
 /docs/releasing.md export-ignore
+/tests/Feature/ReleasePreparationTest.php export-ignore

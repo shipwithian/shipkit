@@ -20,11 +20,10 @@ Only the maintainer can do these. A release fails with a message that names the 
 ## Release
 
 1. **Prepare the notes in a pull request.** In `CHANGELOG.md` and `packages/shipkit-core/CHANGELOG.md`, replace `(unreleased)` with the version and date. A major release must also have its section in `packages/shipkit-core/UPGRADE.md` (see below). Merge it.
-2. **Run the release.** From the Actions tab, run **release** on `main` with the version, such as `1.0.0`. It does this in order and stops at the first failure:
-    1. Splits `packages/shipkit-core` and tags the split `v1.0.0` in `shipwithian/shipkit-core`.
-    2. Waits up to 10 minutes for Packagist to list it.
-    3. Builds the release commit and creates a project from it with the package from Packagist, then runs `composer ci:check` in that project and checks that it fails when the checks are unregistered or a mapped model is unguarded.
-    4. Pushes the tag `v1.0.0` to this repository.
+2. **Run the release.** From the Actions tab, run **release** on `main` with the version, such as `1.0.0`. It runs three jobs in order and stops at the first failure:
+    1. **verify** splits `packages/shipkit-core` without publishing it, builds the release commit, creates a project from it with the split package standing in for version `1.0.0`, and runs `composer ci:check` in that project. It also checks that `ci:check` fails when the checks are unregistered or a mapped model is unguarded. Nothing is tagged yet, so a release that cannot work leaves nothing behind.
+    2. **shipkit-core** tags the split `v1.0.0` in `shipwithian/shipkit-core` and waits up to 10 minutes for Packagist to list it.
+    3. **ShipKit** builds the release commit again, this time locked to the package from Packagist, repeats the project check against it, and pushes the tag `v1.0.0` to this repository.
 3. **Check it as a user would.** In an empty folder, run `laravel new release-check --using=shipwithian/shipkit`, then `cd release-check && composer ci:check`. Delete the folder afterwards.
 4. **Publish the notes.** Create the GitHub release for the tag from the matching `CHANGELOG.md` section:
 
@@ -32,7 +31,11 @@ Only the maintainer can do these. A release fails with a message that names the 
 gh release create v1.0.0 --title "ShipKit 1.0.0" --notes-file notes.md
 ```
 
-If a step fails after the core tag exists and `packages/shipkit-core` has not changed since, rerun the workflow: pushing the same split to the same tag is a no-op. Otherwise, or if the failure is in the project check, fix `main` and release the next patch version; never move a tag.
+If **verify** fails, nothing was published: fix `main` and run the release again with the same version.
+
+If a later job fails, the core tag already exists. When `packages/shipkit-core` has not changed since, rerun the workflow: pushing the same split to the same tag is a no-op, and the job that failed runs again. If the final push fails because the template tag already exists, the release is done. Otherwise, fix `main` and release the next patch version; never move a tag.
+
+The **release** and **split core** workflows share one queue, because both push to the `shipkit-core` repository's `main`. GitHub keeps one waiting run per queue, so a push that arrives while a release is waiting can cancel it; run the release again if you find it cancelled.
 
 ## Versioning
 

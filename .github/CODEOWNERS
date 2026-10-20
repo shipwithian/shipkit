@@ -46,6 +46,7 @@
 /tests/Feature/CodeOwnersTest.php                        @ianlabicani
 /tests/Feature/CreationInvariantsTest.php                @ianlabicani
 /tests/Feature/DomainFactoryResolutionTest.php           @ianlabicani
+/tests/Feature/ReleasePreparationTest.php               @ianlabicani
 /tests/Feature/RouteAuthorizationTest.php                @ianlabicani
 /tests/Feature/TemplateArchiveTest.php                   @ianlabicani
 /tests/Feature/AccessControl/AccessControlInvariantsTest.php    @ianlabicani
