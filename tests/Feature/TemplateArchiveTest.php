@@ -16,6 +16,12 @@ const ARCHIVE_EXCLUDED = [
     '.github/workflows/browser-tests.yml' => 'a workflow for the template itself',
     '.github/workflows/fresh-project.yml' => 'a workflow for the template itself',
     '.github/scripts/fresh-project.sh' => 'the script behind the template\'s fresh-project workflow',
+    '.github/workflows/release.yml' => 'publishes the template and shipkit-core; a new project releases nothing',
+    '.github/workflows/split-core.yml' => 'publishes shipkit-core from the template repository',
+    '.github/scripts/prepare-release.sh' => 'the script behind the template\'s release workflow',
+    '.github/scripts/split-core.sh' => 'the script behind the template\'s split-core and release workflows',
+    'docs/releasing.md' => 'the template maintainer\'s release runbook',
+    'tests/Feature/ReleasePreparationTest.php' => 'tests the release scripts, which a new project does not receive',
     '.github/CODEOWNERS' => 'names the template\'s maintainer; a new project names its own',
     'docs/branch-protection.md' => 'the template maintainer\'s runbook for protecting its main branch',
 ];

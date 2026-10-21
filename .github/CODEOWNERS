@@ -17,6 +17,8 @@
 # CI, its scripts, Dependabot, and this file.
 /.github/                                                @ianlabicani
 /docs/branch-protection.md                               @ianlabicani
+/docs/releasing.md                                       @ianlabicani
+/CHANGELOG.md                                            @ianlabicani
 
 # The configuration of every check, and where check exceptions are recorded.
 /config/shipkit.php                                      @ianlabicani
@@ -44,6 +46,7 @@
 /tests/Feature/CodeOwnersTest.php                        @ianlabicani
 /tests/Feature/CreationInvariantsTest.php                @ianlabicani
 /tests/Feature/DomainFactoryResolutionTest.php           @ianlabicani
+/tests/Feature/ReleasePreparationTest.php               @ianlabicani
 /tests/Feature/RouteAuthorizationTest.php                @ianlabicani
 /tests/Feature/TemplateArchiveTest.php                   @ianlabicani
 /tests/Feature/AccessControl/AccessControlInvariantsTest.php    @ianlabicani

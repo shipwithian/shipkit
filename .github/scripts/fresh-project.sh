@@ -4,11 +4,16 @@
 # `composer ci:check` passes, and fails when ShipKit's testsuite is unregistered or a guarded
 # model is swapped for an unguarded one.
 #
-# The project requires shipkit-core from this checkout through a path repository, never Packagist.
+# SHIPKIT_CORE_SOURCE says where the project gets shipkit-core:
+#
+#   checkout   (default) the packages/shipkit-core folder of this checkout, through a path repository.
+#   split      the folder SHIPKIT_CORE_PATH, pretending to be SHIPKIT_CORE_VERSION. A release uses it
+#              to prove the release commit against the split package before that is tagged.
+#   packagist  the published package, from the release commit's own composer.json and lock file.
 #
 # Usage: .github/scripts/fresh-project.sh [project-directory]
 # SHIPKIT_ARCHIVE_REF picks the commit to archive (default HEAD); `git stash create` archives
-# uncommitted changes to tracked files.
+# uncommitted changes to tracked files. For a release, it is the release commit.
 
 set -euo pipefail
 
@@ -16,6 +21,7 @@ checkout="$(git rev-parse --show-toplevel)"
 core="$checkout/packages/shipkit-core"
 project="${1:-$(mktemp -d)/fresh-project}"
 ref="${SHIPKIT_ARCHIVE_REF:-HEAD}"
+core_source="${SHIPKIT_CORE_SOURCE:-checkout}"
 
 step() {
     printf '\n\033[1m==> %s\033[0m\n' "$1"
@@ -43,6 +49,16 @@ expect_ci_check_failure() {
     echo "composer ci:check failed as expected: $message"
 }
 
+case "$core_source" in
+    checkout) ;;
+    split)
+        core="${SHIPKIT_CORE_PATH:?SHIPKIT_CORE_PATH must name the split package for SHIPKIT_CORE_SOURCE=split}"
+        core_version="${SHIPKIT_CORE_VERSION:?SHIPKIT_CORE_VERSION must name the version for SHIPKIT_CORE_SOURCE=split}"
+        ;;
+    packagist) ;;
+    *) fail "Unknown SHIPKIT_CORE_SOURCE '$core_source'; use checkout, split, or packagist." ;;
+esac
+
 step "Building the installer archive of $ref into $project"
 if [ -e "$project" ] && [ -n "$(ls -A "$project")" ]; then
     fail "$project already exists and is not empty."
@@ -54,20 +70,46 @@ cd "$project"
 step "Creating the project the way composer create-project does"
 php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-# Copy rather than symlink, as a Packagist install does: Pest cannot register arch() tests from a
-# file that resolves outside the project.
-jq --arg url "$core" '.repositories = [{"name": "shipkit-core", "type": "path", "url": $url, "options": {"symlink": false}}]' \
-    composer.json >composer.json.tmp
-mv composer.json.tmp composer.json
+# The locked version, dist type, and dist URL of shipkit-core.
+lockedCore() {
+    jq -r '.packages[] | select(.name == "shipwithian/shipkit-core") | "\(.version) \(.dist.type) \(.dist.url)"' composer.lock
+}
 
-# The lock file records the archive's own packages/ copy, so resolve shipkit-core again from the checkout.
-composer update shipwithian/shipkit-core --no-interaction --no-progress
+if [ "$core_source" = "packagist" ]; then
+    # The archive is a release: its composer.json and lock file already name the published package.
+    jq -e '.repositories == null' composer.json >/dev/null || fail "The archive still lists a repository for shipkit-core."
+    [ ! -e packages ] || fail "The archive still contains packages/."
+    composer install --no-interaction --no-progress
+
+    installed="$(lockedCore)"
+    case "$installed" in
+        *" path "*) fail "shipkit-core is locked to a path repository: $installed" ;;
+        "") fail "shipkit-core is not in composer.lock." ;;
+    esac
+else
+    # Copy rather than symlink, as a Packagist install does: Pest cannot register arch() tests from a
+    # file that resolves outside the project. A split package has no tag yet, so give it its version.
+    jq --arg url "$core" --arg version "${core_version:-}" '
+        .repositories = [{
+            "name": "shipkit-core", "type": "path", "url": $url,
+            "options": ({"symlink": false} + (if $version == "" then {} else {"versions": {"shipwithian/shipkit-core": $version}} end))
+        }]
+    ' composer.json >composer.json.tmp
+    mv composer.json.tmp composer.json
+
+    # The lock file records a copy that is not the one under test, so resolve shipkit-core again from it.
+    composer update shipwithian/shipkit-core --no-interaction --no-progress
+
+    installed="$(lockedCore)"
+    case "$installed" in
+        *" path $core") ;;
+        *) fail "shipkit-core is installed from '$installed', not from $core." ;;
+    esac
+    diff -rq "$core" vendor/shipwithian/shipkit-core || fail "vendor/shipwithian/shipkit-core differs from $core."
+fi
+
 composer run-script post-create-project-cmd --no-interaction
-
-installed="$(jq -r '.packages[] | select(.name == "shipwithian/shipkit-core") | .dist.url' composer.lock)"
-[ "$installed" = "$core" ] || fail "shipkit-core is installed from $installed, not from this checkout ($core)."
-diff -rq "$core" vendor/shipwithian/shipkit-core || fail "vendor/shipwithian/shipkit-core differs from $core."
-echo "shipkit-core is installed from $installed"
+echo "shipkit-core is installed: $installed"
 
 npm ci --no-audit --no-fund
 npm run build

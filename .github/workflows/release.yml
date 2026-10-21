@@ -1,0 +1,156 @@
+name: release
+
+# Releases shipkit-core and then ShipKit itself at the same version, from main. Run it from the
+# Actions tab; docs/releasing.md lists what the maintainer sets up first and checks afterwards.
+#
+# Nothing is published until the release commit has passed against the split package, so a release
+# that cannot work never leaves a tag behind:
+#   verify   builds the release commit and checks it against the split package, before any tag.
+#   core     tags the split in the shipkit-core repository and waits for Packagist.
+#   template checks the release against the published package, then pushes the template tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, such as 1.0.0 (without the v)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-shipkit-core
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      - name: Split packages/shipkit-core without publishing it
+        run: |
+          split="$(git subtree split --prefix=packages/shipkit-core HEAD)"
+          mkdir "$RUNNER_TEMP/shipkit-core"
+          git archive "$split" | tar -x -C "$RUNNER_TEMP/shipkit-core"
+
+      - name: Prepare the release commit in a separate checkout
+        env:
+          VERSION: ${{ inputs.version }}
+          SHIPKIT_RELEASE_SKIP_LOCK: '1'
+        run: |
+          git clone --quiet --no-hardlinks "$GITHUB_WORKSPACE" "$RUNNER_TEMP/release"
+          .github/scripts/prepare-release.sh "$VERSION" "$RUNNER_TEMP/release"
+
+      - name: Create a project from the release and run its checks against the split package
+        working-directory: ${{ runner.temp }}/release
+        env:
+          VERSION: ${{ inputs.version }}
+          SHIPKIT_CORE_SOURCE: split
+          SHIPKIT_CORE_PATH: ${{ runner.temp }}/shipkit-core
+          SHIPKIT_CORE_VERSION: ${{ inputs.version }}
+        run: .github/scripts/fresh-project.sh "$RUNNER_TEMP/fresh-project"
+
+  core:
+    name: shipkit-core
+    runs-on: ubuntu-latest
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Tag the split of packages/shipkit-core
+        env:
+          SHIPKIT_CORE_SPLIT_TOKEN: ${{ secrets.SHIPKIT_CORE_SPLIT_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: .github/scripts/split-core.sh "$VERSION"
+
+      - name: Wait for Packagist to list the release
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          # Packagist keeps the tag's v in `version`; `version_normalized` is always four numbers.
+          for attempt in $(seq 1 40); do
+            if curl -fsS "https://repo.packagist.org/p2/shipwithian/shipkit-core.json" \
+              | jq -e --arg v "$VERSION.0" '.packages["shipwithian/shipkit-core"][] | select(.version_normalized == $v)' >/dev/null; then
+              echo "Packagist lists shipwithian/shipkit-core $VERSION"
+              exit 0
+            fi
+            echo "Packagist does not list $VERSION yet (attempt $attempt of 40)"
+            sleep 15
+          done
+          echo "Packagist never listed shipwithian/shipkit-core $VERSION. Register the package and its update hook (docs/releasing.md), then rerun." >&2
+          exit 1
+
+  template:
+    name: ShipKit
+    runs-on: ubuntu-latest
+    needs: core
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      - name: Prepare the release commit
+        env:
+          VERSION: ${{ inputs.version }}
+        run: .github/scripts/prepare-release.sh "$VERSION" "$GITHUB_WORKSPACE"
+
+      - name: Create a project from the release and run its checks against Packagist
+        env:
+          SHIPKIT_CORE_SOURCE: packagist
+        run: .github/scripts/fresh-project.sh "$RUNNER_TEMP/fresh-project"
+
+      # The token is passed to this step only, so the install scripts above never see it.
+      - name: Push the release tag
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          authorization="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          echo "::add-mask::$authorization"
+          git -c "http.extraheader=$authorization" push "https://github.com/$GITHUB_REPOSITORY.git" "refs/tags/v$VERSION"
