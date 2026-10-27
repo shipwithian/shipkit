@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\AccessControl\Models\Permission;
 use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -95,6 +96,20 @@ describe('update', function () {
             ->assertSessionHasErrors(['roles' => 'You can only assign or remove roles whose permissions you hold.']);
 
         expect($actor->hasRole(protectedRole()))->toBeFalse();
+    });
+
+    it('lets a super admin assign a role whose permissions super-admin lacks', function () {
+        $user = User::factory()->create();
+        $publisher = Role::create(['name' => 'publisher', 'guard_name' => 'web']);
+        $publisher->givePermissionTo(Permission::findOrCreate('publish posts', 'web'));
+
+        $this->actingAs(protectedUser())
+            ->from(route('users.index'))
+            ->put(route('users.roles.update', $user), ['roles' => [$publisher->id]])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('users.index'));
+
+        expect($user->hasRole($publisher))->toBeTrue();
     });
 
     it('refuses to remove the last super admin', function () {

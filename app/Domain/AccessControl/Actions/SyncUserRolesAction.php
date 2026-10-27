@@ -6,6 +6,7 @@ use App\Domain\AccessControl\Exceptions\RoleExceedsActorPermissions;
 use App\Domain\AccessControl\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use ShipKit\Core\AccessControl\SystemPermission;
 use Spatie\Permission\PermissionRegistrar;
 
 class SyncUserRolesAction
@@ -13,6 +14,8 @@ class SyncUserRolesAction
     /**
      * Give the user exactly these roles. The actor must hold every permission of each role they add
      * or remove, so nobody can grant themselves more access or strip it from someone who has more.
+     * An actor who holds `assign permissions` is exempt: they can already put any permission on their
+     * own role, so the check would only add steps, not stop them.
      *
      * @param  array<int, int>  $roleIds
      *
@@ -48,7 +51,13 @@ class SyncUserRolesAction
             return;
         }
 
-        $actorPermissionIds = $actor->getAllPermissions()->pluck('id');
+        $actorPermissions = $actor->getAllPermissions();
+
+        if ($actorPermissions->contains('name', SystemPermission::AssignPermissions->value)) {
+            return;
+        }
+
+        $actorPermissionIds = $actorPermissions->pluck('id');
 
         $exceedsActor = Role::query()
             ->whereKey($roleIds)
