@@ -2,7 +2,7 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2026-10-27)
 
 The first release that lets agents implement features unattended: the rules that protect the application's invariants are enforced by code, tests, and CI instead of by review, and they ship in a versioned package that updates with `composer update`.
 
