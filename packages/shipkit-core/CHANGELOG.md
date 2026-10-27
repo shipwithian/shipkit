@@ -2,7 +2,7 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2026-10-27)
 
 The first release.
 
