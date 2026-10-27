@@ -7,14 +7,14 @@ it('shares no navigation abilities with a guest', function () {
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user', null)
-            ->where('auth.can', ['viewRoles' => false, 'viewPermissions' => false]));
+            ->where('auth.can', ['viewRoles' => false, 'viewPermissions' => false, 'viewUsers' => false]));
 });
 
 it('shares no navigation abilities with a user without access control permissions', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('auth.can', ['viewRoles' => false, 'viewPermissions' => false]));
+            ->where('auth.can', ['viewRoles' => false, 'viewPermissions' => false, 'viewUsers' => false]));
 });
 
 it('shares the navigation abilities each permission grants through a role', function (array $permissions, array $abilities) {
@@ -23,9 +23,10 @@ it('shares the navigation abilities each permission grants through a role', func
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.can', $abilities));
 })->with([
-    'role resource management' => [['manage roles resource'], ['viewRoles' => true, 'viewPermissions' => false]],
-    'permission assignment' => [['assign permissions'], ['viewRoles' => true, 'viewPermissions' => false]],
-    'permission resource management' => [['manage permissions resource'], ['viewRoles' => false, 'viewPermissions' => true]],
+    'role resource management' => [['manage roles resource'], ['viewRoles' => true, 'viewPermissions' => false, 'viewUsers' => false]],
+    'permission assignment' => [['assign permissions'], ['viewRoles' => true, 'viewPermissions' => false, 'viewUsers' => false]],
+    'permission resource management' => [['manage permissions resource'], ['viewRoles' => false, 'viewPermissions' => true, 'viewUsers' => false]],
+    'role assignment' => [['assign roles'], ['viewRoles' => false, 'viewPermissions' => false, 'viewUsers' => true]],
 ]);
 
 it('stops sharing an ability once its permission is revoked', function () {
