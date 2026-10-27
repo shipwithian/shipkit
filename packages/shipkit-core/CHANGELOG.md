@@ -2,9 +2,11 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## Unreleased
+## 2.0.0 (Unreleased)
 
-- **Access Control records:** `SystemPermission::AssignRoles` (`assign roles`), which lets a user put roles on users. Existing projects run `php artisan db:seed --class=AccessControlSeeder` again to create it and give it to `super-admin`.
+A major release because a new system permission makes a 1.0 project's seeder test fail. [UPGRADE.md](UPGRADE.md#upgrading-to-20) has the fix.
+
+- **Access Control records:** `SystemPermission::AssignRoles` (`assign roles`), the permission to put roles on users, reserved because nobody could otherwise change who holds which role. The bootstrap creates it protected and gives it to `super-admin`; existing projects run `php artisan db:seed --class=AccessControlSeeder` again.
 
 ## 1.0.0 (2026-10-27)
 

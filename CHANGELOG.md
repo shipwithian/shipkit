@@ -2,6 +2,12 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
+## Unreleased
+
+Requires `shipwithian/shipkit-core` 2.0.
+
+- **Assign roles to users:** a paginated Users page, gated by the new `assign roles` system permission, sets the roles each user holds. `SyncUserRolesAction` refuses to add or remove a role holding a permission the actor lacks, so nobody can grant themselves `super-admin` or strip it from someone with more access, and the last super admin still cannot lose the role.
+
 ## 1.0.0 (2026-10-27)
 
 The first release that lets agents implement features unattended: the rules that protect the application's invariants are enforced by code, tests, and CI instead of by review, and they ship in a versioned package that updates with `composer update`.
