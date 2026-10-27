@@ -65,8 +65,7 @@ export function EditUserRolesDialog({ user, roles }: Props) {
                 <DialogHeader>
                     <DialogTitle>Roles for {user.name}</DialogTitle>
                     <DialogDescription>
-                        You can only add or remove roles whose permissions you
-                        hold.
+                        Choose the roles this user holds.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={submit} className="space-y-4">
