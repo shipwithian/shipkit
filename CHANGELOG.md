@@ -4,6 +4,12 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+Requires `shipwithian/shipkit-core` 3.0.
+
+- **Short frontend files:** pages stay at or under 200 lines and other frontend files at or under 400, checked by `shipkit-core`'s `FrontendFileLengthTest`, so a page composes partials instead of growing into one large file.
+
+## 2.0.0 (2026-10-27)
+
 Requires `shipwithian/shipkit-core` 2.0.
 
 - **Assign roles to users:** a paginated Users page, gated by the new `assign roles` system permission, sets the roles each user holds. `SyncUserRolesAction` refuses to add or remove a role holding a permission the actor lacks, so nobody can grant themselves `super-admin` or strip it from someone with more access, and the last super admin still cannot lose the role.

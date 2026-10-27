@@ -18,6 +18,13 @@ use SplFileInfo;
  */
 class ProjectLayout
 {
+    /**
+     * Frontend paths that hold generated code, which the frontend checks do not read.
+     *
+     * @var list<string>
+     */
+    public const array GENERATED_FRONTEND_PATHS = ['resources/js/actions/', 'resources/js/routes/', 'resources/js/wayfinder/', 'resources/js/types/generated.ts'];
+
     private static ?self $current = null;
 
     private ?string $appNamespace = null;
@@ -115,6 +122,37 @@ class ProjectLayout
         foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS)) as $file) {
             if ($file->getExtension() === 'php') {
                 $files[] = $file->getPathname();
+            }
+        }
+
+        sort($files);
+
+        return $files;
+    }
+
+    /**
+     * Every TypeScript source below `resources/js`, relative to the project, except generated code.
+     *
+     * @return list<string>
+     */
+    public function frontendFiles(): array
+    {
+        $path = $this->path('resources/js');
+
+        if (! is_dir($path)) {
+            return [];
+        }
+
+        $files = [];
+
+        /** @var SplFileInfo $file */
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS)) as $file) {
+            $relative = substr($file->getPathname(), strlen($this->path()) + 1);
+
+            $isGenerated = array_filter(self::GENERATED_FRONTEND_PATHS, fn (string $generated): bool => str_starts_with($relative, $generated)) !== [];
+
+            if (in_array($file->getExtension(), ['ts', 'tsx'], true) && ! $isGenerated) {
+                $files[] = $relative;
             }
         }
 
