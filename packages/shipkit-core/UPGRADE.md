@@ -20,6 +20,26 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 2.0
+
+### The `assign roles` system permission
+
+- **Fails:** `AccessControlSeederTest` › "seeds protected access control records idempotently", with `Failed asserting that 4 is identical to 3.`
+- **Fix:** Count the system permissions instead of hardcoding them: `->toBe(count(SystemPermission::cases()))`. Then run `php artisan db:seed --class=AccessControlSeeder` in every environment so the database has the new permission and `super-admin` holds it.
+- **Why:** `SystemPermission::AssignRoles` was added, so the bootstrap now creates four protected permissions instead of three.
+
+### `SystemRecordIsNotProtected` when seeding
+
+- **Fails:** `AccessControlSeeder` throws `SystemRecordIsNotProtected` for the permission `assign roles`.
+- **Fix:** Your project already has its own unprotected `assign roles` permission. Rename it or delete it, then run the seeder again. Roles that held it need the new protected permission instead.
+- **Why:** Only the bootstrap may create a protected record, and it refuses to adopt an existing unprotected one.
+
+### The Users page is template code
+
+- **Fails:** nothing. Updating the package adds the permission, not the feature.
+- **Fix:** To assign roles from the app, copy the feature from the ShipKit template: `SyncUserRolesAction`, `RoleExceedsActorPermissions`, `UserRoleListQuery`, `RolePolicy::assignToUsers`, `UserRoleController` and its request, props, and routes, `resources/js/pages/users`, the `viewUsers` navigation ability, and their tests. Then run `composer types:generate`.
+- **Why:** Projects are one-time copies of the template, and only enforcement ships in `shipkit-core`.
+
 ## Upgrading to 1.0
 
 The first release. There is nothing to upgrade from.
