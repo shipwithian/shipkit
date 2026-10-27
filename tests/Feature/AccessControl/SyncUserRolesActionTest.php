@@ -35,6 +35,15 @@ it('refuses to remove a role with a permission the actor lacks', function () {
     }
 })->throws(RoleExceedsActorPermissions::class);
 
+it('lets an actor who assigns permissions add and remove any role', function () {
+    $actor = userWithPermissions(['assign roles', 'assign permissions']);
+    $this->user->assignRole($this->archiver);
+
+    app(SyncUserRolesAction::class)->handle($actor, $this->user, [$this->publisher->id]);
+
+    expect($this->user->roles()->pluck('name')->all())->toBe(['publisher']);
+});
+
 it('keeps a role the actor could not grant when it is left unchanged', function () {
     $this->user->assignRole($this->archiver);
 
