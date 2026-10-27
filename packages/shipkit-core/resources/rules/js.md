@@ -17,6 +17,10 @@ The shared `auth` prop (`AuthProps`) holds the signed-in user, `null` for a gues
 
 A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it: `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
 
+## Keep files short by splitting them as they grow
+
+A page stays at or under 200 lines and any other frontend file at or under 400; `FrontendFileLengthTest` fails above that. Split before you reach the limit, not after: move each section, dialog, table, or form into its own partial in the feature's `partials/` folder, and the page's state and handlers into a `use-{feature}.ts` hook beside them, so the page only reads its props and composes the pieces. The vendored primitives in `components/ui` are exempt. A file that must stay long goes in `shipkit.architecture.long_frontend_files` in `config/shipkit.php` with the reason.
+
 ## Use full pages when the feature edits on its own screens
 
 A feature that creates and edits on dedicated screens instead of in dialogs uses `index.tsx`, `create.tsx`, `show.tsx`, and `edit.tsx`, and shares the form fields between create and edit through `partials/{model}-fields.tsx`. Dialog-based features such as roles keep `create-`, `edit-`, and `delete-{model}-dialog.tsx` partials.

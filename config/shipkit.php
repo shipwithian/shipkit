@@ -44,6 +44,7 @@ return [
         'protected_marker_exceptions' => [
             'tests/Feature/AccessControl/AccessControlInvariantsTest.php' => 'attempts to change the marker to prove the models refuse it',
         ],
+        'long_frontend_files' => [],
     ],
 
     /*

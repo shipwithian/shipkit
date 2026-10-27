@@ -1,23 +1,13 @@
 <?php
 
-use Illuminate\Support\Str;
 use ShipKit\Core\Architecture\ProjectLayout;
-
-/**
- * Frontend folders that hold generated code, which the check does not read.
- *
- * @var list<string>
- */
-const GENERATED_FRONTEND_PATHS = ['resources/js/actions/', 'resources/js/routes/', 'resources/js/wayfinder/', 'resources/js/types/generated.ts'];
 
 it('gates the UI on server-computed abilities, never permission names', function () {
     $layout = ProjectLayout::current();
     $violations = [];
 
-    foreach (frontendSourceFiles($layout) as $path) {
-        $relative = Str::after($path, $layout->path().'/');
-
-        foreach (permissionNameChecks((string) file_get_contents($path)) as $line => $check) {
+    foreach ($layout->frontendFiles() as $relative) {
+        foreach (permissionNameChecks((string) file_get_contents($layout->path($relative))) as $line => $check) {
             $violations[] = "{$relative}:{$line} decides visibility from a permission name (`{$check}`). Pass the page an ability computed with the Gate from the policy the controller authorizes, such as `can.update` in its props class, and read that instead";
         }
     }
@@ -71,30 +61,4 @@ function permissionNameChecks(string $source): array
     }
 
     return $checks;
-}
-
-/**
- * @return list<string>
- */
-function frontendSourceFiles(ProjectLayout $layout): array
-{
-    $directory = $layout->path('resources/js');
-
-    if (! is_dir($directory)) {
-        return [];
-    }
-
-    $files = [];
-
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)) as $file) {
-        $path = $file->getPathname();
-
-        if (Str::endsWith($path, ['.ts', '.tsx']) && ! Str::startsWith(Str::after($path, $layout->path().'/'), GENERATED_FRONTEND_PATHS)) {
-            $files[] = $path;
-        }
-    }
-
-    sort($files);
-
-    return $files;
 }

@@ -20,6 +20,14 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 3.0
+
+### Frontend files over the length limit
+
+- **Fails:** `FrontendFileLengthTest` › "keeps every frontend file short enough to read in one sitting", with `resources/js/pages/{feature}/{page}.tsx has N lines, over the 200-line limit for a page.`
+- **Fix:** Split the file: move each section, dialog, table, or form into its own partial in the feature's `partials/` folder, and state and handlers into a `use-{feature}.ts` hook beside it. Any other frontend file has a 400-line limit. To keep a file long on purpose, list its path in `architecture.long_frontend_files` in `config/shipkit.php` with the reason.
+- **Why:** Nothing limited a page's size, so pages grew past 2,000 lines that neither people nor agents could review.
+
 ## Upgrading to 2.0
 
 ### The `assign roles` system permission

@@ -35,12 +35,16 @@ return [
     | protected_marker_exceptions: files allowed to write is_protected, keyed by path, such as a test
     | that proves the marker cannot change. Application code never belongs here.
     |
+    | long_frontend_files: files under resources/js allowed past FrontendFileLengthTest's limit
+    | (200 lines for a page, 400 for any other file), keyed by path, with the reason.
+    |
     */
 
     'architecture' => [
         'contexts_using_framework_exceptions' => [],
         'non_context_folders' => [],
         'protected_marker_exceptions' => [],
+        'long_frontend_files' => [],
     ],
 
     /*

@@ -2,7 +2,15 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## 2.0.0 (Unreleased)
+## 3.0.0 (Unreleased)
+
+A major release because a new check can fail a project that passed 2.x. [UPGRADE.md](UPGRADE.md#upgrading-to-30) has the fix.
+
+- **Checks:** `FrontendFileLengthTest` fails when a page in `resources/js/pages` is over 200 lines or any other frontend file is over 400, so pages stay a list of partials instead of growing into thousand-line files. The vendored `components/ui` primitives are exempt, and `shipkit.architecture.long_frontend_files` records deliberate exceptions with their reasons.
+- **Guidance:** the `js` rule says how to split a file before it reaches the limit.
+- **Internals:** `ProjectLayout::frontendFiles()` lists the project's own TypeScript sources, shared by both frontend checks.
+
+## 2.0.0 (2026-10-27)
 
 A major release because a new system permission makes a 1.0 project's seeder test fail. [UPGRADE.md](UPGRADE.md#upgrading-to-20) has the fix.
 
