@@ -33,4 +33,9 @@ class RolePolicy
     {
         return $user->can(SystemPermission::AssignPermissions->value);
     }
+
+    public function assignToUsers(User $user): bool
+    {
+        return $user->can(SystemPermission::AssignRoles->value);
+    }
 }

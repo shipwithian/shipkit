@@ -31,9 +31,10 @@ it('seeds protected access control records idempotently', function () {
         ->and($role->hasPermissionTo(SystemPermission::ManageRolesResource))->toBeTrue()
         ->and($role->hasPermissionTo(SystemPermission::ManagePermissionsResource))->toBeTrue()
         ->and($role->hasPermissionTo(SystemPermission::AssignPermissions))->toBeTrue()
+        ->and($role->hasPermissionTo(SystemPermission::AssignRoles))->toBeTrue()
         ->and($role->hasPermissionTo('view reports'))->toBeTrue()
         ->and(Role::query()->where('name', SystemRole::SuperAdmin->value)->count())->toBe(1)
-        ->and(Permission::query()->where('is_protected', true)->count())->toBe(3);
+        ->and(Permission::query()->where('is_protected', true)->count())->toBe(count(SystemPermission::cases()));
 });
 
 it('does not grant implicit abilities to the super admin role', function () {

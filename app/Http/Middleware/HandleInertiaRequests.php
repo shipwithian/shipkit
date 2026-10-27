@@ -38,8 +38,8 @@ class HandleInertiaRequests extends Middleware
      * @see https://inertiajs.com/shared-data
      *
      * The typed `SharedProps` sits in the list next to Inertia's own shared props, and Inertia
-     * expands it into its public properties. The navigation abilities come from the same `viewAny`
-     * policy abilities the access control controllers authorize.
+     * expands it into its public properties. The navigation abilities come from the same policy
+     * abilities the access control index controllers authorize.
      *
      * @return array<array-key, mixed>
      */
@@ -52,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                 auth: AuthProps::for($request->user(), new NavigationAbilities(
                     viewRoles: Gate::allows('viewAny', Role::class),
                     viewPermissions: Gate::allows('viewAny', Permission::class),
+                    viewUsers: Gate::allows('assignToUsers', Role::class),
                 )),
                 sidebarOpen: ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             ),

@@ -5,6 +5,10 @@ export type AssignablePermission = {
     readonly name: string;
     readonly is_protected: boolean;
 };
+export type AssignableRole = {
+    readonly id: number;
+    readonly name: string;
+};
 export type AuthProps = {
     readonly user: AuthUser | null;
     readonly can: NavigationAbilities;
@@ -28,6 +32,14 @@ export type LoginProps = {
 export type NavigationAbilities = {
     readonly viewRoles: boolean;
     readonly viewPermissions: boolean;
+    readonly viewUsers: boolean;
+};
+export type Pagination = {
+    readonly current_page: number;
+    readonly last_page: number;
+    readonly total: number;
+    readonly previous_page_url: string | null;
+    readonly next_page_url: string | null;
 };
 export type PasskeyListItem = {
     readonly id: number;
@@ -109,6 +121,17 @@ export type SharedProps = {
     readonly name: string;
     readonly auth: AuthProps;
     readonly sidebarOpen: boolean;
+};
+export type UserRoleIndexProps = {
+    readonly users: UserRoleListItem[];
+    readonly pagination: Pagination;
+    readonly roles: AssignableRole[];
+};
+export type UserRoleListItem = {
+    readonly id: number;
+    readonly name: string;
+    readonly email: string;
+    readonly role_ids: number[];
 };
 export type VerifyEmailProps = {
     readonly status: string | null;

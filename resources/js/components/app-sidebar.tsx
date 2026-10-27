@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { KeyRound, LayoutGrid, ShieldCheck } from 'lucide-react';
+import { KeyRound, LayoutGrid, ShieldCheck, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -15,6 +15,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as permissionsIndex } from '@/routes/permissions';
 import { index as rolesIndex } from '@/routes/roles';
+import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -36,6 +37,9 @@ export function AppSidebar() {
                       icon: KeyRound,
                   },
               ]
+            : []),
+        ...(can.viewUsers
+            ? [{ title: 'Users', href: usersIndex(), icon: Users }]
             : []),
     ];
 

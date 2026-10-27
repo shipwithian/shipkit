@@ -7,4 +7,5 @@ enum SystemPermission: string
     case ManageRolesResource = 'manage roles resource';
     case ManagePermissionsResource = 'manage permissions resource';
     case AssignPermissions = 'assign permissions';
+    case AssignRoles = 'assign roles';
 }
