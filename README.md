@@ -11,8 +11,10 @@ It is designed to be used as a **project template**, not installed as a Laravel 
 Create a new project with the Laravel installer:
 
 ```bash
-laravel new my-app --using=shipwithian/shipkit
+laravel new my-app --using=shipwithian/shipkit --git --npm
 ```
+
+This installs the latest ShipKit release. `--git` starts the project as a git repository and `--npm` installs and builds the frontend; both are optional.
 
 Move into the project:
 
@@ -34,7 +36,9 @@ composer dev
 
 The installer copies ShipKit into `my-app`, creates `.env`, generates the application key, and runs the migrations. It also generates the agent skills for Claude Code and Codex into `.claude/skills` and `.agents/skills`. Boost detects the React skill only once `node_modules` exists, so run `php artisan boost:update` once after the first `npm install`; `composer setup` does it in that order for you. Seeding adds the protected access-control defaults and a local Super Admin account.
 
-Prefer to start from GitHub? Use the repository's **Use this template** button, or follow [Create a project from ShipKit](#create-a-project-from-shipkit) to clone it and start a fresh history. That section also covers environment configuration and the checklist to run through before building features.
+Without the Laravel installer, `composer create-project shipwithian/shipkit my-app` does the same. To start from GitHub instead, follow [Create a project from ShipKit](#create-a-project-from-shipkit), which also covers environment configuration and the checklist to run through before building features.
+
+Every project requires [`shipwithian/shipkit-core`](https://github.com/shipwithian/shipkit-core), the package that holds ShipKit's guards and checks, from Packagist. The rest of the code is yours to change. [Updating a project](#updating-a-project) explains what updates and how.
 
 ShipKit ships as a single template: web authentication, roles and permissions, and a versioned Sanctum API are all included.
 
@@ -93,10 +97,11 @@ Authorization is powered by Spatie Laravel Permission and currently includes:
 - Role resource management
 - Permission resource management
 - A dedicated role-permission assignment interface
-- Permission-aware navigation and controls
+- A Users page that assigns roles to users, gated by `assign roles`. Adding or removing a role requires holding every permission in it, so nobody can grant more access than they have; holders of `assign permissions` are exempt, since they can already change any role
+- Navigation and controls shown from abilities the server computes with the same policies
 - Policy-based backend authorization
 
-ShipKit does **not** currently include general user administration or user-role assignment screens. Those should be added by a project when its requirements are known.
+ShipKit does **not** include general user administration, such as creating, editing, or deleting users. Add it when a project's requirements are known.
 
 ### Application interface
 
@@ -105,7 +110,8 @@ The application includes an Inertia and React interface with:
 - Responsive application layouts and navigation
 - Light and dark appearance modes
 - Typed Wayfinder routes and controller actions
-- Shared authenticated-user and permission data
+- Shared authenticated user and server-computed abilities
+- TypeScript types for every page payload, generated from PHP
 - Reusable form, dialog, table, badge, and feedback patterns
 
 ## Technology
@@ -271,34 +277,44 @@ A workflow outside standard resource management receives its own verb permission
 
 ```text
 assign permissions
+assign roles
 ```
 
 This keeps resource CRUD access independent from specific business operations.
 
 ### Protected records
 
-System users, roles, and permissions may be marked as protected. Protection is a system invariant rather than an actor permission, so it cannot be bypassed by assigning broader permissions.
+System users, roles, and permissions may be marked as protected. Protection is a system invariant rather than an actor permission, so it cannot be bypassed by assigning broader permissions:
 
-The access-control seeder:
+- Protected roles and permissions cannot be renamed or deleted, and protected users cannot be deleted.
+- A protected role keeps its protected permissions, and the last Super Admin cannot lose the role.
+- The protected marker never changes after a record is created, in either direction.
 
-- Creates or finds and protects the Super Admin account and role
-- Creates and protects required system permissions
-- Preserves additional permissions assigned to the Super Admin role
-- Migrates legacy system permission names without losing assignments
-- Can be run repeatedly without duplicating system records
+Only `shipkit-core`'s access-control bootstrap, which the access-control seeder calls, creates protected records. Seeding:
 
-### Frontend permission contract
+- Creates the missing system permissions, the Super Admin role, and the Super Admin account, protected from the start
+- Gives the Super Admin role its system permissions and the account its role, keeping any other permissions the role holds
+- Stops with `SystemRecordIsNotProtected` when a record with a system name exists without protection, instead of adopting it
+- Can be run repeatedly without duplicating or rewriting system records
 
-Inertia shares the authenticated user and all direct or role-inherited permissions using this contract:
+### Frontend abilities contract
+
+The frontend never reads permission names. Each page receives the abilities its controls need, computed on the server with `Gate::allows()` against the same policy ability the controller authorizes, and the shared `auth` prop carries the navigation abilities:
 
 ```ts
-export type Auth = {
-    user: User;
-    permissions: string[];
+export type AuthProps = {
+    readonly user: AuthUser | null;
+    readonly can: NavigationAbilities;
+};
+
+export type NavigationAbilities = {
+    readonly viewRoles: boolean;
+    readonly viewPermissions: boolean;
+    readonly viewUsers: boolean;
 };
 ```
 
-The frontend uses `auth.permissions` to show appropriate navigation and controls. These checks improve the interface; backend policies remain the authoritative security boundary.
+These types are generated from the PHP props classes by `composer types:generate`. A page shows a control only when its `can` says so, such as `can.create` or `role.can.update`; `shipkit-core`'s `FrontendAbilitiesTest` fails on a permission-name check like `permissions.includes('...')`. The abilities improve the interface; backend policies remain the authoritative security boundary.
 
 ## Create a project from ShipKit
 
@@ -308,12 +324,14 @@ The Laravel installer flow in [Quick start](#quick-start) is the shortest path. 
 
 Create an empty repository for the new project on GitHub. Do not fork ShipKit or initialize the new repository with a README, license, or `.gitignore`.
 
-Clone ShipKit:
+Clone the latest ShipKit release. Use the newest tag from the [releases page](https://github.com/shipwithian/shipkit/releases) in place of `v3.0.0`:
 
 ```bash
-git clone --branch main --single-branch https://github.com/shipwithian/shipkit.git YOUR_PROJECT
+git clone --branch v3.0.0 --depth 1 https://github.com/shipwithian/shipkit.git YOUR_PROJECT
 cd YOUR_PROJECT
 ```
+
+Clone a release tag, not `main`, and do not use GitHub's **Use this template** button, which copies `main`. `main` is ShipKit's development branch: it builds `shipkit-core` from the copy in `packages/` instead of requiring the published package, so a project started from it cannot update its guards and checks with Composer.
 
 Remove the template Git history, initialize the project's own repository, and push it to the empty remote:
 
@@ -377,7 +395,7 @@ The development command starts the configured Laravel and frontend development p
 
 Before starting business features:
 
-- [ ] Create the project with the Laravel installer, or initialize an empty repository from ShipKit.
+- [ ] Create the project with the Laravel installer, or initialize an empty repository from a ShipKit release tag.
 - [ ] Update `APP_NAME`, `APP_URL`, and project branding.
 - [ ] Update the root package name, description, and keywords in `composer.json`.
 - [ ] Replace the placeholder landing page copy in `resources/js/pages/welcome/partials/content.ts`.
@@ -484,9 +502,27 @@ ShipKit itself remains a starter application. Consider extracting a Laravel pack
 
 Do not introduce a package solely to avoid keeping application-level code in the application.
 
+## Updating a project
+
+A project created from ShipKit gets two kinds of updates, in two different ways.
+
+**`shipkit-core`: guards, checks, rules, and skills.** These come from Composer:
+
+```bash
+composer update shipwithian/shipkit-core
+```
+
+```bash
+composer ci:check
+```
+
+`composer update` also runs `php artisan boost:update`, so the refreshed agent rules and skills arrive with the package. The project's constraint, such as `^3.0`, keeps it within one major version, and a minor or patch release never makes a passing project fail. A new major version tightens a guard, so moving to it is a deliberate step: require it with `composer require shipwithian/shipkit-core:^4.0`, then follow its section in the package's [`UPGRADE.md`](packages/shipkit-core/UPGRADE.md), which names each check that may now fail and the fix.
+
+**Template code: controllers, pages, contexts, and configuration.** Nothing updates it. The project copied it once and owns it from then on. To adopt an improvement from a later ShipKit release, read its section in [`CHANGELOG.md`](CHANGELOG.md), compare the two release tags on GitHub, for example `https://github.com/shipwithian/shipkit/compare/v2.0.0...v3.0.0`, and copy the parts you want.
+
 ## Bringing improvements back to ShipKit
 
-Projects created from ShipKit do not automatically receive later template changes. They are independent repositories by design.
+Projects created from ShipKit do not receive later template changes; only `shipkit-core` updates, as [Updating a project](#updating-a-project) describes. They are independent repositories by design.
 
 When a downstream project discovers a better pattern:
 
