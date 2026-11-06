@@ -11,10 +11,10 @@ It is designed to be used as a **project template**, not installed as a Laravel 
 Create a new project with the Laravel installer:
 
 ```bash
-laravel new my-app --using=shipwithian/shipkit --git --npm
+laravel new my-app --using="shipwithian/shipkit:^3.0" --git --npm
 ```
 
-This installs the latest ShipKit release. `--git` starts the project as a git repository and `--npm` installs and builds the frontend; both are optional.
+Keep the version constraint. The Laravel installer creates starter kits with `--stability=dev`, so without a constraint Composer picks ShipKit's development branch over the latest release. That branch requires `shipkit-core` as `@dev` from a `packages/` folder, so the project can never update it. `--git` starts the project as a git repository and `--npm` installs and builds the frontend; both are optional.
 
 Move into the project:
 
@@ -36,7 +36,7 @@ composer dev
 
 The installer copies ShipKit into `my-app`, creates `.env`, generates the application key, and runs the migrations. It also generates the agent skills for Claude Code and Codex into `.claude/skills` and `.agents/skills`. Boost detects the React skill only once `node_modules` exists, so run `php artisan boost:update` once after the first `npm install`; `composer setup` does it in that order for you. Seeding adds the protected access-control defaults and a local Super Admin account.
 
-Without the Laravel installer, `composer create-project shipwithian/shipkit my-app` does the same. To start from GitHub instead, follow [Create a project from ShipKit](#create-a-project-from-shipkit), which also covers environment configuration and the checklist to run through before building features.
+Without the Laravel installer, `composer create-project shipwithian/shipkit my-app` installs the latest release; it needs no constraint because Composer only picks stable versions by default. To start from GitHub instead, follow [Create a project from ShipKit](#create-a-project-from-shipkit), which also covers environment configuration and the checklist to run through before building features.
 
 Every project requires [`shipwithian/shipkit-core`](https://github.com/shipwithian/shipkit-core), the package that holds ShipKit's guards and checks, from Packagist. The rest of the code is yours to change. [Updating a project](#updating-a-project) explains what updates and how.
 
