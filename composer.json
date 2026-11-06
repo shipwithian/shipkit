@@ -73,8 +73,9 @@
             "@rector:check",
             "npm run check",
             "@php artisan wayfinder:generate --with-form --no-interaction",
+            "@php -r \"copy('resources/js/types/generated.ts', 'storage/framework/cache/generated.ts.before');\"",
             "@types:generate",
-            "git diff --exit-code -- resources/js/types/generated.ts",
+            "@php -r \"if (file_get_contents('resources/js/types/generated.ts') !== file_get_contents('storage/framework/cache/generated.ts.before')) { fwrite(STDERR, 'resources/js/types/generated.ts was out of date with app/Http/Props and has been regenerated: review it and commit it.'.PHP_EOL); exit(1); }\"",
             "npm run types:check",
             "@php artisan shipkit:verify --ansi",
             "@test"

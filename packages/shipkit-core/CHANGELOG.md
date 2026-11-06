@@ -2,7 +2,11 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## 3.0.0 (Unreleased)
+## Unreleased
+
+- **Guidance:** the `responses` rule describes the generated-types check as a comparison with the project's own copy of the file, since `composer ci:check` no longer needs git.
+
+## 3.0.0 (2026-10-27)
 
 A major release because a new check can fail a project that passed 2.x. [UPGRADE.md](UPGRADE.md#upgrading-to-30) has the fix.
 

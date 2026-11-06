@@ -15,7 +15,7 @@ API Resources and Inertia props name every field sent to the client. Never pass 
 
 Every page with props of its own receives a `{Page}Props` class from `app/Http/Props/{Context}/`: a `final readonly` class marked `#[TypeScript]` that extends `App\Http\Props\PageProps`, whose public promoted properties are the props. Nested records are their own `#[TypeScript]` classes with a static `from({Model})` that maps the loaded model, and lists are typed `list<{Item}>` in the constructor's PHPDoc, built with `array_values(array_map({Item}::from(...), ...))`. Shared props are `SharedProps`, returned by `HandleInertiaRequests::share()`. Type each property as what the server sends: nullable when it can be null, and no optional or catch-all fields. `InertiaPayloadTest` fails on an `Inertia::render()`, `inertia()`, or `Route::inertia()` that passes props any other way.
 
-`composer types:generate` writes the TypeScript types to `resources/js/types/generated.ts`. Run it after changing a props class and commit the result; `composer ci:check` regenerates the file and fails when it differs from what is committed.
+`composer types:generate` writes the TypeScript types to `resources/js/types/generated.ts`. Run it after changing a props class and commit the result; `composer ci:check` regenerates the file and fails when it differs from the copy in the project, so a stale committed file fails CI.
 
 ## Send abilities as typed props
 
