@@ -4,6 +4,10 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+- **`composer ci:check` without git:** the check that the generated TypeScript types are up to date no longer uses `git diff`, so it works in a project created with `laravel new` without `--git`. Before, it failed with git's usage text and exit code 129.
+
+## 3.0.0 (2026-10-27)
+
 Requires `shipwithian/shipkit-core` 3.0.
 
 - **Short frontend files:** pages stay at or under 200 lines and other frontend files at or under 400, checked by `shipkit-core`'s `FrontendFileLengthTest`, so a page composes partials instead of growing into one large file.
