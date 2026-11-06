@@ -40,6 +40,21 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Development processes
+    |--------------------------------------------------------------------------
+    |
+    | mailpit: run Mailpit as the `mail` process of `composer dev` in a local environment where
+    | the `mailpit` binary is installed. Point MAIL_PORT at 1025 and read mail at
+    | http://localhost:8025. Set it to false to leave Mailpit out.
+    |
+    */
+
+    'dev' => [
+        'mailpit' => true,
+    ],
+
     'architecture' => [
         'contexts_using_framework_exceptions' => [],
         'non_context_folders' => [],
