@@ -391,6 +391,8 @@ composer dev
 
 The development command starts the configured Laravel and frontend development processes.
 
+Local mail goes to [Mailpit](https://mailpit.axllent.org) on `127.0.0.1:1025`. When the `mailpit` binary is installed (`brew install mailpit`), `composer dev` runs it as the `mail` process (registered by `shipkit-core`; set `dev.mailpit` to `false` in `config/shipkit.php` to turn it off), and verification, password reset, and other emails land in the inbox at http://localhost:8025. Without Mailpit, set `MAIL_MAILER=log` to write emails to `storage/logs/laravel.log` instead. Tests always use the `array` mailer.
+
 ## New-project checklist
 
 Before starting business features:
