@@ -14,7 +14,7 @@ Create a new project with the Laravel installer:
 laravel new my-app --using=shipwithian/shipkit --git --npm
 ```
 
-This installs the latest ShipKit release. `--git` starts the project as a git repository and `--npm` installs and builds the frontend; both are optional.
+This installs the latest ShipKit release. The installer lets Composer choose development versions, so ShipKit's `composer.json` declares its `main` branch as `0.x-dev`, below every release; without that, `main`, whose `shipkit-core` cannot be updated, would win. Add a version such as `--using="shipwithian/shipkit:3.0.0"` to install an exact release. `--git` starts the project as a git repository and `--npm` installs and builds the frontend; both are optional.
 
 Move into the project:
 

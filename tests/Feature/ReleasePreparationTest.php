@@ -38,6 +38,13 @@ describe('a prepared release', function () {
             ->and(is_dir($this->checkout.'/packages'))->toBeFalse();
     });
 
+    it("drops main's branch alias, which only exists to rank main below the releases", function () {
+        $composer = json_decode((string) file_get_contents($this->checkout.'/composer.json'), true);
+
+        expect($composer['extra'])->not->toHaveKey('branch-alias')
+            ->and($composer['extra'])->toHaveKey('laravel');
+    });
+
     it('tags one commit on top of main and leaves nothing uncommitted', function () {
         expect(runInCheckout($this->checkout, ['git', 'rev-parse', 'v1.4.2^{commit}']))->toBe(runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD']))
             ->and(runInCheckout($this->checkout, ['git', 'rev-parse', 'HEAD~1']))->toBe($this->main)
@@ -55,6 +62,12 @@ describe('a prepared release', function () {
             ->and(simplexml_load_file($this->checkout.'/phpunit.xml'))->not->toBeFalse()
             ->and((new Process(['php', '-l', 'rector.php'], $this->checkout))->run())->toBe(0);
     });
+});
+
+it('ranks main below every release, so the Laravel installer installs a release', function () {
+    $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
+
+    expect($composer['extra']['branch-alias']['dev-main'] ?? null)->toBe('0.x-dev', 'The Laravel installer runs create-project with --stability=dev and no version, so without this alias Composer ranks main, the development layout that cannot update shipkit-core, above every release.');
 });
 
 it('refuses a version that is not major.minor.patch', function (string $version) {
@@ -136,6 +149,8 @@ function commitCheckoutOfProject(string $directory): void
     }
 
     runInCheckout($directory, ['git', 'init', '--quiet']);
+    runInCheckout($directory, ['git', 'config', 'gc.auto', '0']);
+    runInCheckout($directory, ['git', 'config', 'maintenance.auto', 'false']);
     runInCheckout($directory, ['git', 'add', '--all']);
     runInCheckout($directory, ['git', '-c', 'user.name=Test', '-c', 'user.email=test@shipkit.invalid', 'commit', '--quiet', '-m', 'main']);
 }

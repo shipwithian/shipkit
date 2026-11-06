@@ -37,11 +37,12 @@ if git rev-parse --verify --quiet "refs/tags/v$version" >/dev/null; then
     exit 1
 fi
 
-echo "Requiring shipwithian/shipkit-core $constraint from Packagist instead of packages/shipkit-core"
+echo "Requiring shipwithian/shipkit-core $constraint from Packagist instead of packages/shipkit-core, without main's branch alias"
 
 jq --arg constraint "$constraint" '
     .require["shipwithian/shipkit-core"] = $constraint
     | del(.repositories)
+    | del(.extra["branch-alias"])
 ' composer.json >composer.json.tmp
 mv composer.json.tmp composer.json
 

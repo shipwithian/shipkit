@@ -125,6 +125,9 @@
         ]
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "0.x-dev"
+        },
         "laravel": {
             "dont-discover": [],
             "installer": {
