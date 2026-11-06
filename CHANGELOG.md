@@ -4,6 +4,7 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+- **`laravel new` installs a release:** `laravel new my-app --using=shipwithian/shipkit` installed the `main` branch, which requires `shipkit-core` as `@dev` from `packages/` and cannot update it, because the installer allows development versions. `main` is now aliased as `0.x-dev`, below every release, and release commits drop the alias.
 - **Local mail in Mailpit:** `.env.example` sends mail to Mailpit on `127.0.0.1:1025`, and `shipkit-core` runs Mailpit with `composer dev` when it is installed. Existing projects get the process with `composer update shipwithian/shipkit-core` and set `MAIL_MAILER=smtp` and `MAIL_PORT=1025` in their `.env` files.
 - **`composer ci:check` without git:** the check that the generated TypeScript types are up to date no longer uses `git diff`, so it works in a project created with `laravel new` without `--git`. Before, it failed with git's usage text and exit code 129.
 
