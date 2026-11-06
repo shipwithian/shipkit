@@ -2,7 +2,9 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
-## Unreleased
+## 3.1.0 (2026-11-06)
+
+Requires `shipwithian/shipkit-core` 3.1.
 
 - **`laravel new` installs a release:** `laravel new my-app --using=shipwithian/shipkit` installed the `main` branch, which requires `shipkit-core` as `@dev` from `packages/` and cannot update it, because the installer allows development versions. `main` is now aliased as `0.x-dev`, below every release, and release commits drop the alias.
 - **Local mail in Mailpit:** `.env.example` sends mail to Mailpit on `127.0.0.1:1025`, and `shipkit-core` runs Mailpit with `composer dev` when it is installed. Existing projects get the process with `composer update shipwithian/shipkit-core` and set `MAIL_MAILER=smtp` and `MAIL_PORT=1025` in their `.env` files.

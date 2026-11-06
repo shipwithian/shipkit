@@ -2,7 +2,7 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## Unreleased
+## 3.1.0 (2026-11-06)
 
 - **Development:** `composer dev` runs [Mailpit](https://mailpit.axllent.org) as its `mail` process in a local environment where the `mailpit` binary is installed. To send local mail to it, set `MAIL_MAILER=smtp` and `MAIL_PORT=1025` in `.env`; read it at http://localhost:8025. Set `dev.mailpit` to `false` in a published `config/shipkit.php`, or call `DevCommands::except('mail')`, to turn it off.
 - **Guidance:** the `responses` rule describes the generated-types check as a comparison with the project's own copy of the file, since `composer ci:check` no longer needs git.
