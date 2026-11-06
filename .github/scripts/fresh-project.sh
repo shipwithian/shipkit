@@ -114,11 +114,7 @@ echo "shipkit-core is installed: $installed"
 npm ci --no-audit --no-fund
 npm run build
 
-# The Laravel installer starts every project as a git repository, and ci:check diffs generated files against it.
-git init --quiet
-git add --all
-git -c user.name='ShipKit CI' -c user.email='ci@shipkit.invalid' commit --quiet -m 'Set up the project'
-
+# No git repository on purpose: `laravel new` creates one only with --git, so ci:check must pass without one.
 step "composer ci:check passes in the new project"
 composer ci:check --no-interaction
 
