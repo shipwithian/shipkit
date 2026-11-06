@@ -4,6 +4,7 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+- **`laravel new` installs a release:** `laravel new my-app --using=shipwithian/shipkit` installed the `main` branch, which requires `shipkit-core` as `@dev` from `packages/` and cannot update it, because the installer allows development versions. `main` is now aliased as `0.x-dev`, below every release, and release commits drop the alias.
 - **`composer ci:check` without git:** the check that the generated TypeScript types are up to date no longer uses `git diff`, so it works in a project created with `laravel new` without `--git`. Before, it failed with git's usage text and exit code 129.
 
 ## 3.0.0 (2026-10-27)
