@@ -1,7 +1,7 @@
 <?php
 
-use App\Domain\Settings\Actions\DeleteAccountAction;
-use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
+use App\Actions\Settings\DeleteAccountAction;
+use App\Exceptions\ProtectedAccountCannotBeDeleted;
 use App\Models\User;
 use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 

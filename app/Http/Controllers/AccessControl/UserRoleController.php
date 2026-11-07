@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\AccessControl;
 
-use App\Domain\AccessControl\Actions\SyncUserRolesAction;
-use App\Domain\AccessControl\Models\Role;
-use App\Domain\AccessControl\Queries\RoleListQuery;
-use App\Domain\AccessControl\Queries\UserRoleListQuery;
+use App\Actions\AccessControl\SyncUserRolesAction;
 use App\Http\Controllers\Controller;
 use App\Http\Props\AccessControl\AssignableRole;
 use App\Http\Props\AccessControl\UserRoleIndexProps;
 use App\Http\Props\AccessControl\UserRoleListItem;
 use App\Http\Props\Pagination;
 use App\Http\Requests\AccessControl\UpdateUserRolesRequest;
+use App\Models\Role;
 use App\Models\User;
+use App\Queries\AccessControl\RoleListQuery;
+use App\Queries\AccessControl\UserRoleListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;

@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
 use App\Http\Props\AuthProps;
 use App\Http\Props\NavigationAbilities;
 use App\Http\Props\SharedProps;
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;

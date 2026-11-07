@@ -1,6 +1,6 @@
 ---
 paths:
-    - 'app/Domain/*/Enums/**'
+    - 'app/Enums/**'
 ---
 
 # Enums

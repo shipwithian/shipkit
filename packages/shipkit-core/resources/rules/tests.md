@@ -7,7 +7,7 @@ paths:
 
 ## Group tests by feature
 
-Place feature tests in `tests/Feature/{Context}/`, using the same context name as `app/Domain/{Context}`. Do not create by-type folders such as `Policies/` or `Actions/`; policy, Action, and Query tests live in their feature folder as `{Model}PolicyTest`, `{Verb}{Model}ActionTest`, and `{Model}ListQueryTest`.
+Place feature tests in `tests/Feature/{Feature}/`, using the same feature name as `app/Actions/{Feature}`. Do not create by-type folders such as `Policies/` or `Actions/`; policy, Action, and Query tests live in their feature folder as `{Model}PolicyTest`, `{Verb}{Model}ActionTest`, and `{Model}ListQueryTest`.
 
 ## Use one file per resource with a describe block per action
 
@@ -31,7 +31,7 @@ Helpers used by more than one file belong in `tests/Pest.php`. Do not leave plac
 
 ## Leave the architecture checks to shipkit-core
 
-Boundary rules live as Pest `arch()` expectations in `shipkit-core` (`vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`), run through the `ShipKit` testsuite. They discover contexts from `app/Domain/*`, so a context created with `php artisan make:context` is covered without editing them. Never edit them in `vendor/`: record a deliberate exception in `config/shipkit.php` with its reason, and put a check for a project-specific rule under `tests/`. Assert invariant failures by their named domain exception, not `ValidationException`, when calling an Action directly.
+Boundary rules live as Pest `arch()` expectations in `shipkit-core` (`vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`), run through the `ShipKit` testsuite. They discover features from the folders of `app/Actions` and `app/Queries`, so a feature created with `php artisan make:feature` is covered without editing them. Never edit them in `vendor/`: record a deliberate exception in `config/shipkit.php` with its reason, and put a check for a project-specific rule under `tests/`. Assert invariant failures by their named exception, not `ValidationException`, when calling an Action directly.
 
 ## Run the full suite yourself
 

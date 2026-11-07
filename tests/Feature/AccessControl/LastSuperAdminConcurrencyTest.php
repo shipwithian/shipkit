@@ -1,7 +1,7 @@
 <?php
 
-use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
-use App\Domain\AccessControl\Models\Role;
+use App\Exceptions\LastSuperAdminCannotBeRemoved;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;

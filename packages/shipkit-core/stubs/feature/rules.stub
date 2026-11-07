@@ -1,0 +1,23 @@
+---
+paths:
+    - 'app/Actions/{{ feature }}/**'
+    - 'app/Queries/{{ feature }}/**'
+---
+
+# {{ title }}
+
+## Vocabulary
+
+_No terms yet. Add each business term with a one-line definition, using the exact names the code uses._
+
+## Invariants
+
+_No invariants yet. List each rule that must always hold, the `ensure...()` method or Action that enforces it, and the exception it throws._
+
+| Rule | Enforced by | Exception |
+| ---- | ----------- | --------- |
+
+## Actions and Queries
+
+- Actions: none yet.
+- Queries: none yet.

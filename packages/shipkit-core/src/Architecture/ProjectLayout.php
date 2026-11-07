@@ -2,6 +2,7 @@
 
 namespace ShipKit\Core\Architecture;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
 use RecursiveDirectoryIterator;
@@ -24,6 +25,13 @@ class ProjectLayout
      * @var list<string>
      */
     public const array GENERATED_FRONTEND_PATHS = ['resources/js/actions/', 'resources/js/routes/', 'resources/js/wayfinder/', 'resources/js/types/generated.ts'];
+
+    /**
+     * Folders under `app/Actions` whose classes a package names and shapes, such as Fortify's actions.
+     *
+     * @var list<string>
+     */
+    public const array PACKAGE_ACTION_FOLDERS = ['Fortify'];
 
     private static ?self $current = null;
 
@@ -71,36 +79,96 @@ class ProjectLayout
     }
 
     /**
-     * The bounded contexts: one folder each under `app/Domain`.
+     * The features: one folder each under `app/Actions` or `app/Queries`, except folders a package
+     * names, such as Fortify's actions.
      *
      * @return list<string>
      */
-    public function contexts(): array
+    public function features(): array
     {
-        $folders = glob($this->appPath('Domain/*'), GLOB_ONLYDIR) ?: [];
+        $folders = [
+            ...(glob($this->appPath('Actions/*'), GLOB_ONLYDIR) ?: []),
+            ...(glob($this->appPath('Queries/*'), GLOB_ONLYDIR) ?: []),
+        ];
 
-        return array_map(basename(...), $folders);
+        $features = array_values(array_unique(array_diff(array_map(basename(...), $folders), self::PACKAGE_ACTION_FOLDERS)));
+        sort($features);
+
+        return $features;
     }
 
     /**
-     * Namespaces of the given context folders that exist, across every context or within one.
+     * Namespaces of the features' `Actions` or `Queries` folders that exist, across every feature or within one.
      *
-     * @param  list<string>|string  $folders
      * @return list<string>
      */
-    public function contextNamespaces(array|string $folders, ?string $onlyContext = null): array
+    public function featureNamespaces(string $folder, ?string $onlyFeature = null): array
     {
         $namespaces = [];
 
-        foreach ($onlyContext === null ? $this->contexts() : [$onlyContext] as $context) {
-            foreach ((array) $folders as $folder) {
-                if (is_dir($this->appPath("Domain/{$context}/{$folder}"))) {
-                    $namespaces[] = $this->appNamespaceFor("Domain/{$context}/{$folder}");
-                }
+        foreach ($onlyFeature === null ? $this->features() : [$onlyFeature] as $feature) {
+            if (is_dir($this->appPath("{$folder}/{$feature}"))) {
+                $namespaces[] = $this->appNamespaceFor("{$folder}/{$feature}");
             }
         }
 
         return $namespaces;
+    }
+
+    /**
+     * Classes outside Laravel's standard folder for their kind, each with the folder it belongs in:
+     * an `app/Domain` folder, an Action outside `app/Actions/{Feature}`, a Query outside
+     * `app/Queries/{Feature}`, or an Eloquent model outside `app/Models`.
+     *
+     * @return list<string>
+     */
+    public function misplacedClasses(): array
+    {
+        $violations = [];
+
+        if (is_dir($this->appPath('Domain'))) {
+            $violations[] = "app/Domain exists. ShipKit uses Laravel's standard folders: Actions in app/Actions/{Feature}, Queries in app/Queries/{Feature}, models in app/Models, policies in app/Policies, exceptions in app/Exceptions";
+        }
+
+        foreach ($this->phpFiles('app') as $path) {
+            $relative = substr($path, strlen($this->path()) + 1);
+            $name = basename($path, '.php');
+            $inActions = str_starts_with($relative, 'app/Actions/');
+            $inQueries = str_starts_with($relative, 'app/Queries/');
+
+            if (str_ends_with($name, 'Action') && ! $inActions) {
+                $violations[] = "{$relative}: an Action lives in app/Actions/{Feature}";
+            }
+
+            if (str_ends_with($name, 'Query') && ! $inQueries) {
+                $violations[] = "{$relative}: a Query lives in app/Queries/{Feature}";
+            }
+
+            if (($inActions || $inQueries) && substr_count($relative, '/') < 3) {
+                $violations[] = "{$relative}: group it by feature, in app/".($inActions ? 'Actions' : 'Queries').'/{Feature}';
+            }
+
+            if (! str_starts_with($relative, 'app/Models/') && $this->declaresModel($path)) {
+                $violations[] = "{$relative}: an Eloquent model lives in app/Models";
+            }
+        }
+
+        return $violations;
+    }
+
+    /**
+     * Whether a file below `app/` declares an Eloquent model, by its loaded class or, for a class
+     * the autoloader cannot reach, by what it extends.
+     */
+    private function declaresModel(string $path): bool
+    {
+        $class = $this->classForAppFile($path);
+
+        if (class_exists($class)) {
+            return is_subclass_of($class, Model::class);
+        }
+
+        return (bool) preg_match('/\bextends\s+\\\\?(?:[\w\\\\]*\\\\)?(?:Model|Pivot|MorphPivot|Authenticatable)\b/', (string) file_get_contents($path));
     }
 
     /**

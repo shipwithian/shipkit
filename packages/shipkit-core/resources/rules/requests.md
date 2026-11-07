@@ -9,9 +9,9 @@ paths:
 
 Form Requests own validation and normalization only. Do not add actor authorization methods; controllers invoke the applicable policy explicitly.
 
-## Group requests by context
+## Group requests by feature
 
-Place Form Requests in `app/Http/Requests/{Context}/`, named exactly after a folder in `app/Domain`, or `app/Http/Requests/Api/V{n}/` for the versioned API.
+Place Form Requests in `app/Http/Requests/{Feature}/`, named exactly after a feature folder in `app/Actions` or `app/Queries`, or `app/Http/Requests/Api/V{n}/` for the versioned API.
 
 ## Never let input decide ownership
 

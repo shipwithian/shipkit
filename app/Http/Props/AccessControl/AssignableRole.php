@@ -2,7 +2,7 @@
 
 namespace App\Http\Props\AccessControl;
 
-use App\Domain\AccessControl\Models\Role;
+use App\Models\Role;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]

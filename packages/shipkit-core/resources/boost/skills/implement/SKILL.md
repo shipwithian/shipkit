@@ -11,7 +11,7 @@ Implement the work described by the user in the spec or tickets.
 
 If the user passes a ticket reference, fetch it with `gh issue view <number> --comments` (see `.ai/issue-tracker.md`) and state its title before starting. If the reference is ambiguous, ask.
 
-Before writing code, open `.ai/rules/index.md` and read every rule file whose globs match the files you will touch, including the context rule file in `.ai/rules/contexts/`. If the work needs a new bounded context, run `php artisan make:context {Name}` first.
+Before writing code, open `.ai/rules/index.md` and read every rule file whose globs match the files you will touch, including the feature rule file in `.ai/rules/features/`. If the work needs a new feature, run `php artisan make:feature {Name}` first.
 
 Work test-first at the seams agreed in the spec: call the Skill tool with "testing-best-practices", write a failing Pest test, then make it pass. New business rules become `ensure...()` methods called from the model's `guardCreate()`/`guardUpdate()`/`guardDelete()` (with `GuardsInvariants`), each throwing a named domain exception, and get a row in the context rule file.
 
@@ -25,7 +25,7 @@ Leave the work uncommitted for the user to review unless they asked you to commi
 
 Work ships on evidence, not on your summary. Collect all three items before you call the work done, and when you open a pull request, put them in its description:
 
-1. **Regression test.** For a change to an invariant (an `ensure...()` method, a guard, a pivot rule, or a cross-aggregate rule in an Action) and for every bug fix, name the test that proves it. Revert only the production change, run that test, and record that it fails for the expected reason. Restore the change and record that it passes.
+1. **Regression test.** For a change to an invariant (an `ensure...()` method, a guard, a pivot rule, or a multi-model rule in an Action) and for every bug fix, name the test that proves it. Revert only the production change, run that test, and record that it fails for the expected reason. Restore the change and record that it passes.
 2. **`composer ci:check` passes**, locally and in CI on the pull request.
 3. **An independent review.** A `review-diff` report on the full diff, produced by an agent session that did not write the code, with every hard finding fixed or answered. Your own review from the step above does not count. Ask the user to run it in a fresh session, or start one if you can.
 

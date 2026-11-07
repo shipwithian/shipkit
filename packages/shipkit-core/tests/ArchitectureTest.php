@@ -8,54 +8,66 @@ $layout = ProjectLayout::current();
 $app = $layout->appNamespace();
 
 /**
- * Contexts that deliberately report failures with Laravel's own exceptions, with the reason,
- * from `shipkit.architecture.contexts_using_framework_exceptions`. Every other context must raise
- * named domain exceptions.
+ * Features that deliberately report failures with Laravel's own exceptions, with the reason,
+ * from `shipkit.architecture.features_using_framework_exceptions`. Every other feature must raise
+ * named exceptions that extend DomainException.
  *
  * @var array<string, string> $usesFrameworkExceptions
  */
-$usesFrameworkExceptions = (array) $layout->config('architecture.contexts_using_framework_exceptions', []);
+$usesFrameworkExceptions = (array) $layout->config('architecture.features_using_framework_exceptions', []);
 
-arch('the domain does not depend on the HTTP layer')
-    ->expect("{$app}Domain")
-    ->not->toUse(["{$app}Http", 'Illuminate\Http', 'Illuminate\Foundation\Http\FormRequest']);
+/**
+ * The business code: the features' Actions and Queries, the models, policies, and exceptions.
+ *
+ * @var list<string> $businessNamespaces
+ */
+$businessNamespaces = [
+    ...$layout->featureNamespaces('Actions'),
+    ...$layout->featureNamespaces('Queries'),
+    ...array_values(array_filter(
+        array_map(fn (string $folder): string => $layout->appNamespaceFor($folder), ['Models', 'Policies', 'Exceptions']),
+        fn (string $namespace): bool => is_dir($layout->appPath(str_replace('\\', '/', Str::after($namespace, $layout->appNamespace())))),
+    )),
+];
+
+if ($businessNamespaces !== []) {
+    arch('business code does not depend on the HTTP layer')
+        ->expect($businessNamespaces)
+        ->not->toUse(["{$app}Http", 'Illuminate\Http', 'Illuminate\Foundation\Http\FormRequest']);
+}
 
 arch('controllers do not use the database directly')
     ->expect("{$app}Http\\Controllers")
     ->not->toUse('Illuminate\Support\Facades\DB');
 
-arch('actions are named use cases with a handle method')
-    ->expect($layout->contextNamespaces('Actions'))
-    ->toBeClasses()
-    ->toHaveSuffix('Action')
-    ->toHaveMethod('handle');
+if ($layout->featureNamespaces('Actions') !== []) {
+    arch('actions are named use cases with a handle method')
+        ->expect($layout->featureNamespaces('Actions'))
+        ->toBeClasses()
+        ->toHaveSuffix('Action')
+        ->toHaveMethod('handle');
+}
 
-arch('queries are named reads with a handle method')
-    ->expect($layout->contextNamespaces('Queries'))
-    ->toBeClasses()
-    ->toHaveSuffix('Query')
-    ->toHaveMethod('handle');
+if ($layout->featureNamespaces('Queries') !== []) {
+    arch('queries are named reads with a handle method')
+        ->expect($layout->featureNamespaces('Queries'))
+        ->toBeClasses()
+        ->toHaveSuffix('Query')
+        ->toHaveMethod('handle');
+}
 
-arch('domain exceptions extend the base domain exception')
-    ->expect($layout->contextNamespaces('Exceptions'))
-    ->toExtend('ShipKit\Core\Exceptions\DomainException');
+if (is_dir($layout->appPath('Exceptions'))) {
+    arch('exceptions extend the base domain exception')
+        ->expect("{$app}Exceptions")
+        ->toExtend('ShipKit\Core\Exceptions\DomainException');
+}
 
-foreach ($layout->contexts() as $context) {
-    $internals = $layout->contextNamespaces(['Models', 'Enums', 'Policies', 'Services'], $context);
+foreach ($layout->features() as $feature) {
+    $featureNamespaces = [...$layout->featureNamespaces('Actions', $feature), ...$layout->featureNamespaces('Queries', $feature)];
 
-    if ($internals !== []) {
-        arch("{$context} internals are only used by its own context, the shared identity model, factories, seeders, and the delivery layer")
-            ->expect($internals)
-            ->toOnlyBeUsedIn(["{$app}Domain\\{$context}", "{$app}Models", "{$app}Http", 'Database\Factories', 'Database\Seeders']);
-    }
-
-    arch("{$context} public surface (Actions, Queries, Exceptions) is only used by the domain, the shared identity model, factories, seeders, and the delivery layer")
-        ->expect("{$app}Domain\\{$context}")
-        ->toOnlyBeUsedIn(["{$app}Domain", "{$app}Models", "{$app}Http", 'Database\Factories', 'Database\Seeders']);
-
-    if (! array_key_exists($context, $usesFrameworkExceptions)) {
-        arch("{$context} reports broken rules as domain exceptions")
-            ->expect("{$app}Domain\\{$context}")
+    if ($featureNamespaces !== [] && ! array_key_exists($feature, $usesFrameworkExceptions)) {
+        arch("{$feature} reports broken rules as named exceptions")
+            ->expect($featureNamespaces)
             ->not->toUse('Illuminate\Validation\ValidationException');
     }
 }
@@ -64,16 +76,19 @@ arch('form requests validate only, with no authorize() logic')
     ->expect("{$app}Http\\Requests")
     ->not->toHaveMethod('authorize');
 
+it('keeps each kind of class in its standard folder', function () {
+    $violations = ProjectLayout::current()->misplacedClasses();
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
 it('authorizes policies through permissions, never role names', function () {
-    $layout = ProjectLayout::current();
     $violations = [];
 
-    foreach ($layout->contexts() as $context) {
-        foreach ($layout->phpFiles("app/Domain/{$context}/Policies") as $path) {
-            if (preg_match_all('/->(?:hasRole|hasAnyRole|hasAllRoles|hasExactRoles)\(|\bSystemRole\b/', (string) file_get_contents($path), $matches)) {
-                foreach ($matches[0] as $match) {
-                    $violations[] = "{$path}: {$match} (check a permission with \$user->can() instead)";
-                }
+    foreach (ProjectLayout::current()->phpFiles('app/Policies') as $path) {
+        if (preg_match_all('/->(?:hasRole|hasAnyRole|hasAllRoles|hasExactRoles)\(|\bSystemRole\b/', (string) file_get_contents($path), $matches)) {
+            foreach ($matches[0] as $match) {
+                $violations[] = "{$path}: {$match} (check a permission with \$user->can() instead)";
             }
         }
     }
@@ -96,12 +111,22 @@ it('lists every exposed field instead of serializing whole models', function () 
 });
 
 it('receives the acting user instead of reading ambient request state', function () {
+    $layout = ProjectLayout::current();
     $violations = [];
+    $folders = [
+        ...array_map(fn (string $feature): string => "app/Actions/{$feature}", $layout->features()),
+        ...array_map(fn (string $feature): string => "app/Queries/{$feature}", $layout->features()),
+        'app/Models',
+        'app/Policies',
+        'app/Exceptions',
+    ];
 
-    foreach (ProjectLayout::current()->phpFiles('app/Domain') as $path) {
-        if (preg_match_all('/\bauth\(|\bAuth::(?:user|id|check|guest|hasUser)\b|\brequest\(|\bsession\(/', (string) file_get_contents($path), $matches)) {
-            foreach ($matches[0] as $match) {
-                $violations[] = "{$path}: {$match} (take the acting user as a `User \$actor` parameter; the controller passes \$request->user())";
+    foreach ($folders as $folder) {
+        foreach ($layout->phpFiles($folder) as $path) {
+            if (preg_match_all('/\bauth\(|\bAuth::(?:user|id|check|guest|hasUser)\b|\brequest\(|\bsession\(/', (string) file_get_contents($path), $matches)) {
+                foreach ($matches[0] as $match) {
+                    $violations[] = "{$path}: {$match} (take the acting user as a `User \$actor` parameter; the controller passes \$request->user())";
+                }
             }
         }
     }
@@ -157,22 +182,32 @@ it('keeps Eloquent queries out of controllers', function () {
     expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
 });
 
-it('documents every action, query, and domain exception in its context rule file', function () {
+it('documents every action, query, and exception in a feature rule file', function () {
     $layout = ProjectLayout::current();
     $missing = [];
+    $allRules = '';
 
-    foreach ($layout->contexts() as $context) {
-        $ruleFile = $layout->path('.ai/rules/contexts/'.Str::kebab($context).'.md');
+    foreach ($layout->features() as $feature) {
+        $ruleFile = $layout->path('.ai/rules/features/'.Str::kebab($feature).'.md');
         $rules = is_file($ruleFile) ? (string) file_get_contents($ruleFile) : '';
+        $allRules .= $rules;
 
-        foreach (['Actions', 'Queries', 'Exceptions'] as $folder) {
-            foreach (glob($layout->appPath("Domain/{$context}/{$folder}/*.php")) ?: [] as $classPath) {
+        foreach (['Actions', 'Queries'] as $folder) {
+            foreach (glob($layout->appPath("{$folder}/{$feature}/*.php")) ?: [] as $classPath) {
                 $class = basename($classPath, '.php');
 
                 if (! str_contains($rules, $class)) {
-                    $missing[] = "{$context}\\{$folder}\\{$class}";
+                    $missing[] = '.ai/rules/features/'.Str::kebab($feature).".md does not mention {$folder}\\{$feature}\\{$class}";
                 }
             }
+        }
+    }
+
+    foreach (glob($layout->appPath('Exceptions/*.php')) ?: [] as $classPath) {
+        $class = basename($classPath, '.php');
+
+        if (! str_contains($allRules, $class)) {
+            $missing[] = "No feature rule file in .ai/rules/features mentions Exceptions\\{$class}";
         }
     }
 
@@ -180,10 +215,9 @@ it('documents every action, query, and domain exception in its context rule file
 });
 
 it('guards invariants only through GuardsInvariants', function () {
-    $layout = ProjectLayout::current();
     $violations = [];
 
-    foreach ([...$layout->phpFiles('app/Domain'), ...$layout->phpFiles('app/Models')] as $path) {
+    foreach (ProjectLayout::current()->phpFiles('app/Models') as $path) {
         $source = (string) file_get_contents($path);
         $isPivot = (bool) preg_match('/\bextends\s+(?:Morph)?Pivot\b/', $source);
         $usesTrait = (bool) preg_match('/\buse\s+(?:[^;{]*,\s*)?GuardsInvariants\b/', $source);
@@ -205,20 +239,20 @@ it('guards invariants only through GuardsInvariants', function () {
     expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
 });
 
-it('names HTTP and feature test folders after a bounded context', function () {
+it('names HTTP and feature test folders after a feature', function () {
     $layout = ProjectLayout::current();
-    $contexts = $layout->contexts();
+    $features = $layout->features();
 
-    /** @var array<string, array<string, string>> $nonContextFolders */
-    $nonContextFolders = (array) $layout->config('architecture.non_context_folders', []);
+    /** @var array<string, array<string, string>> $nonFeatureFolders */
+    $nonFeatureFolders = (array) $layout->config('architecture.non_feature_folders', []);
     $strays = [];
 
     foreach (['app/Http/Controllers', 'app/Http/Requests', 'app/Http/Props', 'tests/Feature'] as $directory) {
-        $allowed = [...$contexts, ...array_keys($nonContextFolders[$directory] ?? [])];
+        $allowed = [...$features, ...array_keys($nonFeatureFolders[$directory] ?? [])];
 
         foreach (glob($layout->path($directory.'/*'), GLOB_ONLYDIR) ?: [] as $folder) {
             if (! in_array(basename($folder), $allowed, true)) {
-                $strays[] = "{$directory}/".basename($folder).' matches no bounded context. Rename it after a context, or list it in shipkit.architecture.non_context_folders with the reason';
+                $strays[] = "{$directory}/".basename($folder).' matches no feature. Rename it after a feature in app/Actions or app/Queries, or list it in shipkit.architecture.non_feature_folders with the reason';
             }
         }
     }

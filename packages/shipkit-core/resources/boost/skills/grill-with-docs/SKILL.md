@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: A relentless interview to sharpen a plan or design, which also updates the context rule files and ADRs as we go.
+description: A relentless interview to sharpen a plan or design, which also updates the feature rule files and ADRs as we go.
 disable-model-invocation: true
 license: MIT
 metadata:

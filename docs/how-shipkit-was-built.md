@@ -6,6 +6,8 @@ This is the story of how we reshaped ShipKit so that an agent who knows nothing 
 
 > [!NOTE]
 > This document describes how the template itself was built. Projects created from ShipKit inherit it because it explains why the structure looks the way it does. Delete or replace it once your project has its own story.
+>
+> ShipKit 4.0 moved from the bounded-context layout described below (`app/Domain/{Context}`) back to Laravel's standard folders, keeping the Actions, Query objects, model guards, and checks. The README's Architecture section describes the current layout.
 
 <details>
 <summary><strong>Words used here</strong></summary>

@@ -1,9 +1,9 @@
 <?php
 
-use App\Domain\AccessControl\Actions\SyncUserRolesAction;
-use App\Domain\AccessControl\Exceptions\RoleExceedsActorPermissions;
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
+use App\Actions\AccessControl\SyncUserRolesAction;
+use App\Exceptions\RoleExceedsActorPermissions;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 
 beforeEach(function () {

@@ -35,7 +35,10 @@
 /.gitattributes                                          @ianlabicani
 
 # The guarded models whose invariants ShipKit's protected records rely on.
-/app/Domain/AccessControl/Models/                        @ianlabicani
+/app/Models/Permission.php                               @ianlabicani
+/app/Models/Role.php                                     @ianlabicani
+/app/Models/RoleAssignment.php                           @ianlabicani
+/app/Models/RolePermission.php                           @ianlabicani
 /app/Models/User.php                                     @ianlabicani
 
 # The project's own checks and invariant tests.
@@ -45,7 +48,6 @@
 /tests/Feature/ApiRouteConventionsTest.php               @ianlabicani
 /tests/Feature/CodeOwnersTest.php                        @ianlabicani
 /tests/Feature/CreationInvariantsTest.php                @ianlabicani
-/tests/Feature/DomainFactoryResolutionTest.php           @ianlabicani
 /tests/Feature/ReleasePreparationTest.php               @ianlabicani
 /tests/Feature/RouteAuthorizationTest.php                @ianlabicani
 /tests/Feature/TemplateArchiveTest.php                   @ianlabicani

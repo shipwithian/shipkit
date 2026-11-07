@@ -4,14 +4,14 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to                                                                              | Rule file                                                      |
 | --------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| app/Domain/**, packages/shipkit-core/**                                                 | vendor/shipwithian/shipkit-core/resources/rules/domain.md      |
-| app/Domain/AccessControl/**                                                             | .ai/rules/contexts/access-control.md                           |
-| app/Domain/Settings/**                                                                  | .ai/rules/contexts/settings.md                                 |
-| app/Domain/Authentication/**                                                            | .ai/rules/contexts/authentication.md                           |
-| app/Domain/*/Actions/**, app/Actions/**                                                 | vendor/shipwithian/shipkit-core/resources/rules/actions.md     |
-| app/Domain/*/Queries/**                                                                 | vendor/shipwithian/shipkit-core/resources/rules/queries.md     |
-| app/Domain/*/Policies/**                                                                | vendor/shipwithian/shipkit-core/resources/rules/policies.md    |
-| app/Domain/*/Enums/**                                                                   | vendor/shipwithian/shipkit-core/resources/rules/enums.md       |
+| app/Models/**, app/Exceptions/**, packages/shipkit-core/**                              | vendor/shipwithian/shipkit-core/resources/rules/domain.md      |
+| app/Actions/AccessControl/**, app/Queries/AccessControl/**                              | .ai/rules/features/access-control.md                           |
+| app/Actions/Settings/**, app/Queries/Settings/**                                        | .ai/rules/features/settings.md                                 |
+| app/Actions/Auth/**, app/Queries/Auth/**                                                | .ai/rules/features/auth.md                                     |
+| app/Actions/**                                                                          | vendor/shipwithian/shipkit-core/resources/rules/actions.md     |
+| app/Queries/**                                                                          | vendor/shipwithian/shipkit-core/resources/rules/queries.md     |
+| app/Policies/**                                                                         | vendor/shipwithian/shipkit-core/resources/rules/policies.md    |
+| app/Enums/**                                                                            | vendor/shipwithian/shipkit-core/resources/rules/enums.md       |
 | app/Http/Controllers/**                                                                 | vendor/shipwithian/shipkit-core/resources/rules/controllers.md |
 | app/Http/Requests/**                                                                    | vendor/shipwithian/shipkit-core/resources/rules/requests.md    |
 | app/Http/Resources/**, app/Http/Props/**, app/Http/Middleware/HandleInertiaRequests.php | vendor/shipwithian/shipkit-core/resources/rules/responses.md   |

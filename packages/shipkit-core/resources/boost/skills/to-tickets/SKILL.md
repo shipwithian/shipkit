@@ -21,7 +21,7 @@ Work from whatever is already in the conversation context. If the user passes a 
 
 ### 2. Explore the codebase (optional)
 
-If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the vocabulary from `.ai/rules/contexts/`, and respect ADRs in `docs/adr/`.
+If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the vocabulary from `.ai/rules/features/`, and respect ADRs in `docs/adr/`.
 
 Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
 
@@ -32,7 +32,7 @@ Break the work into **tracer bullet** tickets.
 <vertical-slice-rules>
 
 - Each slice cuts a narrow but COMPLETE path through every layer (migration, model and invariants, Action or Query, controller and Form Request, Inertia page, Pest tests): vertical, NOT a horizontal slice of one layer
-- If the work needs a new bounded context, the first ticket runs `php artisan make:context {Name}` and fills in its rule file
+- If the work needs a new feature, the first ticket runs `php artisan make:feature {Name}` and fills in its rule file
 - A completed slice is demoable or verifiable on its own
 - Each slice is sized to fit in a single fresh context window
 - Any prefactoring should be done first

@@ -39,7 +39,7 @@ Look for the originating spec, in this order:
 The standards for this repo are, always:
 
 - `vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md`, and the reviewer's [CHECKLIST.md](CHECKLIST.md);
-- every rule file `.ai/rules/index.md` maps to a glob that matches a file in the diff: the project's in `.ai/rules`, `shipkit-core`'s in `vendor/shipwithian/shipkit-core/resources/rules`, and the context rule files in `.ai/rules/contexts/`.
+- every rule file `.ai/rules/index.md` maps to a glob that matches a file in the diff: the project's in `.ai/rules`, `shipkit-core`'s in `vendor/shipwithian/shipkit-core/resources/rules`, and the feature rule files in `.ai/rules/features/`.
 
 Skip anything `composer ci:check` already enforces (Pint, PHPStan, `vp check`, and every row of `.ai/rules/enforcement.md` that names a check). Review the rows that name nothing: those are the rules only a reviewer catches.
 

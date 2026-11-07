@@ -4,6 +4,14 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+Requires `shipwithian/shipkit-core` 4.0.
+
+- **Laravel's standard folders:** `app/Domain` is gone. Actions are in `app/Actions/{Feature}`, Query objects in `app/Queries/{Feature}`, every model (with `User`) in `app/Models`, policies in `app/Policies`, and named exceptions in `app/Exceptions`, next to `app/Actions/Fortify` and `app/Concerns` as the starter kit ships them. The features are `AccessControl`, `Auth`, and `Settings`, and ShipKit's API authentication tests joined the starter kit's in `tests/Feature/Auth`. Factories use Laravel's default naming, so the custom factory-name resolver is gone.
+
+## 3.1.0 (2026-11-06)
+
+Requires `shipwithian/shipkit-core` 3.1.
+
 - **`laravel new` installs a release:** `laravel new my-app --using=shipwithian/shipkit` installed the `main` branch, which requires `shipkit-core` as `@dev` from `packages/` and cannot update it, because the installer allows development versions. `main` is now aliased as `0.x-dev`, below every release, and release commits drop the alias.
 - **Local mail in Mailpit:** `.env.example` sends mail to Mailpit on `127.0.0.1:1025`, and `shipkit-core` runs Mailpit with `composer dev` when it is installed. Existing projects get the process with `composer update shipwithian/shipkit-core` and set `MAIL_MAILER=smtp` and `MAIL_PORT=1025` in their `.env` files.
 - **`composer ci:check` without git:** the check that the generated TypeScript types are up to date no longer uses `git diff`, so it works in a project created with `laravel new` without `--git`. Before, it failed with git's usage text and exit code 129.

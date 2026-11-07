@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\AccessControl;
 
-use App\Domain\AccessControl\Actions\CreateRoleAction;
-use App\Domain\AccessControl\Actions\DeleteRoleAction;
-use App\Domain\AccessControl\Actions\UpdateRoleAction;
-use App\Domain\AccessControl\Models\Role;
-use App\Domain\AccessControl\Queries\RoleListQuery;
+use App\Actions\AccessControl\CreateRoleAction;
+use App\Actions\AccessControl\DeleteRoleAction;
+use App\Actions\AccessControl\UpdateRoleAction;
 use App\Http\Controllers\Controller;
 use App\Http\Props\AccessControl\RoleAbilities;
 use App\Http\Props\AccessControl\RoleIndexAbilities;
@@ -14,6 +12,8 @@ use App\Http\Props\AccessControl\RoleIndexProps;
 use App\Http\Props\AccessControl\RoleListItem;
 use App\Http\Requests\AccessControl\StoreRoleRequest;
 use App\Http\Requests\AccessControl\UpdateRoleRequest;
+use App\Models\Role;
+use App\Queries\AccessControl\RoleListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;

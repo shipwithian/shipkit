@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\AccessControl\Models\Role;
+use App\Models\Role;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 

@@ -1,9 +1,9 @@
 <?php
 
-use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
-use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
+use App\Exceptions\LastSuperAdminCannotBeRemoved;
+use App\Exceptions\ProtectedRecordCannotBeChanged;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\AccessControlSeeder;
 use Illuminate\Support\Facades\DB;

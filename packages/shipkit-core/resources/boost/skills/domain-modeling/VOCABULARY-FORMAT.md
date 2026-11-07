@@ -1,6 +1,6 @@
-# Context rule file format
+# Feature rule file format
 
-Each bounded context's model lives in `.ai/rules/contexts/{context}.md`, scaffolded by `php artisan make:context`. Keep its three sections in this order.
+Each feature's model lives in `.ai/rules/features/{feature}.md`, scaffolded by `php artisan make:feature`. Keep its three sections in this order.
 
 ## Vocabulary
 
@@ -12,7 +12,7 @@ Each bounded context's model lives in `.ai/rules/contexts/{context}.md`, scaffol
 
 - **Be opinionated.** When multiple words exist for the same concept, pick the one the code uses and list the others under `_Avoid_`.
 - **Keep definitions tight.** One sentence. Define what it IS, not what it does.
-- **Only business terms.** General programming concepts (timeouts, error types, utility patterns) don't belong, even when the context uses them a lot.
+- **Only business terms.** General programming concepts (timeouts, error types, utility patterns) don't belong, even when the feature uses them a lot.
 
 ## Invariants
 
@@ -26,7 +26,7 @@ Each bounded context's model lives in `.ai/rules/contexts/{context}.md`, scaffol
 - **Enforced by** names the `ensure...()` method (run by the model's `guardCreate()`/`guardUpdate()`/`guardDelete()`) or the Action that checks it.
 - **Exception** names the domain exception it throws, or `—` when the rule is applied silently.
 
-## Public surface
+## Actions and Queries
 
 ```md
 - Actions: `CreateRoleAction`, `DeleteRoleAction`.

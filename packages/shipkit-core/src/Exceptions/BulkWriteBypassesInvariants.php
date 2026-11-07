@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use LogicException;
 
 /**
- * A bulk query-builder write was attempted on a guarded aggregate.
+ * A bulk query-builder write was attempted on a guarded model.
  *
  * This is a programming error, not a business failure, so it is not a {@see DomainException}.
  */

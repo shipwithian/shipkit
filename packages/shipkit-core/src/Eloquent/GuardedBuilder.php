@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 
 /**
- * Query builder for aggregates whose invariants run as model events.
+ * Query builder for models whose invariants run as model events.
  *
  * Builder writes skip the guards, so every one is refused. The writes {@see BuilderMethods::GUARDED}
  * lists pass only on the single-record path {@see GuardsInvariants} opens for its own save, delete,
