@@ -2,6 +2,7 @@
 paths:
     - 'app/Actions/Settings/**'
     - 'app/Queries/Settings/**'
+    - 'app/Models/User.php'
     - 'app/Policies/UserPolicy.php'
 ---
 

@@ -13,7 +13,7 @@ If the user passes a ticket reference, fetch it with `gh issue view <number> --c
 
 Before writing code, open `.ai/rules/index.md` and read every rule file whose globs match the files you will touch, including the feature rule file in `.ai/rules/features/`. If the work needs a new feature, run `php artisan make:feature {Name}` first.
 
-Work test-first at the seams agreed in the spec: call the Skill tool with "testing-best-practices", write a failing Pest test, then make it pass. New business rules become `ensure...()` methods called from the model's `guardCreate()`/`guardUpdate()`/`guardDelete()` (with `GuardsInvariants`), each throwing a named domain exception, and get a row in the context rule file.
+Work test-first at the seams agreed in the spec: call the Skill tool with "testing-best-practices", write a failing Pest test, then make it pass. New business rules become `ensure...()` methods called from the model's `guardCreate()`/`guardUpdate()`/`guardDelete()` (with `GuardsInvariants`), each throwing a named exception from `app/Exceptions`, and get a row in the feature rule file.
 
 Run `composer types:check` and the single test files you touch regularly (`php artisan test --compact <path>`). Once done, run `vendor/bin/pint --format agent` and then `composer ci:check`, which includes the full test suite and `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`. Fix every failure; never weaken an architecture check to get green.
 

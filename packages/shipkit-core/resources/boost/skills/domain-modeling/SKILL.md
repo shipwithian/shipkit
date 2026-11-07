@@ -8,7 +8,7 @@ metadata:
 
 # Domain Modeling
 
-Actively build and sharpen the project's domain model as you design. This is the _active_ discipline: challenging terms, inventing edge-case scenarios, and writing the vocabulary, invariants, and decisions down the moment they crystallise. (Merely _reading_ a context rule file for vocabulary is not this skill: that's a habit any task does. This skill is for when you're changing the model, not just consuming it.)
+Actively build and sharpen the project's domain model as you design. This is the _active_ discipline: challenging terms, inventing edge-case scenarios, and writing the vocabulary, invariants, and decisions down the moment they crystallise. (Merely _reading_ a feature rule file for vocabulary is not this skill: that's a habit any task does. This skill is for when you're changing the model, not just consuming it.)
 
 ## Where the model lives
 
@@ -33,7 +33,7 @@ When the user uses a term that conflicts with the feature's **Vocabulary** secti
 
 ### Sharpen fuzzy language
 
-When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account': do you mean the User or the Customer? Those are different things." If a term belongs to a different context than the one being discussed, say so: crossing a context boundary is a design decision, not a wording choice.
+When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account': do you mean the User or the Customer? Those are different things." If a term belongs to a different feature than the one being discussed, say so: moving a term between features is a design decision, not a wording choice.
 
 ### Discuss concrete scenarios
 

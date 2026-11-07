@@ -48,6 +48,7 @@
 /tests/Feature/ApiRouteConventionsTest.php               @ianlabicani
 /tests/Feature/CodeOwnersTest.php                        @ianlabicani
 /tests/Feature/CreationInvariantsTest.php                @ianlabicani
+/tests/Feature/FactoryResolutionTest.php                 @ianlabicani
 /tests/Feature/ReleasePreparationTest.php               @ianlabicani
 /tests/Feature/RouteAuthorizationTest.php                @ianlabicani
 /tests/Feature/TemplateArchiveTest.php                   @ianlabicani

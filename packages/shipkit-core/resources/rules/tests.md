@@ -19,7 +19,7 @@ Files that cover one action or one class, such as policy, Action, Query, seeder,
 
 ## Split by flow when a file covers several endpoints
 
-When a file would cover unrelated endpoints, create one file per flow, such as `Authentication/LoginTest`, `Authentication/RegistrationTest`, and `Authentication/PasswordResetTest`.
+When a file would cover unrelated endpoints, create one file per flow, such as `Billing/InvoiceTest`, `Billing/PaymentTest`, and `Billing/RefundTest`.
 
 ## Cover the delivery boundary in order
 

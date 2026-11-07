@@ -17,22 +17,19 @@ $app = $layout->appNamespace();
 $usesFrameworkExceptions = (array) $layout->config('architecture.features_using_framework_exceptions', []);
 
 /**
- * The business code: the features' Actions and Queries, the models, policies, and exceptions.
+ * The shared business folders that exist, by namespace: models, policies, and exceptions.
  *
- * @var list<string> $businessNamespaces
+ * @var list<string> $sharedNamespaces
  */
-$businessNamespaces = [
-    ...$layout->featureNamespaces('Actions'),
-    ...$layout->featureNamespaces('Queries'),
-    ...array_values(array_filter(
-        array_map(fn (string $folder): string => $layout->appNamespaceFor($folder), ['Models', 'Policies', 'Exceptions']),
-        fn (string $namespace): bool => is_dir($layout->appPath(str_replace('\\', '/', Str::after($namespace, $layout->appNamespace())))),
-    )),
-];
+$sharedNamespaces = array_values(array_map(
+    fn (string $folder): string => $layout->appNamespaceFor($folder),
+    array_filter(['Models', 'Policies', 'Exceptions'], fn (string $folder): bool => is_dir($layout->appPath($folder))),
+));
 
-if ($businessNamespaces !== []) {
-    arch('business code does not depend on the HTTP layer')
-        ->expect($businessNamespaces)
+// Each arch() expects one namespace: Pest passes `->not->toUse()` on an array of namespaces without checking them.
+foreach ([...$layout->featureNamespaces('Actions'), ...$layout->featureNamespaces('Queries'), ...$sharedNamespaces] as $namespace) {
+    arch("{$namespace} does not depend on the HTTP layer")
+        ->expect($namespace)
         ->not->toUse(["{$app}Http", 'Illuminate\Http', 'Illuminate\Foundation\Http\FormRequest']);
 }
 
@@ -40,17 +37,17 @@ arch('controllers do not use the database directly')
     ->expect("{$app}Http\\Controllers")
     ->not->toUse('Illuminate\Support\Facades\DB');
 
-if ($layout->featureNamespaces('Actions') !== []) {
-    arch('actions are named use cases with a handle method')
-        ->expect($layout->featureNamespaces('Actions'))
+foreach ($layout->featureNamespaces('Actions') as $namespace) {
+    arch("{$namespace} holds named use cases with a handle method")
+        ->expect($namespace)
         ->toBeClasses()
         ->toHaveSuffix('Action')
         ->toHaveMethod('handle');
 }
 
-if ($layout->featureNamespaces('Queries') !== []) {
-    arch('queries are named reads with a handle method')
-        ->expect($layout->featureNamespaces('Queries'))
+foreach ($layout->featureNamespaces('Queries') as $namespace) {
+    arch("{$namespace} holds named reads with a handle method")
+        ->expect($namespace)
         ->toBeClasses()
         ->toHaveSuffix('Query')
         ->toHaveMethod('handle');
@@ -63,13 +60,21 @@ if (is_dir($layout->appPath('Exceptions'))) {
 }
 
 foreach ($layout->features() as $feature) {
-    $featureNamespaces = [...$layout->featureNamespaces('Actions', $feature), ...$layout->featureNamespaces('Queries', $feature)];
+    if (array_key_exists($feature, $usesFrameworkExceptions)) {
+        continue;
+    }
 
-    if ($featureNamespaces !== [] && ! array_key_exists($feature, $usesFrameworkExceptions)) {
-        arch("{$feature} reports broken rules as named exceptions")
-            ->expect($featureNamespaces)
+    foreach ([...$layout->featureNamespaces('Actions', $feature), ...$layout->featureNamespaces('Queries', $feature)] as $namespace) {
+        arch("{$namespace} reports broken rules as named exceptions")
+            ->expect($namespace)
             ->not->toUse('Illuminate\Validation\ValidationException');
     }
+}
+
+foreach (array_filter($sharedNamespaces, fn (string $namespace): bool => $namespace !== "{$app}Exceptions") as $namespace) {
+    arch("{$namespace} reports broken rules as named exceptions")
+        ->expect($namespace)
+        ->not->toUse('Illuminate\Validation\ValidationException');
 }
 
 arch('form requests validate only, with no authorize() logic')

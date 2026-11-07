@@ -39,13 +39,13 @@ it("refuses a folder that holds a package's own actions", function () {
     expect(is_dir($this->scratchPath.'/app/Actions/Fortify'))->toBeFalse();
 });
 
-it('refuses to overwrite an existing feature', function () {
-    (new Filesystem)->ensureDirectoryExists($this->scratchPath.'/app/Queries/Billing');
+it('refuses to overwrite an existing feature', function (string $existing) {
+    (new Filesystem)->ensureDirectoryExists($this->scratchPath."/{$existing}");
 
     $this->artisan('make:feature', ['name' => 'Billing'])
         ->expectsOutputToContain('already exists')
         ->assertFailed();
-});
+})->with(['app/Actions/Billing', 'app/Queries/Billing']);
 
 it('scaffolds the Actions, Queries, and feature test folders and the rule file', function () {
     $this->artisan('make:feature', ['name' => 'BillingAccounts'])->assertSuccessful();

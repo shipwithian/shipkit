@@ -81,3 +81,39 @@ it('fails on an Eloquent model outside app/Models', function () {
         'app/Billing/InvoiceLine.php: an Eloquent model lives in app/Models',
     ]);
 });
+
+it('fails on a Query directly in app/Queries', function () {
+    $layout = layoutOfScratchProject([
+        'app/Queries/InvoiceListQuery.php' => scratchClass('App\Queries', 'class InvoiceListQuery {}'),
+    ]);
+
+    expect($layout->misplacedClasses())->toBe([
+        'app/Queries/InvoiceListQuery.php: group it by feature, in app/Queries/{Feature}',
+    ]);
+});
+
+it('recognises morph pivots and authenticatable users as models', function () {
+    $layout = layoutOfScratchProject([
+        'app/Billing/Taggable.php' => scratchClass('App\Billing', 'use Illuminate\Database\Eloquent\Relations\MorphPivot; class Taggable extends MorphPivot {}'),
+        'app/Billing/Customer.php' => scratchClass('App\Billing', 'use Illuminate\Foundation\Auth\User as Authenticatable; class Customer extends Authenticatable {}'),
+        'app/Models/Billing/Invoice.php' => scratchClass('App\Models\Billing', 'use Illuminate\Database\Eloquent\Model; class Invoice extends Model {}'),
+    ]);
+
+    expect($layout->misplacedClasses())->toBe([
+        'app/Billing/Customer.php: an Eloquent model lives in app/Models',
+        'app/Billing/Taggable.php: an Eloquent model lives in app/Models',
+    ]);
+});
+
+it('discovers features from app/Actions and app/Queries, but not Fortify', function () {
+    $layout = layoutOfScratchProject([
+        'app/Actions/Fortify/CreateNewUser.php' => scratchClass('App\Actions\Fortify', 'class CreateNewUser {}'),
+        'app/Actions/Billing/CreateInvoiceAction.php' => scratchClass('App\Actions\Billing', 'class CreateInvoiceAction {}'),
+        'app/Queries/Billing/InvoiceListQuery.php' => scratchClass('App\Queries\Billing', 'class InvoiceListQuery {}'),
+        'app/Queries/Reports/RevenueQuery.php' => scratchClass('App\Queries\Reports', 'class RevenueQuery {}'),
+    ]);
+
+    expect($layout->features())->toBe(['Billing', 'Reports'])
+        ->and($layout->featureNamespaces('Actions'))->toBe(['App\Actions\Billing'])
+        ->and($layout->featureNamespaces('Queries'))->toBe(['App\Queries\Billing', 'App\Queries\Reports']);
+});
