@@ -2,7 +2,7 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
-## Unreleased
+## 4.0.0 (2026-11-07)
 
 Requires `shipwithian/shipkit-core` 4.0.
 
