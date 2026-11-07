@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Settings;
 
-use App\Domain\Settings\Actions\UpdatePasswordAction;
-use App\Domain\Settings\Queries\PasskeyListQuery;
+use App\Actions\Settings\UpdatePasswordAction;
 use App\Http\Controllers\Controller;
 use App\Http\Props\Settings\PasskeyListItem;
 use App\Http\Props\Settings\SecurityEditProps;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use App\Models\User;
+use App\Queries\Settings\PasskeyListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Password;

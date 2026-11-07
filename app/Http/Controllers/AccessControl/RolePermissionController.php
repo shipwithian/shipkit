@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\AccessControl;
 
-use App\Domain\AccessControl\Actions\SyncRolePermissionsAction;
-use App\Domain\AccessControl\Models\Role;
-use App\Domain\AccessControl\Queries\AssignablePermissionListQuery;
+use App\Actions\AccessControl\SyncRolePermissionsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Props\AccessControl\AssignablePermission;
 use App\Http\Props\AccessControl\RolePermissionsEditProps;
 use App\Http\Props\AccessControl\RoleWithPermissionIds;
 use App\Http\Requests\AccessControl\UpdateRolePermissionsRequest;
+use App\Models\Role;
+use App\Queries\AccessControl\AssignablePermissionListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;

@@ -42,7 +42,7 @@ This means that the review agent should be responsible for imposing coding stand
 You have access to several files in the repo:
 
 - `.ai/guidelines/*.md`: compiled into `CLAUDE.md`/`AGENTS.md`, so they are pushed to the context window of every agent. Use them incredibly sparingly, mostly for **navigation pointers** to other files.
-- `.ai/rules/*.md`: scoped by `paths:` globs and mapped in `.ai/rules/index.md`; agents read the ones matching the files they touch. The context rule files in `.ai/rules/contexts/` hold each context's vocabulary and invariants. `/review-diff` reads these as the standards.
+- `.ai/rules/*.md`: scoped by `paths:` globs and mapped in `.ai/rules/index.md`; agents read the ones matching the files they touch. The feature rule files in `.ai/rules/features/` hold each feature's vocabulary and invariants. `/review-diff` reads these as the standards.
 - `.ai/rules/enforcement.md`: pairs each rule with the check that enforces it.
 - Docs: use docs as references files, pointed to by other files. Look for existing docs before writing new ones.
 - Skills: live in `.ai/skills/` (the project's) and `vendor/shipwithian/shipkit-core/resources/boost/skills/` (shared), and are synced to every agent by `php artisan boost:update`. Use skills for docs (since their description goes into the agent's context window), or for user-invoked commands. Follow the advice in the `writing-for-agents` skill.

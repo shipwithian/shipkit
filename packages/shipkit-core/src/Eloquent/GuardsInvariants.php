@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use LogicException;
 
 /**
- * Run an aggregate's invariant guards on every write, with no way around them.
+ * Run a model's invariant guards on every write, with no way around them.
  *
  * The model overrides {@see guardCreate()}, {@see guardUpdate()} and {@see guardDelete()} to call its
  * `ensure...()` methods. The guards run:

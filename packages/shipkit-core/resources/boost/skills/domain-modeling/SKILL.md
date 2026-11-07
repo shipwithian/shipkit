@@ -1,6 +1,6 @@
 ---
 name: domain-modeling
-description: Build and sharpen a bounded context's domain model. Use when discussing codebase terminology, defining a new context, writing a context's vocabulary or invariants in .ai/rules/contexts, or recording an ADR.
+description: Build and sharpen a feature's domain model. Use when discussing codebase terminology, defining a new feature, writing a feature's vocabulary or invariants in .ai/rules/features, or recording an ADR.
 license: MIT
 metadata:
     source: https://github.com/mattpocock/skills/tree/main/skills/engineering/domain-modeling
@@ -8,31 +8,32 @@ metadata:
 
 # Domain Modeling
 
-Actively build and sharpen the project's domain model as you design. This is the _active_ discipline: challenging terms, inventing edge-case scenarios, and writing the vocabulary, invariants, and decisions down the moment they crystallise. (Merely _reading_ a context rule file for vocabulary is not this skill: that's a habit any task does. This skill is for when you're changing the model, not just consuming it.)
+Actively build and sharpen the project's domain model as you design. This is the _active_ discipline: challenging terms, inventing edge-case scenarios, and writing the vocabulary, invariants, and decisions down the moment they crystallise. (Merely _reading_ a feature rule file for vocabulary is not this skill: that's a habit any task does. This skill is for when you're changing the model, not just consuming it.)
 
 ## Where the model lives
 
-This repo has one bounded context per folder in `app/Domain/`, and each context's model lives in its rule file:
+This repo has one feature per folder in `app/Actions/` and `app/Queries/`, and each feature's model lives in its rule file:
 
 ```
-.ai/rules/contexts/
-├── access-control.md     ← Vocabulary, Invariants, Public surface for app/Domain/AccessControl
+.ai/rules/features/
+├── access-control.md     ← Vocabulary, Invariants, Actions and Queries for AccessControl
+├── auth.md
 ├── settings.md
-└── {context}.md
+└── {feature}.md
 docs/adr/                  ← decisions, created lazily
 ```
 
-A new context starts with `php artisan make:context {Name}`, which scaffolds its rule file. The context rule file is the single source of truth for the context's language, and `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php` fails when an Action, Query, or domain exception is missing from it.
+A new feature starts with `php artisan make:feature {Name}`, which scaffolds its rule file. The feature rule file is the single source of truth for the feature's language, and `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php` fails when an Action, Query, or exception is missing from it.
 
 ## During the session
 
 ### Challenge against the vocabulary
 
-When the user uses a term that conflicts with the context's **Vocabulary** section, call it out immediately. "Your Settings vocabulary defines 'account' as the user's own record, but you seem to mean the billing customer. Which is it?"
+When the user uses a term that conflicts with the feature's **Vocabulary** section, call it out immediately. "Your Settings vocabulary defines 'account' as the user's own record, but you seem to mean the billing customer. Which is it?"
 
 ### Sharpen fuzzy language
 
-When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account': do you mean the User or the Customer? Those are different things." If a term belongs to a different context than the one being discussed, say so: crossing a context boundary is a design decision, not a wording choice.
+When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account': do you mean the User or the Customer? Those are different things." If a term belongs to a different feature than the one being discussed, say so: moving a term between features is a design decision, not a wording choice.
 
 ### Discuss concrete scenarios
 
@@ -42,13 +43,13 @@ When domain relationships are being discussed, stress-test them with specific sc
 
 When the user states how something works, check whether the code agrees. If you find a contradiction, surface it: "Your code cancels entire Orders, but you just said partial cancellation is possible. Which is right?"
 
-### Update the context rule file inline
+### Update the feature rule file inline
 
-When a term is resolved, update the context's rule file right there. Don't batch these up: capture them as they happen. Follow [VOCABULARY-FORMAT.md](./VOCABULARY-FORMAT.md).
+When a term is resolved, update the feature's rule file right there. Don't batch these up: capture them as they happen. Follow [VOCABULARY-FORMAT.md](./VOCABULARY-FORMAT.md).
 
 - **Vocabulary** holds business terms only, using the exact names the code uses. No implementation details.
 - **Invariants** holds each rule that must always hold, the `ensure...()` method or Action that enforces it, and the domain exception it throws. An invariant with no enforcer yet is a task, not a finished entry: say so.
-- **Public surface** lists the context's Actions and Queries.
+- **Actions and Queries** lists the feature's Actions, Queries, and exceptions.
 
 ### Offer ADRs sparingly
 

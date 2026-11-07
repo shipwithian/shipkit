@@ -1,7 +1,7 @@
 <?php
 
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
+use App\Models\Permission;
+use App\Models\Role;
 use Inertia\Testing\AssertableInertia as Assert;
 use ShipKit\Core\AccessControl\SystemPermission;
 

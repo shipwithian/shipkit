@@ -43,6 +43,6 @@ Both packages use [semantic versioning](https://semver.org) and share a version 
 
 - A release that **tightens a guard**, so that code which passed a check before can fail it, is a **major** version. Its section in `packages/shipkit-core/UPGRADE.md` names the failing check, the fix, and why, as that file describes. Review a pull request that changes a guard or a check for this before merging it.
 - A release that adds a check or guard without failing any passing project is **minor**; a fix is **patch**.
-- Template changes to project-owned code (controllers, pages, the Authentication and Settings contexts) are never merged into projects that already exist, so they need no upgrade notes.
+- Template changes to project-owned code (controllers, pages, the Auth and Settings features) are never merged into projects that already exist, so they need no upgrade notes.
 - Before 1.0.0, changes broke freely with no compatibility code.
 - A project created from ShipKit starts its own version sequence and tags; it does not inherit these.

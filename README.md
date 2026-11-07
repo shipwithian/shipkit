@@ -184,27 +184,36 @@ If the key is missing, authentication fails, Jev is rate-limited or unavailable,
 
 ## Architecture
 
-ShipKit uses a DDD-lite architecture: business code is grouped by bounded context, Eloquent models are the aggregates, and Pest architecture tests enforce the boundaries.
+ShipKit is a standard Laravel application: the folders of Laravel's React starter kit, with Actions for writes, Query objects for reads, and models that guard their own invariants. Pest architecture tests keep it that way.
 
 ```text
-app/Domain/
-├── AccessControl/    roles, permissions, protected system records
-├── Settings/         profile, password, passkeys, account deletion
-└── Authentication/   API login, two-factor challenges, tokens, verification
+app/
+├── Actions/
+│   ├── Fortify/          Fortify's own actions, as Laravel ships them
+│   ├── AccessControl/    roles, permissions, role assignment
+│   ├── Auth/             API login, two-factor challenges, tokens, verification
+│   └── Settings/         profile, password, account deletion
+├── Queries/              one folder per feature, like Actions
+├── Models/               User, Role, Permission, and their pivots
+├── Policies/
+├── Exceptions/           one named exception per broken business rule
+└── Http/                 controllers, Form Requests, Inertia props, API resources
 ```
 
-Each context holds its Actions, Query objects, Models, Policies, Enums, and Exceptions. Other code reaches a context only through its Actions (writes) and Query objects (reads).
+A feature, such as `AccessControl`, uses one name everywhere: `app/Actions/AccessControl`, `app/Queries/AccessControl`, `app/Http/Controllers/AccessControl`, and `tests/Feature/AccessControl`.
 
-The normal write flow is:
+The write flow is:
 
 ```text
-Form Request
+HTTP request
     ↓
-Controller authorization
+Form Request (validates)
     ↓
-Context Action
+Controller (authorizes)
     ↓
-Eloquent aggregate (ensure...() invariants)
+Action
+    ↓
+Eloquent model (ensure...() invariants)
     ↓
 Database
 ```
@@ -216,15 +225,15 @@ Responsibilities are intentionally separated:
 - **Form Requests** validate and normalize input.
 - **Controllers** authorize the request, invoke an Action or Query object, and return the response. They do not query the database directly.
 - **Policies** map application abilities to user permissions.
-- **Actions** perform named workflows and enforce non-bypassable business invariants.
+- **Actions** perform named workflows and enforce business rules that span several models.
 - **Query objects** own the Eloquent query behind each page, list, or API response.
-- **Eloquent models** are the aggregates: persistence, relationships, casts, and `ensure...()` methods that protect their own state.
-- **Domain exceptions** name each broken business rule and render as validation errors.
+- **Eloquent models** own persistence, relationships, casts, and `ensure...()` methods that protect their own state on every write.
+- **Named exceptions** describe each broken business rule and render as validation errors.
 - **React pages** present server-provided state and improve usability without replacing backend authorization.
 
-ShipKit deliberately stops short of full DDD: there are no separate domain entities, repositories, or mappers, because Fortify, Sanctum, Spatie Permission, and the Gate all work with Eloquent models.
+There are no repositories, mappers, or separate domain entities: Fortify, Sanctum, Spatie Permission, and the Gate all work with Eloquent models, and so does ShipKit.
 
-The boundaries are checked by `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`, and each context's vocabulary and invariants are documented for agents in `.ai/rules/contexts/`. For the complete architecture guidance, see [`vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md`](vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md).
+The rules are checked by `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`, including that each class sits in its standard folder, and each feature's vocabulary and invariants are documented for agents in `.ai/rules/features/`. For the complete architecture guidance, see [`vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md`](vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md).
 
 For the story of how this architecture was chosen, and how it was evaluated by letting agents build real features unaided, see [How ShipKit was built](docs/how-shipkit-was-built.md).
 
@@ -234,12 +243,12 @@ ShipKit's shared skills, path rules, and architecture guideline ship with `shipk
 
 | Skill                                            | Use it to                                                                                      |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `new-context`                                    | Create a bounded context with `php artisan make:context {Name}`                                |
+| `new-feature`                                    | Create a feature with `php artisan make:feature {Name}`                                        |
 | `to-spec`, `to-tickets`, `implement`             | Turn a conversation into a GitHub issue spec, split it into tickets, and build them test-first |
 | `review-diff`                                    | Review a branch against the `.ai` rules and its originating issue                              |
 | `diagnosing-bugs`                                | Debug with a red-capable feedback loop before hypothesising                                    |
 | `verify-app`                                     | Drive an isolated copy of the app over HTTP and capture evidence                               |
-| `domain-modeling`, `grill-with-docs`, `grilling` | Sharpen the domain language into `.ai/rules/contexts/`                                         |
+| `domain-modeling`, `grill-with-docs`, `grilling` | Sharpen a feature's language into `.ai/rules/features/`                                        |
 | `retro`, `correct`                               | Turn repeated agent mistakes into checks                                                       |
 | `writing-for-agents`, `handoff`                  | Write agent documents; hand work to a fresh session                                            |
 
@@ -468,7 +477,7 @@ When working on a focused change, run the narrowest relevant Pest tests first, t
 
 ## Extending a generated project
 
-Start with the application's business capabilities rather than adding more foundation layers. Give each capability with its own vocabulary and invariants a bounded context in `app/Domain/{Context}`, a rule file in `.ai/rules/contexts/`, and let `shipkit-core`'s architecture checks, which discover every context, enforce its boundaries.
+Start with the application's business capabilities rather than adding more foundation layers. Give each capability with its own vocabulary and invariants a feature with `php artisan make:feature {Name}`: its Actions in `app/Actions/{Feature}`, its Queries in `app/Queries/{Feature}`, and a rule file in `.ai/rules/features/`. `shipkit-core`'s architecture checks discover every feature and cover it without changes.
 
 For example, an ecommerce project might add products, orders, payments, and inventory. A community-management project might add residents, households, certificates, and programs. Those features belong to their individual applications, not to ShipKit.
 
@@ -520,7 +529,7 @@ composer ci:check
 
 `composer update` also runs `php artisan boost:update`, so the refreshed agent rules and skills arrive with the package. The project's constraint, such as `^3.0`, keeps it within one major version, and a minor or patch release never makes a passing project fail. A new major version tightens a guard, so moving to it is a deliberate step: require it with `composer require shipwithian/shipkit-core:^4.0`, then follow its section in the package's [`UPGRADE.md`](packages/shipkit-core/UPGRADE.md), which names each check that may now fail and the fix.
 
-**Template code: controllers, pages, contexts, and configuration.** Nothing updates it. The project copied it once and owns it from then on. To adopt an improvement from a later ShipKit release, read its section in [`CHANGELOG.md`](CHANGELOG.md), compare the two release tags on GitHub, for example `https://github.com/shipwithian/shipkit/compare/v2.0.0...v3.0.0`, and copy the parts you want.
+**Template code: controllers, Actions, Queries, models, pages, and configuration.** Nothing updates it. The project copied it once and owns it from then on. To adopt an improvement from a later ShipKit release, read its section in [`CHANGELOG.md`](CHANGELOG.md), compare the two release tags on GitHub, for example `https://github.com/shipwithian/shipkit/compare/v2.0.0...v3.0.0`, and copy the parts you want.
 
 ## Bringing improvements back to ShipKit
 

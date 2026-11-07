@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Authentication\Actions\CompleteApiTwoFactorChallengeAction;
-use App\Domain\Authentication\Actions\LoginApiUserAction;
-use App\Domain\Authentication\Actions\RegisterApiUserAction;
-use App\Domain\Authentication\Actions\RevokeApiTokenAction;
+use App\Actions\Auth\CompleteApiTwoFactorChallengeAction;
+use App\Actions\Auth\LoginApiUserAction;
+use App\Actions\Auth\RegisterApiUserAction;
+use App\Actions\Auth\RevokeApiTokenAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;

@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\AccessControl;
 
-use App\Domain\AccessControl\Actions\CreatePermissionAction;
-use App\Domain\AccessControl\Actions\DeletePermissionAction;
-use App\Domain\AccessControl\Actions\UpdatePermissionAction;
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Queries\PermissionListQuery;
+use App\Actions\AccessControl\CreatePermissionAction;
+use App\Actions\AccessControl\DeletePermissionAction;
+use App\Actions\AccessControl\UpdatePermissionAction;
 use App\Http\Controllers\Controller;
 use App\Http\Props\AccessControl\PermissionAbilities;
 use App\Http\Props\AccessControl\PermissionIndexAbilities;
@@ -14,6 +12,8 @@ use App\Http\Props\AccessControl\PermissionIndexProps;
 use App\Http\Props\AccessControl\PermissionListItem;
 use App\Http\Requests\AccessControl\StorePermissionRequest;
 use App\Http\Requests\AccessControl\UpdatePermissionRequest;
+use App\Models\Permission;
+use App\Queries\AccessControl\PermissionListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;

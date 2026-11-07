@@ -2,17 +2,13 @@
 
 namespace App\Models;
 
-use App\Domain\AccessControl\Exceptions\LastSuperAdminCannotBeRemoved;
-use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
-use App\Domain\AccessControl\Models\Role;
-use App\Domain\AccessControl\Models\RoleAssignment;
-use App\Domain\Settings\Exceptions\ProtectedAccountCannotBeDeleted;
-use App\Domain\Settings\Policies\UserPolicy;
+use App\Exceptions\LastSuperAdminCannotBeRemoved;
+use App\Exceptions\ProtectedAccountCannotBeDeleted;
+use App\Exceptions\ProtectedRecordCannotBeChanged;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -43,7 +39,6 @@ use Spatie\Permission\Traits\HasRoles;
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-#[UsePolicy(UserPolicy::class)]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */

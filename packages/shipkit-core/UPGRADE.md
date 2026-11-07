@@ -20,6 +20,27 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 4.0
+
+### Laravel's standard folders
+
+- **Fails:** `ArchitectureTest` › "keeps each kind of class in its standard folder", with `app/Domain exists.`
+- **Fix:** Move each context's classes to Laravel's folder for their kind, and rename their namespaces to match:
+
+    | 3.x                                                             | 4.0                                                                                                     |
+    | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+    | `app/Domain/{Context}/Actions` (`App\Domain\{Context}\Actions`) | `app/Actions/{Feature}` (`App\Actions\{Feature}`)                                                       |
+    | `app/Domain/{Context}/Queries`                                  | `app/Queries/{Feature}`                                                                                 |
+    | `app/Domain/{Context}/Models`                                   | `app/Models`                                                                                            |
+    | `app/Domain/{Context}/Policies`                                 | `app/Policies` (drop `#[UsePolicy]` where the name matches the model)                                   |
+    | `app/Domain/{Context}/Exceptions`                               | `app/Exceptions`                                                                                        |
+    | `.ai/rules/contexts/{context}.md`                               | `.ai/rules/features/{feature}.md`, with `paths` pointing at the new folders                             |
+    | `database/factories/Domain/{Context}/Models/{Model}Factory.php` | `database/factories/{Model}Factory.php`, and remove the factory-name resolver from `AppServiceProvider` |
+
+    In `config/shipkit.php`, rename `contexts_using_framework_exceptions` to `features_using_framework_exceptions` and `non_context_folders` to `non_feature_folders`, and point `models` at `App\Models`. Run `php artisan make:feature {Name}` instead of `make:context`.
+
+- **Why:** The bounded-context layout added a second vocabulary and special cases (the shared `User`, Fortify's actions) on top of Laravel, while the protection came from Actions, Query objects, and model guards, which work the same in Laravel's own folders.
+
 ## Upgrading to 3.0
 
 ### Frontend files over the length limit

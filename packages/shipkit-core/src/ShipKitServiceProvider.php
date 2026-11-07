@@ -4,7 +4,7 @@ namespace ShipKit\Core;
 
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\ServiceProvider;
-use ShipKit\Core\Console\MakeContextCommand;
+use ShipKit\Core\Console\MakeFeatureCommand;
 use ShipKit\Core\Console\VerifyCommand;
 use Symfony\Component\Process\ExecutableFinder;
 
@@ -25,7 +25,7 @@ class ShipKitServiceProvider extends ServiceProvider
         $this->app->make(GuardedModelMap::class)->ensureMappedModelsAreGuarded();
 
         if ($this->app->runningInConsole()) {
-            $this->commands([MakeContextCommand::class, VerifyCommand::class]);
+            $this->commands([MakeFeatureCommand::class, VerifyCommand::class]);
 
             $this->publishes([
                 __DIR__.'/../config/shipkit.php' => config_path('shipkit.php'),

@@ -10,7 +10,7 @@ metadata:
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
 
-When exploring the codebase, read the context rule file in `.ai/rules/contexts/` for the area you're touching to get its vocabulary and invariants, and check `docs/adr/` if it exists.
+When exploring the codebase, read the feature rule file in `.ai/rules/features/` for the area you're touching to get its vocabulary and invariants, and check `docs/adr/` if it exists.
 
 ## Redact
 

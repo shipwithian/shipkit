@@ -13,7 +13,7 @@ use ShipKit\Core\GuardedModelMap;
 
 uses(TestCase::class);
 
-it('finds the guarded aggregates it protects', function () {
+it('finds the guarded models it protects', function () {
     $models = app(GuardedModelMap::class);
 
     expect(guardedTables())->toContain(
@@ -102,7 +102,7 @@ it('never lets a database cascade delete guarded rows without a recorded reason'
 
 /**
  * Tables of every guarded model: the ones mapped in config/shipkit.php, and every model under
- * the application's Domain and Models folders that uses GuardsInvariants.
+ * the application's Models folder that uses GuardsInvariants.
  *
  * @return list<string>
  */
@@ -110,7 +110,7 @@ function guardedTables(): array
 {
     $layout = ProjectLayout::current();
     $models = app(GuardedModelMap::class);
-    $discovered = array_map($layout->classForAppFile(...), [...$layout->phpFiles('app/Domain'), ...$layout->phpFiles('app/Models')]);
+    $discovered = array_map($layout->classForAppFile(...), $layout->phpFiles('app/Models'));
 
     return collect([$models->role(), $models->permission(), $models->user(), ...$discovered])
         ->filter(fn (string $class): bool => class_exists($class)

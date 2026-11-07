@@ -4,11 +4,11 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
-use App\Http\Props\Authentication\ForgotPasswordProps;
-use App\Http\Props\Authentication\LoginProps;
-use App\Http\Props\Authentication\RegisterProps;
-use App\Http\Props\Authentication\ResetPasswordProps;
-use App\Http\Props\Authentication\VerifyEmailProps;
+use App\Http\Props\Auth\ForgotPasswordProps;
+use App\Http\Props\Auth\LoginProps;
+use App\Http\Props\Auth\RegisterProps;
+use App\Http\Props\Auth\ResetPasswordProps;
+use App\Http\Props\Auth\VerifyEmailProps;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;

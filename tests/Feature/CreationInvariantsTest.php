@@ -1,8 +1,8 @@
 <?php
 
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
-use App\Domain\AccessControl\Models\RolePermission;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\RolePermission;
 use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 use ShipKit\Core\Exceptions\DomainException;
 

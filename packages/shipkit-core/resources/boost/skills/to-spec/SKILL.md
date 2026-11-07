@@ -13,7 +13,7 @@ The issue tracker, its labels, and its commands are described in `.ai/issue-trac
 
 ## Process
 
-1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the vocabulary from the relevant context rule files in `.ai/rules/contexts/` throughout the spec, and respect any ADRs in `docs/adr/`. Name the bounded context the work belongs to, or say that it needs a new one.
+1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the vocabulary from the relevant feature rule files in `.ai/rules/features/` throughout the spec, and respect any ADRs in `docs/adr/`. Name the feature the work belongs to, or say that it needs a new one.
 
 2. Sketch out the seams at which you're going to test the feature. In this repo the highest seam is usually a Pest feature test through the route, with Actions tested directly only for invariants with several branches. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
 

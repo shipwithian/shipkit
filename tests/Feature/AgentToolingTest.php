@@ -135,7 +135,7 @@ it('maps every rule file in the rules index', function () {
     $index = (string) file_get_contents(base_path('.ai/rules/index.md'));
     $unmapped = [];
 
-    foreach ([...glob(base_path('.ai/rules/*.md')), ...glob(base_path('.ai/rules/contexts/*.md')), ...glob(base_path(CORE_GUIDANCE.'/rules/*.md'))] as $ruleFile) {
+    foreach ([...glob(base_path('.ai/rules/*.md')), ...glob(base_path('.ai/rules/features/*.md')), ...glob(base_path(CORE_GUIDANCE.'/rules/*.md'))] as $ruleFile) {
         $relative = Str::after($ruleFile, base_path().'/');
 
         if ($relative !== '.ai/rules/index.md' && ! str_contains($index, $relative)) {

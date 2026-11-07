@@ -26,11 +26,11 @@ return [
     | Deliberate departures from ShipKit's architecture checks, each with the reason, so they stay
     | visible and reviewable instead of being hidden by editing a check.
     |
-    | contexts_using_framework_exceptions: contexts that report failures with Laravel's own
-    | exceptions instead of named domain exceptions, keyed by context.
+    | features_using_framework_exceptions: features whose Actions and Queries report failures with
+    | Laravel's own exceptions instead of named exceptions, keyed by feature.
     |
-    | non_context_folders: folders under app/Http/Controllers, app/Http/Requests, app/Http/Props, and tests/Feature
-    | that are not named after a bounded context, keyed by parent directory, then folder.
+    | non_feature_folders: folders under app/Http/Controllers, app/Http/Requests, app/Http/Props, and tests/Feature
+    | that are not named after a feature, keyed by parent directory, then folder.
     |
     | protected_marker_exceptions: files allowed to write is_protected, keyed by path, such as a test
     | that proves the marker cannot change. Application code never belongs here.
@@ -56,8 +56,8 @@ return [
     ],
 
     'architecture' => [
-        'contexts_using_framework_exceptions' => [],
-        'non_context_folders' => [],
+        'features_using_framework_exceptions' => [],
+        'non_feature_folders' => [],
         'protected_marker_exceptions' => [],
         'long_frontend_files' => [],
     ],

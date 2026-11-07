@@ -1,7 +1,7 @@
 <?php
 
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 
 return [
@@ -33,13 +33,12 @@ return [
     */
 
     'architecture' => [
-        'contexts_using_framework_exceptions' => [
-            'Authentication' => 'mirrors Fortify, which reports with validation and authorization exceptions',
+        'features_using_framework_exceptions' => [
+            'Auth' => 'mirrors Fortify, which reports with validation and authorization exceptions',
         ],
-        'non_context_folders' => [
+        'non_feature_folders' => [
             'app/Http/Controllers' => ['Api' => 'versioned API controllers, grouped by version'],
             'app/Http/Requests' => ['Api' => 'versioned API requests, grouped by version'],
-            'tests/Feature' => ['Auth' => "the upstream starter kit's authentication tests, kept as shipped"],
         ],
         'protected_marker_exceptions' => [
             'tests/Feature/AccessControl/AccessControlInvariantsTest.php' => 'attempts to change the marker to prove the models refuse it',

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Authentication\Actions\CreateApiTokenAction;
-use App\Domain\Authentication\Actions\RevokeApiTokenAction;
-use App\Domain\Authentication\Queries\ApiTokenListQuery;
-use App\Domain\Authentication\Queries\ApiTokenQuery;
+use App\Actions\Auth\CreateApiTokenAction;
+use App\Actions\Auth\RevokeApiTokenAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreApiTokenRequest;
 use App\Http\Resources\Api\V1\ApiTokenResource;
 use App\Models\User;
+use App\Queries\Auth\ApiTokenListQuery;
+use App\Queries\Auth\ApiTokenQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

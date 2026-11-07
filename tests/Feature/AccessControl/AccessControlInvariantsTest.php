@@ -1,10 +1,10 @@
 <?php
 
-use App\Domain\AccessControl\Exceptions\PermissionIsInUse;
-use App\Domain\AccessControl\Exceptions\ProtectedRecordCannotBeChanged;
-use App\Domain\AccessControl\Exceptions\RoleIsInUse;
-use App\Domain\AccessControl\Models\Permission;
-use App\Domain\AccessControl\Models\Role;
+use App\Exceptions\PermissionIsInUse;
+use App\Exceptions\ProtectedRecordCannotBeChanged;
+use App\Exceptions\RoleIsInUse;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use ShipKit\Core\Exceptions\BulkWriteBypassesInvariants;
 
