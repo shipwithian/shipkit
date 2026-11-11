@@ -8,7 +8,7 @@ use App\Mcp\Servers\AppServer;
 use Illuminate\Support\Facades\Route;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Passport\Http\Middleware\CheckToken;
-use ShipKit\Core\Channel;
+use ShipKit\Core\ChannelKind;
 
 /*
 | AI clients find the app's sign-in through discovery, register themselves (public, rate-limited,
@@ -25,5 +25,5 @@ Mcp::web('/mcp', AppServer::class)->middleware([
     CheckToken::using(ApiScope::McpUse->value),
     'throttle:mcp',
     RecordApiTokenUse::class,
-    ShareChannel::class.':'.Channel::MCP,
+    ShareChannel::class.':'.ChannelKind::Mcp->value,
 ]);

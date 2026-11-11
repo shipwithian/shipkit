@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mcp\Concerns;
+namespace App\Mcp\Support;
 
 use Closure;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -24,10 +24,17 @@ use Laravel\Mcp\ResponseFactory;
  *
  * This confirms what the model saw. The human gate is the AI client's own approval prompt for
  * destructive tools.
+ *
+ * Single use depends on a cache every worker shares and that does not evict early (database or
+ * Redis, not `array` or `file` across servers): the lock and the first result live there.
  */
 final class ConsequentialActionConfirmation
 {
-    public const int CONFIRMATION_MINUTES = 10;
+    /** How long a confirmation_token works, and how long the first result is kept for replays. */
+    public const int TOKEN_MINUTES = 10;
+
+    /** How long one confirmed call may hold the lock, so a crashed worker blocks its token for at most this. */
+    public const int LOCK_SECONDS = 120;
 
     /**
      * @param  class-string  $tool  the tool asking, so a token for one tool never confirms another
@@ -44,16 +51,16 @@ final class ConsequentialActionConfirmation
                 'confirmed' => false,
                 'summary' => $summary(),
                 'confirmation_token' => $this->issueConfirmationToken($request, $tool, $arguments),
-                'expires_in_minutes' => self::CONFIRMATION_MINUTES,
+                'expires_in_minutes' => self::TOKEN_MINUTES,
             ]);
         }
 
         $nonce = $this->redeemConfirmationToken($request, $tool, $arguments, $token);
 
-        $lock = Cache::lock("mcp-confirmation:{$nonce}:lock", self::CONFIRMATION_MINUTES * 60);
+        $lock = Cache::lock("mcp-confirmation:{$nonce}:lock", self::LOCK_SECONDS);
 
         try {
-            return $lock->block((int) config('mcp.confirmation_lock_wait_seconds', 5), function () use ($nonce, $act): ResponseFactory {
+            return $lock->block((int) config('mcp.confirmation_lock_wait_seconds'), function () use ($nonce, $act): ResponseFactory {
                 $resultKey = "mcp-confirmation:{$nonce}:result";
 
                 /** @var array<string, mixed>|null $result */
@@ -61,7 +68,7 @@ final class ConsequentialActionConfirmation
 
                 if ($result === null) {
                     $result = ['confirmed' => true, ...$act()];
-                    Cache::put($resultKey, $result, now()->addMinutes(self::CONFIRMATION_MINUTES));
+                    Cache::put($resultKey, $result, now()->addMinutes(self::TOKEN_MINUTES));
                 }
 
                 return Response::structured($result);
@@ -81,7 +88,7 @@ final class ConsequentialActionConfirmation
             'tool' => $tool,
             'user' => $request->user()?->getAuthIdentifier(),
             'arguments' => $this->fingerprint($arguments),
-            'expires_at' => now()->addMinutes(self::CONFIRMATION_MINUTES)->getTimestamp(),
+            'expires_at' => now()->addMinutes(self::TOKEN_MINUTES)->getTimestamp(),
         ]));
     }
 

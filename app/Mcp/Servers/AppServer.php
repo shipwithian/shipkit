@@ -32,5 +32,6 @@ class AppServer extends Server
     protected function boot(): void
     {
         $this->name = (string) config('app.name');
+        $this->instructions = "{$this->name}: ".$this->instructions;
     }
 }

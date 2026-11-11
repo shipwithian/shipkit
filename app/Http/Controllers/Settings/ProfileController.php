@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use ShipKit\Core\Channel;
 
 class ProfileController extends Controller
 {
@@ -38,7 +39,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request, UpdateProfileAction $updateProfile): RedirectResponse
+    public function update(ProfileUpdateRequest $request, UpdateProfileAction $updateProfile, Channel $channel): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -48,7 +49,7 @@ class ProfileController extends Controller
         /** @var array{name: string, email: string} $validated */
         $validated = $request->validated();
 
-        $updateProfile->handle($user, $validated);
+        $updateProfile->handle($user, $validated, $channel);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 

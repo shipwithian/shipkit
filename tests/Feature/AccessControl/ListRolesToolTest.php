@@ -13,7 +13,8 @@ it('tells the AI client clearly when the user may not view roles', function () {
 it('lists the roles with exactly the listed fields', function () {
     $user = userWithPermissions([SystemPermission::ManageRolesResource->value]);
 
-    $response = AppServer::actingAs($user)->tool(ListRolesTool::class)->assertOk();
-
-    $response->assertExactStructuredContentStructure(['roles' => ['*' => ['id', 'name', 'is_protected', 'permissions_count', 'users_count']]]);
+    AppServer::actingAs($user)->tool(ListRolesTool::class)
+        ->assertOk()
+        ->assertExactStructuredContentStructure(['roles' => ['*' => ['id', 'name', 'is_protected', 'permissions_count', 'users_count']]])
+        ->assertStructuredContentFragment(['name' => 'super-admin', 'is_protected' => true, 'users_count' => 1]);
 });

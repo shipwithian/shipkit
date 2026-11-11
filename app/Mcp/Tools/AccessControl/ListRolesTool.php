@@ -2,7 +2,6 @@
 
 namespace App\Mcp\Tools\AccessControl;
 
-use App\Mcp\Concerns\ReportsDomainExceptions;
 use App\Models\Role;
 use App\Queries\AccessControl\RoleListQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -24,8 +23,6 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsIdempotent]
 class ListRolesTool extends Tool
 {
-    use ReportsDomainExceptions;
-
     public function handle(Request $request, RoleListQuery $roleList): Response|ResponseFactory
     {
         Gate::forUser($request->user())->authorize('viewAny', Role::class);

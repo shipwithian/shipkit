@@ -33,6 +33,9 @@ class ProjectLayout
      */
     public const array PACKAGE_ACTION_FOLDERS = ['Fortify'];
 
+    /** A class that extends Laravel MCP's Tool, whatever it is named. */
+    private const string TOOL_CLASS_PATTERN = '/\bclass\s+(\w+)\s+extends\s+(?:\\\\?[\w\\\\]*\\\\)?Tool\b/';
+
     private static ?self $current = null;
 
     private ?string $appNamespace = null;
@@ -151,7 +154,7 @@ class ProjectLayout
 
             $inTools = str_starts_with($relative, 'app/Mcp/Tools/');
 
-            if (str_ends_with($name, 'Tool') && ! $inTools) {
+            if (! $inTools && (str_ends_with($name, 'Tool') || preg_match(self::TOOL_CLASS_PATTERN, (string) file_get_contents($path)))) {
                 $violations[] = "{$relative}: an MCP tool lives in app/Mcp/Tools/{Feature}";
             }
 
@@ -168,37 +171,67 @@ class ProjectLayout
     }
 
     /**
-     * MCP tools that break the conventions in the `mcp` rule, each with what to change: a tool must
-     * authorize before it reads or writes, reach data only through Queries and Actions, declare an
-     * output schema, and, when marked `#[IsDestructive]`, confirm before acting.
+     * MCP tools that break the conventions in the `mcp` rule, each with what to change. A tool is any
+     * class in `app/Mcp/Tools` that extends `Tool`. It must be named `{Name}Tool`, declare a
+     * snake_case `#[Name]`, a `#[Title]`, and `#[IsReadOnly]` or `#[IsDestructive]` explicitly (MCP
+     * clients treat an unannotated tool as destructive), be registered in a server under
+     * `app/Mcp/Servers`, authorize before anything else, reach no `DB` and query no model, declare an
+     * output schema, and, when destructive, confirm before acting.
+     *
+     * The check does not see whether arguments use the shared validation rules, whether the result
+     * lists its fields one by one, or whether a tool takes the acting user from its arguments; the
+     * `mcp` rule says so, and review covers them.
      *
      * @return list<string>
      */
     public function toolConventionViolations(): array
     {
         $violations = [];
+        $servers = implode("\n", array_map(fn (string $path): string => $this->withoutComments((string) file_get_contents($path)), $this->phpFiles('app/Mcp/Servers')));
 
         foreach ($this->phpFiles('app/Mcp/Tools') as $path) {
             $relative = substr($path, strlen($this->path()) + 1);
-            $source = (string) file_get_contents($path);
+            $code = $this->withoutComments((string) file_get_contents($path));
 
-            if (! preg_match('/\bclass\s+\w+Tool\b/', $source)) {
+            if (! preg_match(self::TOOL_CLASS_PATTERN, $code, $class)) {
                 continue;
             }
 
-            $handle = preg_match('/function\s+handle\s*\(.*?\{(.*?)\n    \}/s', $source, $match) ? $match[1] : '';
-            $authorizesAt = preg_match('/Gate::(?:forUser\([^;]*?\)->)?(?:authorize|inspect)\(/', $handle, $found, PREG_OFFSET_CAPTURE) ? $found[0][1] : null;
-            $firstUseAt = preg_match('/->handle\(|->validate\(/', $handle, $used, PREG_OFFSET_CAPTURE) ? $used[0][1] : null;
+            $class = $class[1];
 
-            if ($authorizesAt === null || ($firstUseAt !== null && $firstUseAt < $authorizesAt)) {
-                $violations[] = "{$relative}: call Gate::forUser(\$user)->authorize() first in handle(), before validating, reading, or writing";
+            if (! str_ends_with($class, 'Tool')) {
+                $violations[] = "{$relative}: name the tool class {$class}Tool";
             }
 
-            if (preg_match('/\bDB::|use Illuminate\\\\Support\\\\Facades\\\\DB;/', $source)) {
+            if (! preg_match("/#\\[Name\\('([^']*)'\\)\\]/", $code, $name) || ! preg_match('/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/', $name[1])) {
+                $violations[] = "{$relative}: declare a snake_case #[Name('show_my_profile')], so AI clients see a stable tool name";
+            }
+
+            if (! str_contains($code, '#[Title(')) {
+                $violations[] = "{$relative}: declare a #[Title('Show my profile')] for people reading the tool list";
+            }
+
+            if (! preg_match('/#\[Is(?:ReadOnly|Destructive)\b/', $code)) {
+                $violations[] = "{$relative}: declare #[IsReadOnly] or #[IsDestructive(true|false)] explicitly; MCP clients treat a tool with neither as destructive";
+            }
+
+            if (! str_contains($servers, "{$class}::class")) {
+                $violations[] = "{$relative}: register {$class} in a server under app/Mcp/Servers, or no AI client can call it";
+            }
+
+            $handle = preg_match('/function\s+handle\s*\(.*?\{(.*?)\n    \}/s', $code, $match) ? $match[1] : '';
+
+            if (! preg_match('/Gate::forUser\([^;]*?\)->authorize\(/', $handle, $found, PREG_OFFSET_CAPTURE)) {
+                $violations[] = "{$relative}: call Gate::forUser(\$user)->authorize() in handle(); Gate::inspect() never throws and a plain Gate::authorize() does not name the user";
+            } elseif (preg_replace('/\s+/', '', substr($handle, 0, $found[0][1])) !== '' && preg_replace('/\s+/', '', substr($handle, 0, $found[0][1])) !== '$user=$request->user();') {
+                $violations[] = "{$relative}: authorize before anything else in handle(); only `\$user = \$request->user();` may come first";
+            }
+
+            if (preg_match('/\bDB::|use Illuminate\\\\Support\\\\Facades\\\\DB;/', $code)) {
                 $violations[] = "{$relative}: uses DB; read through a Query object and write through an Action";
             }
 
-            preg_match_all('/^use ([\w\\\\]+);$/m', $source, $imports);
+            preg_match_all('/^use ([\w\\\\]+);$/m', $code, $imports);
 
             foreach ($imports[1] as $import) {
                 if (! class_exists($import) || ! is_subclass_of($import, Model::class)) {
@@ -207,21 +240,36 @@ class ProjectLayout
 
                 $model = substr((string) strrchr('\\'.$import, '\\'), 1);
 
-                if (preg_match("/\\b{$model}::(?!class\\b)(?![A-Z][A-Z0-9_]*\\b)\\w+/", $source, $call)) {
+                if (preg_match("/\\b{$model}::(?!class\\b)(?![A-Z][A-Z0-9_]*\\b)\\w+/", $code, $call)) {
                     $violations[] = "{$relative}: {$call[0]} queries the {$model} model; read through a Query object and write through an Action";
                 }
             }
 
-            if (! str_contains($source, 'function outputSchema(')) {
+            if (preg_match('/\\\\?[\w\\\\]*\\\\Models\\\\\w+::(?!class\b)(?![A-Z][A-Z0-9_]*\b)\w+/', $code, $call)) {
+                $violations[] = "{$relative}: {$call[0]} queries a model; read through a Query object and write through an Action";
+            }
+
+            if (! str_contains($code, 'function outputSchema(')) {
                 $violations[] = "{$relative}: declare outputSchema() so AI clients can parse the result";
             }
 
-            if (preg_match('/#\[IsDestructive(?!\(\s*false)/', $source) && (! str_contains($source, 'ConsequentialActionConfirmation') || ! str_contains($source, '->confirmBeforeActing('))) {
+            if (preg_match('/#\[IsDestructive(?!\(\s*false)/', $code) && (! str_contains($code, 'ConsequentialActionConfirmation') || ! str_contains($code, '->confirmBeforeActing('))) {
                 $violations[] = "{$relative}: a destructive tool confirms before acting; type-hint ConsequentialActionConfirmation in handle() and run the action through confirmBeforeActing()";
             }
         }
 
         return $violations;
+    }
+
+    /**
+     * PHP source without its comments, so a comment cannot satisfy or trip a convention check.
+     */
+    private function withoutComments(string $php): string
+    {
+        return implode('', array_map(
+            fn (mixed $token): string => is_array($token) ? (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true) ? '' : $token[1]) : $token,
+            token_get_all($php),
+        ));
     }
 
     /**

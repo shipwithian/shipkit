@@ -8,9 +8,9 @@ Released as 5.0.0 because `shipkit-core` shares the template's version, which mo
 
 - **Guidance:** the `tests` rule's note about calling `Auth::forgetGuards()` before reusing a revoked bearer token no longer names Sanctum.
 - **Upgrade notes:** [UPGRADE.md](UPGRADE.md#upgrading-to-50) carries the template's Sanctum → Passport steps.
-- **Checks:** `ArchitectureTest` gains "follows the MCP tool conventions": a tool in `app/Mcp/Tools` authorizes first, uses no `DB` or model queries, declares an output schema, and confirms before acting when it is `#[IsDestructive]`. The standard-folders check keeps tools in `app/Mcp/Tools/{Feature}`. Both pass on a project without tools.
-- **Channel:** `ShipKit\Core\Channel` names where a change came from (web, API, or MCP with its client), for Actions that record it.
-- **Commands:** `make:feature {Name} --mcp` also creates `app/Mcp/Tools/{Name}`.
+- **Checks:** `ArchitectureTest` gains "follows the MCP tool conventions": a tool in `app/Mcp/Tools` (any class extending `Tool`) is named `{Name}Tool`, has a snake_case `#[Name]`, a `#[Title]`, and an explicit `#[IsReadOnly]` or `#[IsDestructive]`, is registered in a server, authorizes with `Gate::forUser($user)->authorize()` before anything but `$user = $request->user();`, uses no `DB` or model queries, declares an output schema, and confirms before acting when destructive. The standard-folders check keeps tools in `app/Mcp/Tools/{Feature}`. Both pass on a project without tools.
+- **Channel:** `ShipKit\Core\Channel` and `ChannelKind` name where a change came from (web, API, or MCP with its client), for Actions that record it.
+- **Commands:** `make:feature {Name} --mcp` also creates `app/Mcp/Tools/{Name}`, adds it to the feature's rule paths and index row, and works on a feature that already exists.
 - **Guidance:** the `mcp` rule covers confirming one risky argument of an otherwise harmless tool, and the allowed redirects and self-declared client names of AI clients.
 - **Guidance:** a new `mcp` rule; `new-feature` decides whether a feature gets tools, `to-spec` gains an "AI Client Access" section, and `grilling` raises AI-client access for new features.
 

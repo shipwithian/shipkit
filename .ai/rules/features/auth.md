@@ -23,7 +23,7 @@ ShipKit is an OAuth 2.1 server built on Laravel Passport. Web sign-in stays sess
 - **Connected app**: an OAuth client for which the user holds at least one non-revoked token. Its access tokens last an hour and its refresh tokens 30 days.
 - **Scope**: a permission a token carries, listed in `App\Enums\ApiScope` with the description the consent screen shows. Every `/api/v1` route requires `api`; `/mcp` requires `mcp:use`. Personal access tokens carry both.
 - **AI client**: an MCP client such as Claude or ChatGPT that finds the app through discovery (`/.well-known/oauth-*`), registers itself at `/oauth/register` (public, 10 a minute per address, and only for allowlisted redirects: claude.ai, chatgpt.com, localhost, and `MCP_REDIRECT_DOMAINS`), and connects through the consent screen. A self-registered client is a public client limited to `mcp:use`, so it never reaches `/api/v1`; registering and limiting it happen in one transaction, so it can never exist with unrestricted scopes. The consent screen shows where the app will return the user, and a client's name is self-declared.
-- **Channel**: where a change came from (web, API, or MCP with the OAuth client), shared by `ShareChannel` and passed to Actions that record it. See the `mcp` rule.
+- **Channel**: where a change came from (web, API, or MCP with the OAuth client), shared by `ShareChannel`, injected into controllers and tools as `Channel`, and passed to Actions that record it (`UpdateProfileAction` logs it). Only the client id is trustworthy; `OAuthClientNameQuery` looks up the self-declared name for logs. See the `mcp` rule.
 - **Two-factor challenge**: a single-use, five-minute cache entry issued instead of a token when the user has two-factor authentication enabled.
 
 ## Invariants
@@ -53,6 +53,6 @@ These rules mirror Fortify's web behaviour and report failures with Laravel's va
 ## Actions and Queries
 
 - Actions: `LoginApiUserAction`, `CompleteApiTwoFactorChallengeAction`, `RegisterApiUserAction`, `ResetApiPasswordAction`, `VerifyApiEmailAction`, `CreateApiTokenAction`, `RevokeApiTokenAction`, `RevokeConnectedAppAction`, `RevokeAllApiAccessAction`, `RecordApiTokenUseAction`, `LimitClientToMcpAction`.
-- Queries: `ApiTokenListQuery`, `ApiTokenQuery`, `ConnectedAppListQuery`, `ConnectedAppQuery`.
+- Queries: `ApiTokenListQuery`, `ApiTokenQuery`, `ConnectedAppListQuery`, `ConnectedAppQuery`, `OAuthClientNameQuery`.
 
 Actions used only by other Auth Actions: `AuthenticateApiUserAction`, `CreateApiTwoFactorChallengeAction`.

@@ -63,14 +63,45 @@ it('scaffolds the Actions, Queries, and feature test folders and the rule file',
         ->not->toContain('{{');
 });
 
-it('creates the MCP tool folder only with --mcp', function () {
+it('creates the MCP tool folder, rule path, and index glob only with --mcp', function () {
     $this->artisan('make:feature', ['name' => 'Billing'])->assertSuccessful();
     $this->artisan('make:feature', ['name' => 'Orders', '--mcp' => true])->assertSuccessful();
 
+    $index = file_get_contents($this->scratchPath.'/.ai/rules/index.md');
+
     expect(is_dir($this->scratchPath.'/app/Mcp/Tools/Billing'))->toBeFalse()
-        ->and($this->scratchPath.'/app/Mcp/Tools/Orders/.gitkeep')->toBeFile();
+        ->and($this->scratchPath.'/app/Mcp/Tools/Orders/.gitkeep')->toBeFile()
+        ->and(file_get_contents($this->scratchPath.'/.ai/rules/features/billing.md'))->not->toContain('app/Mcp/Tools')
+        ->and(file_get_contents($this->scratchPath.'/.ai/rules/features/orders.md'))->toContain("    - 'app/Mcp/Tools/Orders/**'")
+        ->and($index)->toContain('app/Actions/Orders/**, app/Queries/Orders/**, app/Mcp/Tools/Orders/**')
+        ->and($index)->not->toContain('app/Mcp/Tools/Billing');
 });
 
+it('adds MCP tools to a feature that already exists, once', function () {
+    $this->artisan('make:feature', ['name' => 'Billing'])->assertSuccessful();
+
+    $this->artisan('make:feature', ['name' => 'Billing', '--mcp' => true])
+        ->expectsOutputToContain('Added MCP tools to the Billing feature.')
+        ->assertSuccessful();
+
+    expect($this->scratchPath.'/app/Mcp/Tools/Billing/.gitkeep')->toBeFile()
+        ->and(file_get_contents($this->scratchPath.'/.ai/rules/features/billing.md'))->toContain("    - 'app/Mcp/Tools/Billing/**'")
+        ->and(file_get_contents($this->scratchPath.'/.ai/rules/index.md'))->toContain('app/Actions/Billing/**, app/Queries/Billing/**, app/Mcp/Tools/Billing/**');
+
+    $this->artisan('make:feature', ['name' => 'Billing', '--mcp' => true])
+        ->expectsOutputToContain('already exists')
+        ->assertFailed();
+
+    expect(substr_count(file_get_contents($this->scratchPath.'/.ai/rules/features/billing.md'), 'app/Mcp/Tools/Billing'))->toBe(1);
+});
+
+it('points a feature without tools at --mcp instead of recreating it', function () {
+    $this->artisan('make:feature', ['name' => 'Billing'])->assertSuccessful();
+
+    $this->artisan('make:feature', ['name' => 'Billing'])
+        ->expectsOutputToContain('make:feature Billing --mcp')
+        ->assertFailed();
+});
 it('adds the index row after the existing feature rows', function () {
     $this->artisan('make:feature', ['name' => 'Billing'])->assertSuccessful();
 

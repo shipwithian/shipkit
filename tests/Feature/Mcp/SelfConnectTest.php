@@ -1,8 +1,11 @@
 <?php
 
 use App\Actions\Auth\LimitClientToMcpAction;
+use App\Http\Middleware\LimitRegisteredClientsToMcp;
 use App\Models\OAuthClient;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -42,9 +45,7 @@ it('connects a self-registered AI client that reaches /mcp but not the REST API'
 
     Auth::forgetGuards();
 
-    $this->withToken($tokens['access_token'])
-        ->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'])
-        ->assertOk();
+    mcpRequest($tokens['access_token'], 'tools/list')->assertOk();
 
     Auth::forgetGuards();
 
@@ -70,9 +71,7 @@ it('lists a self-registered AI client under connected apps only after the user a
 it('lets a personal access token use /mcp', function () {
     $token = User::factory()->create()->createToken('Script', ['api', 'mcp:use'])->accessToken;
 
-    $this->withToken($token)
-        ->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'])
-        ->assertOk();
+    mcpRequest($token, 'tools/list')->assertOk();
 });
 
 it('rate-limits client registration', function () {
@@ -118,6 +117,37 @@ it('does not create a client when limiting it to mcp:use fails', function () {
     $before = OAuthClient::query()->count();
 
     $this->postJson('/oauth/register', ['client_name' => 'Claude', 'redirect_uris' => ['https://claude.ai/cb']])->assertServerError();
+
+    expect(OAuthClient::query()->count())->toBe($before);
+});
+
+it('does not keep a client when registration answers with an error', function () {
+    $before = OAuthClient::query()->count();
+
+    $response = app(LimitRegisteredClientsToMcp::class)->handle(
+        Request::create('/oauth/register', 'POST'),
+        function () {
+            registerAiClient();
+
+            return new JsonResponse(['error' => 'server_error'], 500);
+        },
+    );
+
+    expect($response->getStatusCode())->toBe(500)
+        ->and(OAuthClient::query()->count())->toBe($before);
+});
+
+it('does not keep a client when a successful registration has no client id', function () {
+    $before = OAuthClient::query()->count();
+
+    expect(fn () => app(LimitRegisteredClientsToMcp::class)->handle(
+        Request::create('/oauth/register', 'POST'),
+        function () {
+            registerAiClient();
+
+            return new JsonResponse(['registered' => true], 201);
+        },
+    ))->toThrow(RuntimeException::class, 'without a client id');
 
     expect(OAuthClient::query()->count())->toBe($before);
 });
