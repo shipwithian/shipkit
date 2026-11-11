@@ -2,16 +2,24 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## Unreleased
+## 5.1.0 (2026-11-11)
+
+A minor release, although it makes the MCP tool checks stricter: they apply only to MCP tools, which no project had before 5.0.0 (released the same day), and ShipKit's own tools pass. A project that wrote tools against 5.0.0 follows [UPGRADE.md](UPGRADE.md#upgrading-to-51).
+
+- **Checks:** "follows the MCP tool conventions" now finds a tool by what it extends, not its file name, and also requires a snake_case `#[Name]`, a `#[Title]`, an explicit `#[IsReadOnly]` or `#[IsDestructive]` (MCP clients treat a tool with neither as destructive), and registration in a server under `app/Mcp/Servers`. A tool must authorize with `Gate::forUser($user)->authorize()` before anything but `$user = $request->user();`; `Gate::inspect()` and a plain `Gate::authorize()` no longer count. Comments are ignored, and a model query by full name is caught. The check still passes on a project without tools.
+- **Channel:** `ChannelKind` replaces the `Channel::WEB`, `API`, and `MCP` constants, `Channel::mcp()` takes the client name as optional, and `Channel` gains `fromContext()` and `withClientName()`. The name is self-declared; trust the client id.
+- **Commands:** `make:feature {Name} --mcp` works on a feature that already exists, and adds the tool path to the rule file and the tool glob to the index row.
+- **Guidance:** the `mcp` rule says exactly what the check covers and what is review-only, and covers confirming one risky argument, the redirect allowlist, self-declared client names, and the shared-cache requirement of the confirmation.
+
+## 5.0.0 (2026-11-11)
 
 Released as 5.0.0 because `shipkit-core` shares the template's version, which moves to a new major with the switch from Sanctum to Passport. Core's new checks only look at MCP tools, so nothing in it can fail a project that passed 4.x.
 
 - **Guidance:** the `tests` rule's note about calling `Auth::forgetGuards()` before reusing a revoked bearer token no longer names Sanctum.
 - **Upgrade notes:** [UPGRADE.md](UPGRADE.md#upgrading-to-50) carries the template's Sanctum → Passport steps.
-- **Checks:** `ArchitectureTest` gains "follows the MCP tool conventions": a tool in `app/Mcp/Tools` (any class extending `Tool`) is named `{Name}Tool`, has a snake_case `#[Name]`, a `#[Title]`, and an explicit `#[IsReadOnly]` or `#[IsDestructive]`, is registered in a server, authorizes with `Gate::forUser($user)->authorize()` before anything but `$user = $request->user();`, uses no `DB` or model queries, declares an output schema, and confirms before acting when destructive. The standard-folders check keeps tools in `app/Mcp/Tools/{Feature}`. Both pass on a project without tools.
-- **Channel:** `ShipKit\Core\Channel` and `ChannelKind` name where a change came from (web, API, or MCP with its client), for Actions that record it.
-- **Commands:** `make:feature {Name} --mcp` also creates `app/Mcp/Tools/{Name}`, adds it to the feature's rule paths and index row, and works on a feature that already exists.
-- **Guidance:** the `mcp` rule covers confirming one risky argument of an otherwise harmless tool, and the allowed redirects and self-declared client names of AI clients.
+- **Checks:** `ArchitectureTest` gains "follows the MCP tool conventions": a tool in `app/Mcp/Tools` authorizes first, uses no `DB` or model queries, declares an output schema, and confirms before acting when destructive. The standard-folders check keeps tools in `app/Mcp/Tools/{Feature}`. Both pass on a project without tools.
+- **Channel:** `ShipKit\Core\Channel` names where a change came from (web, API, or MCP with its client), for Actions that record it.
+- **Commands:** `make:feature {Name} --mcp` also creates `app/Mcp/Tools/{Name}`.
 - **Guidance:** a new `mcp` rule; `new-feature` decides whether a feature gets tools, `to-spec` gains an "AI Client Access" section, and `grilling` raises AI-client access for new features.
 
 ## 4.0.0 (2026-11-07)

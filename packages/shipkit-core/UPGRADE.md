@@ -20,6 +20,25 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 5.1
+
+`shipkit-core` 5.1 is a minor release: only a project that has MCP tools in `app/Mcp/Tools` can fail its checks, and only when a tool breaks a convention the 5.0.0 check did not yet enforce. A project without tools updates with `composer update shipwithian/shipkit-core` and nothing else. The template's own changes (below) are code you own, so `composer update` does not bring them.
+
+### Stricter MCP tool checks
+
+- **Fails:** `ArchitectureTest` › "follows the MCP tool conventions", with a message such as `declare a snake_case #[Name('show_my_profile')]`, `declare a #[Title(...)]`, `declare #[IsReadOnly] or #[IsDestructive(true|false)] explicitly`, `register ListInvoicesTool in a server under app/Mcp/Servers`, or `authorize before anything else in handle()`; and "keeps each kind of class in its standard folder" for a tool class outside `app/Mcp/Tools/{Feature}` whatever its file is named.
+- **Fix:** give each tool a snake_case `#[Name]`, a `#[Title]`, and `#[IsReadOnly]`, `#[IsDestructive]` (with `ConsequentialActionConfirmation`), or `#[IsDestructive(false)]`; list it in a server's `$tools`; and start `handle()` with `$user = $request->user();` and `Gate::forUser($user)->authorize(...)` (replace `Gate::inspect()` and a plain `Gate::authorize()`). Use `ChannelKind::Mcp` instead of the removed `Channel::MCP` constant.
+- **Why:** an unannotated tool is destructive to an MCP client, a tool nobody registered cannot be called, and a check that accepted `Gate::inspect()` or work before authorizing let a tool skip its policy.
+
+### Template changes to copy from 5.1.0
+
+Compare the `v5.0.0` and `v5.1.0` tags, or copy these:
+
+- `config/mcp.php` (the redirect allowlist; 5.0.0 accepted any redirect, so any site could register as a trusted client), with `MCP_REDIRECT_DOMAINS=` in `.env.example`.
+- `app/Http/Middleware/LimitRegisteredClientsToMcp.php` (fails closed, acts only on registration), `ShareChannel`, the `Channel` binding in `AppServiceProvider`, `OAuthClientNameQuery`, and the `Channel` parameter of `UpdateProfileAction` with its callers.
+- `ConsequentialActionConfirmation` at `App\Mcp\Support`, with its separate token, lock, and result durations, and the `mcp.confirmation_lock_wait_seconds` setting.
+- `update_my_profile`'s confirmation of an email change.
+
 ## Upgrading to 5.0
 
 `shipkit-core` 5.0 adds only checks for MCP tools, which pass on a project without them. The major version belongs to the template, whose API moves from Sanctum to Passport. A project created before 5.0 keeps working on Sanctum; follow these steps only to adopt the OAuth server.
