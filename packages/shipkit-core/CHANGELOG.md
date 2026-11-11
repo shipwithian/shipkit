@@ -4,10 +4,14 @@
 
 ## Unreleased
 
-Released as 5.0.0 because `shipkit-core` shares the template's version, which moves to a new major with the switch from Sanctum to Passport. Core itself adds no check, and nothing in it can fail a project that passed 4.x.
+Released as 5.0.0 because `shipkit-core` shares the template's version, which moves to a new major with the switch from Sanctum to Passport. Core's new checks only look at MCP tools, so nothing in it can fail a project that passed 4.x.
 
 - **Guidance:** the `tests` rule's note about calling `Auth::forgetGuards()` before reusing a revoked bearer token no longer names Sanctum.
 - **Upgrade notes:** [UPGRADE.md](UPGRADE.md#upgrading-to-50) carries the template's Sanctum → Passport steps.
+- **Checks:** `ArchitectureTest` gains "follows the MCP tool conventions": a tool in `app/Mcp/Tools` authorizes first, uses no `DB` or model queries, declares an output schema, and confirms before acting when it is `#[IsDestructive]`. The standard-folders check keeps tools in `app/Mcp/Tools/{Feature}`. Both pass on a project without tools.
+- **Channel:** `ShipKit\Core\Channel` names where a change came from (web, API, or MCP with its client), for Actions that record it.
+- **Commands:** `make:feature {Name} --mcp` also creates `app/Mcp/Tools/{Name}`.
+- **Guidance:** a new `mcp` rule; `new-feature` decides whether a feature gets tools, `to-spec` gains an "AI Client Access" section, and `grilling` raises AI-client access for new features.
 
 ## 4.0.0 (2026-11-07)
 

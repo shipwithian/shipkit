@@ -61,7 +61,7 @@ describe('store', function () {
 
         expect($stored->user_id)->toBe($user->id)
             ->and($stored->name)->toBe('CI')
-            ->and($stored->scopes)->toBe(['api']);
+            ->and($stored->scopes)->toBe(['api', 'mcp:use']);
 
         Auth::forgetGuards();
 

@@ -22,7 +22,7 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 
 ## Upgrading to 5.0
 
-`shipkit-core` 5.0 adds no check. The major version belongs to the template, whose API moves from Sanctum to Passport. A project created before 5.0 keeps working on Sanctum; follow these steps only to adopt the OAuth server.
+`shipkit-core` 5.0 adds only checks for MCP tools, which pass on a project without them. The major version belongs to the template, whose API moves from Sanctum to Passport. A project created before 5.0 keeps working on Sanctum; follow these steps only to adopt the OAuth server.
 
 ### Sanctum → Passport
 

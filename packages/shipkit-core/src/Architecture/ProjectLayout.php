@@ -118,7 +118,8 @@ class ProjectLayout
     /**
      * Classes outside Laravel's standard folder for their kind, each with the folder it belongs in:
      * an `app/Domain` folder, an Action outside `app/Actions/{Feature}`, a Query outside
-     * `app/Queries/{Feature}`, or an Eloquent model outside `app/Models`.
+     * `app/Queries/{Feature}`, an MCP tool outside `app/Mcp/Tools/{Feature}`, or an Eloquent model
+     * outside `app/Models`.
      *
      * @return list<string>
      */
@@ -148,8 +149,75 @@ class ProjectLayout
                 $violations[] = "{$relative}: group it by feature, in app/".($inActions ? 'Actions' : 'Queries').'/{Feature}';
             }
 
+            $inTools = str_starts_with($relative, 'app/Mcp/Tools/');
+
+            if (str_ends_with($name, 'Tool') && ! $inTools) {
+                $violations[] = "{$relative}: an MCP tool lives in app/Mcp/Tools/{Feature}";
+            }
+
+            if ($inTools && substr_count($relative, '/') < 4) {
+                $violations[] = "{$relative}: group it by feature, in app/Mcp/Tools/{Feature}";
+            }
+
             if (! str_starts_with($relative, 'app/Models/') && $this->declaresModel($path)) {
                 $violations[] = "{$relative}: an Eloquent model lives in app/Models";
+            }
+        }
+
+        return $violations;
+    }
+
+    /**
+     * MCP tools that break the conventions in the `mcp` rule, each with what to change: a tool must
+     * authorize before it reads or writes, reach data only through Queries and Actions, declare an
+     * output schema, and, when marked `#[IsDestructive]`, confirm before acting.
+     *
+     * @return list<string>
+     */
+    public function toolConventionViolations(): array
+    {
+        $violations = [];
+
+        foreach ($this->phpFiles('app/Mcp/Tools') as $path) {
+            $relative = substr($path, strlen($this->path()) + 1);
+            $source = (string) file_get_contents($path);
+
+            if (! preg_match('/\bclass\s+\w+Tool\b/', $source)) {
+                continue;
+            }
+
+            $handle = preg_match('/function\s+handle\s*\(.*?\{(.*?)\n    \}/s', $source, $match) ? $match[1] : '';
+            $authorizesAt = preg_match('/Gate::(?:forUser\([^;]*?\)->)?(?:authorize|inspect)\(/', $handle, $found, PREG_OFFSET_CAPTURE) ? $found[0][1] : null;
+            $firstUseAt = preg_match('/->handle\(|->validate\(/', $handle, $used, PREG_OFFSET_CAPTURE) ? $used[0][1] : null;
+
+            if ($authorizesAt === null || ($firstUseAt !== null && $firstUseAt < $authorizesAt)) {
+                $violations[] = "{$relative}: call Gate::forUser(\$user)->authorize() first in handle(), before validating, reading, or writing";
+            }
+
+            if (preg_match('/\bDB::|use Illuminate\\\\Support\\\\Facades\\\\DB;/', $source)) {
+                $violations[] = "{$relative}: uses DB; read through a Query object and write through an Action";
+            }
+
+            preg_match_all('/^use ([\w\\\\]+);$/m', $source, $imports);
+
+            foreach ($imports[1] as $import) {
+                if (! class_exists($import) || ! is_subclass_of($import, Model::class)) {
+                    continue;
+                }
+
+                $model = substr((string) strrchr('\\'.$import, '\\'), 1);
+
+                if (preg_match("/\\b{$model}::(?!class\\b)(?![A-Z][A-Z0-9_]*\\b)\\w+/", $source, $call)) {
+                    $violations[] = "{$relative}: {$call[0]} queries the {$model} model; read through a Query object and write through an Action";
+                }
+            }
+
+            if (! str_contains($source, 'function outputSchema(')) {
+                $violations[] = "{$relative}: declare outputSchema() so AI clients can parse the result";
+            }
+
+            if (preg_match('/#\[IsDestructive(?!\(\s*false)/', $source) && (! str_contains($source, 'ConsequentialActionConfirmation') || ! str_contains($source, '->confirmBeforeActing('))) {
+                $violations[] = "{$relative}: a destructive tool confirms before acting; type-hint ConsequentialActionConfirmation in handle() and run the action through confirmBeforeActing()";
             }
         }
 
