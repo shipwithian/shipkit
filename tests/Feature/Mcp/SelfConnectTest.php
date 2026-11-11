@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Process;
 
 /**
  * Register an AI client the way Claude or ChatGPT does: by itself, through the public endpoint.
@@ -153,13 +154,11 @@ it('does not keep a client when a successful registration has no client id', fun
 });
 
 it('ignores a wildcard in MCP_REDIRECT_DOMAINS, so no site can register as a trusted client', function () {
-    putenv('MCP_REDIRECT_DOMAINS=*, https://app.acme.test');
+    // A real environment variable wins over .env, so this holds whatever .env defines.
+    $result = Process::path(base_path())
+        ->env(['MCP_REDIRECT_DOMAINS' => '*, https://app.acme.test'])
+        ->run([PHP_BINARY, 'artisan', 'tinker', '--execute', 'echo json_encode(config("mcp.redirect_domains"));'])
+        ->throw();
 
-    try {
-        $domains = (require config_path('mcp.php'))['redirect_domains'];
-    } finally {
-        putenv('MCP_REDIRECT_DOMAINS');
-    }
-
-    expect($domains)->toBe(['https://claude.ai', 'https://chatgpt.com', 'http://localhost', 'https://app.acme.test']);
+    expect(json_decode(trim($result->output()), true))->toBe(['https://claude.ai', 'https://chatgpt.com', 'http://localhost', 'https://app.acme.test']);
 });
