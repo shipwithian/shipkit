@@ -48,6 +48,14 @@ export default function OAuthAuthorize(props: OAuthAuthorizeProps) {
                     .
                 </p>
 
+                <p className="text-muted-foreground text-center text-sm">
+                    After you approve, you'll return to{' '}
+                    <span className="text-foreground font-medium">
+                        {props.redirectHost}
+                    </span>
+                    .
+                </p>
+
                 {props.scopes.length > 0 && (
                     <div className="space-y-2">
                         <p className="text-sm font-medium">

@@ -21,6 +21,7 @@ final readonly class OAuthAuthorizeProps extends PageProps
         public array $scopes,
         public string $accountName,
         public string $accountEmail,
+        public string $redirectHost,
         public string $clientId,
         public string $state,
         public string $authToken,

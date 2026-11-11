@@ -4,6 +4,8 @@ use App\Mcp\Concerns\ConsequentialActionConfirmation;
 use App\Mcp\Concerns\ReportsDomainExceptions;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -146,4 +148,25 @@ it('reports a broken business rule as field: message, not an internal error', fu
 
     placeTestOrder($this->customer, [...$arguments, 'confirmation_token' => $token])
         ->assertHasErrors(['item: This coffee is sold out today.']);
+});
+
+it('answers "still being processed" when a repeated confirmation arrives while the first is running', function () {
+    config(['mcp.confirmation_lock_wait_seconds' => 0]);
+
+    $arguments = ['item' => 'flat white', 'quantity' => 2];
+    $token = confirmationTokenFor($this->customer, $arguments);
+    $nonce = json_decode(Crypt::decryptString($token), true)['nonce'];
+
+    $running = Cache::lock("mcp-confirmation:{$nonce}:lock", 60);
+    $running->get();
+
+    placeTestOrder($this->customer, [...$arguments, 'confirmation_token' => $token])
+        ->assertHasErrors(['This action is still being processed. Call again in a moment with the same confirmation_token.']);
+
+    expect(PlaceTestOrderTool::$placed)->toBe([]);
+
+    $running->release();
+
+    placeTestOrder($this->customer, [...$arguments, 'confirmation_token' => $token])
+        ->assertExactStructuredContent(['confirmed' => true, 'order_number' => 1]);
 });

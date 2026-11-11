@@ -11,6 +11,7 @@ Released as 5.0.0 because `shipkit-core` shares the template's version, which mo
 - **Checks:** `ArchitectureTest` gains "follows the MCP tool conventions": a tool in `app/Mcp/Tools` authorizes first, uses no `DB` or model queries, declares an output schema, and confirms before acting when it is `#[IsDestructive]`. The standard-folders check keeps tools in `app/Mcp/Tools/{Feature}`. Both pass on a project without tools.
 - **Channel:** `ShipKit\Core\Channel` names where a change came from (web, API, or MCP with its client), for Actions that record it.
 - **Commands:** `make:feature {Name} --mcp` also creates `app/Mcp/Tools/{Name}`.
+- **Guidance:** the `mcp` rule covers confirming one risky argument of an otherwise harmless tool, and the allowed redirects and self-declared client names of AI clients.
 - **Guidance:** a new `mcp` rule; `new-feature` decides whether a feature gets tools, `to-spec` gains an "AI Client Access" section, and `grilling` raises AI-client access for new features.
 
 ## 4.0.0 (2026-11-07)

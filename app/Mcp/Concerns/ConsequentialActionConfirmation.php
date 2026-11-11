@@ -3,6 +3,7 @@
 namespace App\Mcp\Concerns;
 
 use Closure;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -49,19 +50,25 @@ final class ConsequentialActionConfirmation
 
         $nonce = $this->redeemConfirmationToken($request, $tool, $arguments, $token);
 
-        return Cache::lock("mcp-confirmation:{$nonce}:lock", 10)->block(5, function () use ($nonce, $act): ResponseFactory {
-            $resultKey = "mcp-confirmation:{$nonce}:result";
+        $lock = Cache::lock("mcp-confirmation:{$nonce}:lock", self::CONFIRMATION_MINUTES * 60);
 
-            /** @var array<string, mixed>|null $result */
-            $result = Cache::get($resultKey);
+        try {
+            return $lock->block((int) config('mcp.confirmation_lock_wait_seconds', 5), function () use ($nonce, $act): ResponseFactory {
+                $resultKey = "mcp-confirmation:{$nonce}:result";
 
-            if ($result === null) {
-                $result = ['confirmed' => true, ...$act()];
-                Cache::put($resultKey, $result, now()->addMinutes(self::CONFIRMATION_MINUTES));
-            }
+                /** @var array<string, mixed>|null $result */
+                $result = Cache::get($resultKey);
 
-            return Response::structured($result);
-        });
+                if ($result === null) {
+                    $result = ['confirmed' => true, ...$act()];
+                    Cache::put($resultKey, $result, now()->addMinutes(self::CONFIRMATION_MINUTES));
+                }
+
+                return Response::structured($result);
+            });
+        } catch (LockTimeoutException) {
+            return Response::error('This action is still being processed. Call again in a moment with the same confirmation_token.');
+        }
     }
 
     /**

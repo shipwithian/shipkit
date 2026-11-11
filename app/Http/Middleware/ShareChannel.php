@@ -53,6 +53,7 @@ class ShareChannel
         $user = $request->user('api');
         $token = $user instanceof User ? $user->token() : null;
         $clientId = $token instanceof AccessToken && isset($token->oauth_client_id) ? (string) $token->oauth_client_id : null;
+        // The id is trustworthy; the name is whatever the client called itself when it registered.
         $clientName = $clientId === null ? null : OAuthClient::query()->whereKey($clientId)->value('name');
 
         return $kind === Channel::MCP

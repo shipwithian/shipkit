@@ -38,6 +38,14 @@ The token proves the model saw this exact summary; the human gate is the AI clie
 
 `App\Http\Middleware\ShareChannel` puts the request's `ShipKit\Core\Channel` (web, API, or MCP with the OAuth client's id and name) into Laravel's `Context`, so logs and queued jobs carry it. When a feature needs to know where a change came from, such as an order placed by a customer's Claude, the tool passes `ShareChannel::current()` to the Action as an explicit parameter after `$actor`, and the Action stores it on its own record. Actions never read the request or the context to find it.
 
+## Confirm one risky argument
+
+A tool need not be destructive as a whole to confirm. When only some calls are consequential, such as `update_my_profile` changing the email while a name change is harmless, run only that branch through `ConsequentialActionConfirmation::confirmBeforeActing()` and apply the rest directly. Declare `confirmation_token` in the input schema, and let the output schema describe both the result and the confirmation fields.
+
+## Redirects and client identity
+
+An AI client registers itself, so anything it declares is unverified. `config/mcp.php` limits where a client may send the user after approval to `https://claude.ai`, `https://chatgpt.com`, and localhost, plus `MCP_REDIRECT_DOMAINS` (comma-separated, with scheme); the consent screen shows that destination. Trust a channel's `client_id`, never its `client_name`, which is whatever the client called itself.
+
 ## Scopes
 
 `/mcp` requires the `mcp:use` scope. A self-registered AI client is limited to `mcp:use`, so it never reaches `/api/v1`; a personal access token carries both `api` and `mcp:use`. Add a scope to `App\Enums\ApiScope` with a description the consent screen shows.

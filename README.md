@@ -122,6 +122,8 @@ claude mcp login my-app
 
 In claude.ai or ChatGPT, add `https://my-app.example.com/mcp` as a custom connector. A client without OAuth support can send a personal access token instead, as `Authorization: Bearer <token>`.
 
+A client that registers itself may only redirect back to claude.ai, chatgpt.com, or localhost, so a look-alike site cannot register as a trusted client. To allow another client, add its origin to `MCP_REDIRECT_DOMAINS` (comma-separated, with scheme), and for a desktop client with its own URL scheme, such as Cursor, add the scheme to `custom_schemes` in `config/mcp.php`.
+
 The connected client then appears under Settings → Security → Connected apps, where the user can disconnect it. Its token works on `/mcp` only, never on `/api/v1`. The first tools are `show_my_profile`, `update_my_profile`, and `list_roles`; a feature adds its own in `app/Mcp/Tools/{Feature}`, following the `mcp` rule, and a tool that costs money or cannot be undone confirms with the user before acting.
 
 #### Passport keys

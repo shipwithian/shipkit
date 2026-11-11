@@ -4,6 +4,7 @@ use App\Mcp\Servers\AppServer;
 use App\Mcp\Tools\Settings\ShowMyProfileTool;
 use App\Mcp\Tools\Settings\UpdateMyProfileTool;
 use App\Models\User;
+use Illuminate\Testing\Fluent\AssertableJson;
 
 describe('show_my_profile', function () {
     it('returns exactly the listed profile fields', function () {
@@ -43,14 +44,51 @@ describe('update_my_profile', function () {
         expect($user->refresh()->name)->toBe('Ada King');
     });
 
-    it('marks a changed email unverified, as the web form does', function () {
-        $user = User::factory()->create();
+    it('asks for confirmation before changing the email, and changes nothing yet', function () {
+        $user = User::factory()->create(['email' => 'ada@example.com']);
 
         AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, ['name' => $user->name, 'email' => 'new@example.com'])
             ->assertOk()
+            ->assertStructuredContentPath('confirmed', false)
+            ->assertStructuredContentPath('summary', 'Change your email from ada@example.com to new@example.com. It will be unverified until you confirm the new address.')
+            ->assertStructuredContentPath('expires_in_minutes', 10);
+
+        expect($user->refresh()->email)->toBe('ada@example.com');
+    });
+
+    it('marks a confirmed email change unverified, as the web form does', function () {
+        $user = User::factory()->create();
+        $token = null;
+        $arguments = ['name' => $user->name, 'email' => 'new@example.com'];
+
+        AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, $arguments)
+            ->assertStructuredContent(function (AssertableJson $content) use (&$token): void {
+                $token = $content->toArray()['confirmation_token'];
+                $content->etc();
+            });
+
+        AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, [...$arguments, 'confirmation_token' => $token])
+            ->assertOk()
+            ->assertStructuredContentPath('confirmed', true)
             ->assertStructuredContentPath('email', 'new@example.com')
             ->assertStructuredContentPath('email_verified', false);
 
         expect($user->refresh()->email_verified_at)->toBeNull();
+    });
+
+    it('rejects a confirmation token for a different email', function () {
+        $user = User::factory()->create();
+        $token = null;
+
+        AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, ['name' => $user->name, 'email' => 'new@example.com'])
+            ->assertStructuredContent(function (AssertableJson $content) use (&$token): void {
+                $token = $content->toArray()['confirmation_token'];
+                $content->etc();
+            });
+
+        AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, ['name' => $user->name, 'email' => 'other@example.com', 'confirmation_token' => $token])
+            ->assertHasErrors();
+
+        expect($user->refresh()->email)->not->toBe('other@example.com');
     });
 });

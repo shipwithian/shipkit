@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Auth\LimitClientToMcpAction;
 use App\Models\OAuthClient;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -76,10 +77,47 @@ it('lets a personal access token use /mcp', function () {
 
 it('rate-limits client registration', function () {
     foreach (range(1, 10) as $attempt) {
-        $this->postJson('/oauth/register', ['client_name' => "Bot {$attempt}", 'redirect_uris' => ['https://bot.test/cb']])->assertCreated();
+        $this->postJson('/oauth/register', ['client_name' => "Bot {$attempt}", 'redirect_uris' => ['https://claude.ai/cb']])->assertCreated();
     }
 
-    $this->postJson('/oauth/register', ['client_name' => 'Bot 11', 'redirect_uris' => ['https://bot.test/cb']])->assertTooManyRequests();
+    $this->postJson('/oauth/register', ['client_name' => 'Bot 11', 'redirect_uris' => ['https://claude.ai/cb']])->assertTooManyRequests();
 
     $this->getJson('/.well-known/oauth-authorization-server')->assertOk();
+});
+
+it('refuses to register a client that redirects to a site that is not allowed', function () {
+    $this->postJson('/oauth/register', ['client_name' => 'Claude', 'redirect_uris' => ['https://evil.test/callback']])
+        ->assertBadRequest()
+        ->assertJsonPath('error', 'invalid_redirect_uri');
+
+    expect(OAuthClient::query()->where('name', 'Claude')->exists())->toBeFalse();
+});
+
+it('registers clients that redirect to claude.ai, chatgpt.com, or localhost on any port', function (string $redirect) {
+    $this->postJson('/oauth/register', ['client_name' => 'AI client', 'redirect_uris' => [$redirect]])->assertCreated();
+})->with([
+    'https://claude.ai/api/mcp/auth_callback',
+    'https://chatgpt.com/connector_platform_oauth_redirect',
+    'http://localhost:33418/callback',
+    'http://127.0.0.1:8123/callback',
+]);
+
+it('allows another site once it is added to the redirect domains', function () {
+    $register = fn () => $this->postJson('/oauth/register', ['client_name' => 'Acme', 'redirect_uris' => ['https://app.acme.test/callback']]);
+
+    $register()->assertBadRequest();
+
+    config(['mcp.redirect_domains' => [...config('mcp.redirect_domains'), 'https://app.acme.test']]);
+
+    $register()->assertCreated();
+});
+
+it('does not create a client when limiting it to mcp:use fails', function () {
+    $this->mock(LimitClientToMcpAction::class)->shouldReceive('handle')->andThrow(new RuntimeException('could not limit'));
+
+    $before = OAuthClient::query()->count();
+
+    $this->postJson('/oauth/register', ['client_name' => 'Claude', 'redirect_uris' => ['https://claude.ai/cb']])->assertServerError();
+
+    expect(OAuthClient::query()->count())->toBe($before);
 });

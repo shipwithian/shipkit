@@ -101,6 +101,7 @@ describe('consent', function () {
                 ->where('clientName', 'Calendar Sync')
                 ->where('scopes.0.id', 'api')
                 ->where('accountEmail', $user->email)
+                ->where('redirectHost', 'partner.test')
                 ->where('state', 'state-123')
                 ->where('clientId', (string) $app->getKey())
                 ->has('authToken')

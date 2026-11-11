@@ -29,4 +29,4 @@ paths:
 
 - Actions: `UpdateProfileAction`, `UpdatePasswordAction`, `DeleteAccountAction`.
 - Queries: `PasskeyListQuery`.
-- MCP tools: `ShowMyProfileTool` (`show_my_profile`, read-only) and `UpdateMyProfileTool` (`update_my_profile`, idempotent; an email change marks the email unverified, as the web form does).
+- MCP tools: `ShowMyProfileTool` (`show_my_profile`, read-only) and `UpdateMyProfileTool` (`update_my_profile`, idempotent; a name change applies at once, an email change confirms first and then marks the email unverified, as the web form does).
