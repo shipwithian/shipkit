@@ -12,8 +12,10 @@ Requires `shipwithian/shipkit-core` 5.0. A major release because the API moves f
 - **Revocation:** a password reset, on the web or the API, revokes every personal access token and every connected app's tokens; deleting an account deletes them.
 - **Setup:** `composer setup` and project creation generate Passport's keys, and a migration creates the personal access client.
 - **MCP server:** AI clients such as Claude Code, claude.ai, and ChatGPT connect at `/mcp`, discovering the app's sign-in, registering themselves (rate-limited and limited to the `mcp:use` scope), and approving on the consent screen. The first tools are `show_my_profile`, `update_my_profile`, and `list_roles`. Personal access tokens work on `/mcp` too. `laravel/mcp` ^1.2 is a direct dependency.
-- **Consequential tools:** a tool marked `#[IsDestructive]` returns a summary and a confirmation token first and acts only on the confirmed call, once per token (`App\Mcp\Concerns\ConsequentialActionConfirmation`). A broken business rule reaches the AI client as `field: message`.
+- **Consequential tools:** a tool marked `#[IsDestructive]` returns a summary and a confirmation token first and acts only on the confirmed call, once per token (`App\Mcp\Support\ConsequentialActionConfirmation`). A broken business rule reaches the AI client as `field: message`.
 - **Channel:** `ShareChannel` records whether a request came from the web, the API, or an AI client (with its name) in Laravel's `Context`.
+- **MCP hardening:** a self-registering AI client may redirect only to claude.ai, chatgpt.com, or localhost (`MCP_REDIRECT_DOMAINS` adds more), and the consent screen shows where it will return the user. Registration and the `mcp:use` limit are one transaction that is rolled back on any failure, a repeated confirmation that arrives while the first is running answers "still being processed" (the lock lasts at most two minutes), and `update_my_profile` is marked destructive and confirms an email change, naming every change, before applying it.
+- **Channel in logs:** `UpdateProfileAction` takes the `Channel` and logs it, so a profile change records whether it came from the web, the API, or an AI client (with its name). `ShareChannel` shares only the trustworthy client id; the name is looked up for logs by `OAuthClientNameQuery`.
 
 ## 4.0.0 (2026-11-07)
 

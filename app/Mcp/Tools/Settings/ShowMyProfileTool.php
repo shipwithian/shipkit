@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Tools\Settings;
 
-use App\Mcp\Concerns\ReportsDomainExceptions;
+use App\Mcp\Support\ProfileFields;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
@@ -23,8 +23,6 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsIdempotent]
 class ShowMyProfileTool extends Tool
 {
-    use ReportsDomainExceptions;
-
     public function handle(Request $request): Response|ResponseFactory
     {
         /** @var User $user */
@@ -32,7 +30,7 @@ class ShowMyProfileTool extends Tool
 
         Gate::forUser($user)->authorize('view', $user);
 
-        return Response::structured(self::profile($user));
+        return Response::structured(ProfileFields::from($user));
     }
 
     /**
@@ -40,34 +38,6 @@ class ShowMyProfileTool extends Tool
      */
     public function outputSchema(JsonSchema $schema): array
     {
-        return self::profileSchema($schema);
-    }
-
-    /**
-     * The profile fields a tool may expose, listed one by one.
-     *
-     * @return array{id: int, name: string, email: string, email_verified: bool}
-     */
-    public static function profile(User $user): array
-    {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'email_verified' => $user->email_verified_at !== null,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public static function profileSchema(JsonSchema $schema): array
-    {
-        return [
-            'id' => $schema->integer()->description('The user id.')->required(),
-            'name' => $schema->string()->description('The user\'s name.')->required(),
-            'email' => $schema->string()->description('The user\'s email address.')->required(),
-            'email_verified' => $schema->boolean()->description('Whether the email address is verified.')->required(),
-        ];
+        return ProfileFields::schema($schema);
     }
 }

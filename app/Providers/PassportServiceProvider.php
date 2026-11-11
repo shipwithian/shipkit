@@ -46,6 +46,20 @@ class PassportServiceProvider extends ServiceProvider
     }
 
     /**
+     * The host (and port) the app will send the user back to, for the consent screen.
+     */
+    private static function hostOf(string $redirectUri): string
+    {
+        $parts = parse_url($redirectUri);
+
+        if (! is_array($parts) || ! isset($parts['host'])) {
+            return $redirectUri;
+        }
+
+        return $parts['host'].(isset($parts['port']) ? ":{$parts['port']}" : '');
+    }
+
+    /**
      * @param  array<string, mixed>  $parameters  Passport's `request`, `authToken`, `client`, `user`, and `scopes`
      */
     private function consentScreen(array $parameters): SymfonyResponse
@@ -61,6 +75,7 @@ class PassportServiceProvider extends ServiceProvider
             scopes: array_values(array_map(OAuthScopeItem::from(...), array_filter($scopes, fn (mixed $scope): bool => $scope instanceof Scope))),
             accountName: $user->name,
             accountEmail: $user->email,
+            redirectHost: self::hostOf($request->string('redirect_uri')->toString()),
             clientId: (string) $client->getKey(),
             state: $request->string('state')->toString(),
             authToken: $authToken,

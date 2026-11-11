@@ -9,6 +9,8 @@ use Database\Seeders\AccessControlSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Testing\Fluent\AssertableJson;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -210,4 +212,31 @@ function tokensThroughConsent(User $user, OAuthClient $app, string $scope, strin
 function connectedAppAccessToken(User $user, OAuthClient $app): string
 {
     return tokensThroughConsent($user, $app, ApiScope::McpUse->value)['access_token'];
+}
+
+/**
+ * Send one JSON-RPC message to /mcp, with a bearer token when given.
+ *
+ * @param  array<string, mixed>  $params
+ */
+function mcpRequest(?string $token, string $method, array $params = []): TestResponse
+{
+    $request = $token === null ? test() : test()->withToken($token);
+
+    return $request->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => $params]);
+}
+
+/**
+ * The confirmation_token a consequential tool returned for its summary.
+ */
+function confirmationTokenFrom(Laravel\Mcp\Server\Testing\TestResponse $response): string
+{
+    $token = null;
+
+    $response->assertOk()->assertStructuredContent(function (AssertableJson $content) use (&$token): void {
+        $token = $content->toArray()['confirmation_token'];
+        $content->etc();
+    });
+
+    return (string) $token;
 }

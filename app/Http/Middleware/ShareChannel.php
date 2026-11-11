@@ -2,18 +2,23 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\OAuthClient;
 use App\Models\User;
+use App\Queries\Auth\OAuthClientNameQuery;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Laravel\Passport\AccessToken;
 use ShipKit\Core\Channel;
+use ShipKit\Core\ChannelKind;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Put the request's channel (web, API, or MCP with its OAuth client) into Laravel's Context, so logs
- * and queued jobs record where a change came from, and controllers and tools can pass it to Actions.
+ * Put the request's channel (web, API, or MCP with its OAuth client) into Laravel's Context, so
+ * every log line records where a change came from. Controllers and tools type-hint `Channel` to
+ * receive it and pass it to the Actions that record it.
+ *
+ * The context carries the client id, which is trustworthy. The name is looked up only when a
+ * `Channel` is resolved, because it is whatever the client called itself when it registered.
  */
 class ShareChannel
 {
@@ -22,41 +27,40 @@ class ShareChannel
     /**
      * @param  Closure(Request): Response  $next
      */
-    public function handle(Request $request, Closure $next, string $kind = Channel::WEB): Response
+    public function handle(Request $request, Closure $next, string $kind = 'web'): Response
     {
-        Context::add(self::CONTEXT_KEY, $this->channel($request, $kind)->toContext());
+        $kind = ChannelKind::from($kind);
+
+        $channel = match ($kind) {
+            ChannelKind::Web => Channel::web(),
+            ChannelKind::Api => Channel::api($this->clientId($request)),
+            ChannelKind::Mcp => Channel::mcp((string) $this->clientId($request)),
+        };
+
+        Context::add(self::CONTEXT_KEY, $channel->toContext());
 
         return $next($request);
     }
 
     /**
-     * The channel shared for the current request, for controllers and tools to pass to Actions.
+     * The channel of the current request, with the client's name, for the container to inject.
      */
     public static function current(): Channel
     {
         /** @var array{kind?: string, client_id?: string|null, client_name?: string|null} $shared */
         $shared = (array) Context::get(self::CONTEXT_KEY, []);
+        $channel = Channel::fromContext($shared);
 
-        return match ($shared['kind'] ?? Channel::WEB) {
-            Channel::MCP => Channel::mcp((string) ($shared['client_id'] ?? ''), (string) ($shared['client_name'] ?? '')),
-            Channel::API => Channel::api($shared['client_id'] ?? null, $shared['client_name'] ?? null),
-            default => Channel::web(),
-        };
+        return $channel->clientId === null
+            ? $channel
+            : $channel->withClientName(app(OAuthClientNameQuery::class)->handle($channel->clientId));
     }
 
-    private function channel(Request $request, string $kind): Channel
+    private function clientId(Request $request): ?string
     {
-        if ($kind === Channel::WEB) {
-            return Channel::web();
-        }
-
         $user = $request->user('api');
         $token = $user instanceof User ? $user->token() : null;
-        $clientId = $token instanceof AccessToken && isset($token->oauth_client_id) ? (string) $token->oauth_client_id : null;
-        $clientName = $clientId === null ? null : OAuthClient::query()->whereKey($clientId)->value('name');
 
-        return $kind === Channel::MCP
-            ? Channel::mcp((string) $clientId, is_string($clientName) ? $clientName : 'Unknown client')
-            : Channel::api($clientId, is_string($clientName) ? $clientName : null);
+        return $token instanceof AccessToken && isset($token->oauth_client_id) ? (string) $token->oauth_client_id : null;
     }
 }

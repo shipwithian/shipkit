@@ -9,7 +9,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use ShipKit\Core\Channel;
+use ShipKit\Core\ChannelKind;
 use ShipKit\Core\Exceptions\DomainException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -30,7 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->api(append: [
-            ShareChannel::class.':'.Channel::API,
+            ShareChannel::class.':'.ChannelKind::Api->value,
         ]);
 
     })

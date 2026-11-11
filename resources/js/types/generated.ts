@@ -45,6 +45,7 @@ export type OAuthAuthorizeProps = {
     readonly scopes: OAuthScopeItem[];
     readonly accountName: string;
     readonly accountEmail: string;
+    readonly redirectHost: string;
     readonly clientId: string;
     readonly state: string;
     readonly authToken: string;
