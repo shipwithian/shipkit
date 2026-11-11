@@ -20,6 +20,24 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 5.0
+
+`shipkit-core` 5.0 adds no check. The major version belongs to the template, whose API moves from Sanctum to Passport. A project created before 5.0 keeps working on Sanctum; follow these steps only to adopt the OAuth server.
+
+### Sanctum → Passport
+
+- **Fails:** every API request with an existing token returns `401 Unauthenticated.`, because Sanctum tokens mean nothing to Passport.
+- **Fix:**
+    1. `composer remove laravel/sanctum`, `composer require laravel/passport:^13.11`, delete `config/sanctum.php` and the `personal_access_tokens` migration, and publish Passport's migrations and config (`php artisan vendor:publish --tag=passport-migrations` and `--tag=passport-config`).
+    2. Copy from ShipKit 5.0: `app/Providers/PassportServiceProvider.php` (and register it in `bootstrap/providers.php`), `app/Models/OAuthClient.php`, `app/Models/OAuthToken.php`, `app/Enums/ApiScope.php`, the migration that creates the personal access client, the `last_used_at` column and cascades on the `oauth_*` tables, and the `api` guard in `config/auth.php`.
+    3. On `User`, replace Sanctum's `HasApiTokens` with Passport's and implement `Laravel\Passport\Contracts\OAuthenticatable`.
+    4. In `routes/api.php`, replace `auth:sanctum` with `auth:api`, `CheckToken::using(ApiScope::Api->value)`, and `RecordApiTokenUse`.
+    5. Replace `SANCTUM_TOKEN_EXPIRATION` (minutes) with `PERSONAL_ACCESS_TOKEN_LIFETIME_DAYS` (days).
+    6. Run `php artisan migrate` and `php artisan passport:keys`, and provide `PASSPORT_PRIVATE_KEY` and `PASSPORT_PUBLIC_KEY` in production.
+    7. Copy the Auth Actions and Queries, the consent page (`auth/oauth-authorize`), and the Security page sections, or compare the `v4.0.0` and `v5.0.0` tags for the full change.
+    8. Tell API clients to sign in again: their old tokens no longer work, and token ids are now strings.
+- **Why:** Sanctum only issues tokens to the app's own clients. Passport adds an OAuth server, so other apps, including AI clients, can act for a user with their consent, and Sanctum and Passport cannot share the `User` model.
+
 ## Upgrading to 4.0
 
 ### Laravel's standard folders

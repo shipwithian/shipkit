@@ -9,7 +9,7 @@
 #   send <METHOD> <path> [json] Submit like an Inertia form; follows the redirect and prints
 #                               the resulting page JSON (validation errors are in props.errors).
 #   api <METHOD> <path> [json]  Call the JSON API; prints the status line and body.
-#                               Set VERIFY_TOKEN to send a Sanctum bearer token.
+#                               Set VERIFY_TOKEN to send a bearer token.
 #   stop                        Stop the server and delete the scratch database. Evidence stays.
 #
 # Every response is also saved under $VERIFY_DIR/evidence/ with a sequence number.

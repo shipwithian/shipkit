@@ -3,7 +3,7 @@
 use App\Models\User;
 use App\Notifications\ApiVerifyEmailNotification;
 use Illuminate\Support\Facades\Notification;
-use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Passport\Token;
 
 it('registers a user and issues a bearer token', function () {
     Notification::fake();
@@ -27,5 +27,5 @@ it('registers a user and issues a bearer token', function () {
 
     expect($response->json('token'))->toBeString()->not->toBeEmpty();
     Notification::assertSentTo($user, ApiVerifyEmailNotification::class);
-    expect(PersonalAccessToken::query()->where('tokenable_id', $user->id)->count())->toBe(1);
+    expect(Token::query()->where('user_id', $user->id)->count())->toBe(1);
 });

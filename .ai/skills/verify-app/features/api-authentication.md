@@ -2,7 +2,7 @@
 
 ## Sub-features
 
-- Token login for a device (`device_name`), returning a Sanctum token.
+- Token login for a device (`device_name`), returning a Passport personal access token.
 - Two-factor challenge instead of a token when the user has two-factor enabled.
 - Current user with permissions; logout revokes the current token.
 - Registration, email verification, and password reset over the API.

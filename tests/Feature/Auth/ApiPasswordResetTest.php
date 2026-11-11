@@ -3,13 +3,13 @@
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Notification;
-use Laravel\Sanctum\PersonalAccessToken;
 
-it('sends a reset link and resets the password', function () {
+it('sends a reset link, resets the password, and revokes every token and connected app', function () {
     Notification::fake();
 
     $user = User::factory()->create();
-    $oldToken = $user->createToken('old client', ['*']);
+    $oldToken = $user->createToken('old client', ['api']);
+    $appToken = connectedAppToken($user);
 
     $this->postJson('/api/v1/forgot-password', ['email' => $user->email])
         ->assertAccepted();
@@ -30,7 +30,9 @@ it('sends a reset link and resets the password', function () {
         ->assertOk()
         ->assertJsonPath('message', 'Your password has been reset.');
 
-    expect(PersonalAccessToken::query()->find($oldToken->accessToken->id))->toBeNull();
+    expect($oldToken->token->refresh()->revoked)->toBeTrue()
+        ->and($appToken->refresh()->revoked)->toBeTrue()
+        ->and($appToken->refreshToken->revoked)->toBeTrue();
 
     $this->postJson('/api/v1/login', [
         'email' => $user->email,

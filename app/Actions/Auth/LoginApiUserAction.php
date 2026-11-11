@@ -2,7 +2,7 @@
 
 namespace App\Actions\Auth;
 
-use Laravel\Sanctum\NewAccessToken;
+use Laravel\Passport\PersonalAccessTokenResult;
 
 class LoginApiUserAction
 {
@@ -15,9 +15,9 @@ class LoginApiUserAction
     /**
      * Issue a token, or a two factor challenge when the user has two factor authentication enabled.
      *
-     * @return NewAccessToken|array{challenge_token: string, expires_at: string}
+     * @return PersonalAccessTokenResult<mixed>|array{challenge_token: string, expires_at: string}
      */
-    public function handle(string $username, string $password, string $deviceName): NewAccessToken|array
+    public function handle(string $username, string $password, string $deviceName): PersonalAccessTokenResult|array
     {
         $user = $this->authenticateApiUser->handle($username, $password);
 

@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Passport\Token;
 
 it('rejects invalid credentials with a validation error', function () {
     $user = User::factory()->create();
@@ -14,7 +14,7 @@ it('rejects invalid credentials with a validation error', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors('email');
 
-    expect(PersonalAccessToken::query()->count())->toBe(0);
+    expect(Token::query()->count())->toBe(0);
 });
 
 it('requires a two factor challenge before issuing a token', function () {
@@ -31,7 +31,7 @@ it('requires a two factor challenge before issuing a token', function () {
         ->assertJsonPath('two_factor_required', true)
         ->assertJsonStructure(['challenge_token', 'expires_at']);
 
-    expect(PersonalAccessToken::query()->count())->toBe(0);
+    expect(Token::query()->count())->toBe(0);
 });
 
 it('issues a token without creating a web session', function () {

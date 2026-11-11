@@ -1,11 +1,16 @@
 <?php
 
+use App\Enums\ApiScope;
+use App\Models\OAuthClient;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\AccessControlSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
+use Laravel\Passport\Token;
 use ShipKit\Core\AccessControl\SystemPermission;
 use ShipKit\Core\AccessControl\SystemRole;
 use Tests\TestCase;
@@ -101,4 +106,52 @@ function userWithPermissions(array $permissions): User
     $user->assignRole($role);
 
     return $user;
+}
+
+/**
+ * Authenticate the next API requests as the user, with a token carrying the `api` scope.
+ *
+ * @return TestCase
+ */
+function actingAsApi(User $user): object
+{
+    Passport::actingAs($user, [ApiScope::Api->value]);
+
+    return test();
+}
+
+/**
+ * An app that signs users in through the authorization-code flow, created the way `passport:client --public` creates one.
+ */
+function oauthApp(string $name = 'Partner App'): OAuthClient
+{
+    /** @var OAuthClient */
+    return app(ClientRepository::class)->createAuthorizationCodeGrantClient($name, ['https://partner.test/callback'], confidential: false);
+}
+
+/**
+ * An access token, with its refresh token, that the user granted an app through the consent screen.
+ */
+function connectedAppToken(User $user, ?OAuthClient $app = null): Token
+{
+    $app ??= oauthApp();
+
+    /** @var Token $token */
+    $token = Passport::token()->newQuery()->forceCreate([
+        'id' => Str::random(80),
+        'user_id' => $user->getKey(),
+        'client_id' => $app->getKey(),
+        'scopes' => [ApiScope::Api->value],
+        'revoked' => false,
+        'expires_at' => now()->addHour(),
+    ]);
+
+    Passport::refreshToken()->newQuery()->forceCreate([
+        'id' => Str::random(80),
+        'access_token_id' => $token->getKey(),
+        'revoked' => false,
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    return $token;
 }

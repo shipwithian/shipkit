@@ -2,18 +2,20 @@
 
 namespace App\Actions\Auth;
 
+use App\Enums\ApiScope;
 use App\Models\User;
-use Laravel\Sanctum\NewAccessToken;
+use Laravel\Passport\PersonalAccessTokenResult;
 
 class CreateApiTokenAction
 {
-    public function handle(User $user, string $name): NewAccessToken
+    /**
+     * Issue a personal access token with the `api` scope. It expires after
+     * `passport.personal_access_token_lifetime_days`.
+     *
+     * @return PersonalAccessTokenResult<mixed>
+     */
+    public function handle(User $user, string $name): PersonalAccessTokenResult
     {
-        $expiration = config('sanctum.expiration');
-        $expiresAt = $expiration === null
-            ? null
-            : now()->addMinutes((int) $expiration);
-
-        return $user->createToken($name, ['*'], $expiresAt);
+        return $user->createToken($name, [ApiScope::Api->value]);
     }
 }

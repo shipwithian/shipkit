@@ -9,7 +9,7 @@ use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use Laravel\Fortify\Events\TwoFactorAuthenticationFailed;
 use Laravel\Fortify\Events\ValidTwoFactorAuthenticationCodeProvided;
 use Laravel\Fortify\Fortify;
-use Laravel\Sanctum\NewAccessToken;
+use Laravel\Passport\PersonalAccessTokenResult;
 
 class CompleteApiTwoFactorChallengeAction
 {
@@ -18,13 +18,16 @@ class CompleteApiTwoFactorChallengeAction
         private readonly CreateApiTwoFactorChallengeAction $createApiTwoFactorChallenge,
     ) {}
 
+    /**
+     * @return PersonalAccessTokenResult<mixed>
+     */
     public function handle(
         string $challengeToken,
         ?string $code,
         ?string $recoveryCode,
-    ): NewAccessToken {
+    ): PersonalAccessTokenResult {
         return Cache::lock($this->createApiTwoFactorChallenge->cacheKey($challengeToken), 10)
-            ->block(3, function () use ($challengeToken, $code, $recoveryCode): NewAccessToken {
+            ->block(3, function () use ($challengeToken, $code, $recoveryCode): PersonalAccessTokenResult {
                 $challenge = Cache::get(
                     $this->createApiTwoFactorChallenge->cacheKey($challengeToken),
                 );

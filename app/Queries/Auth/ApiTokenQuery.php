@@ -2,19 +2,22 @@
 
 namespace App\Queries\Auth;
 
+use App\Models\OAuthToken;
 use App\Models\User;
-use Laravel\Sanctum\PersonalAccessToken;
 
 class ApiTokenQuery
 {
     /**
-     * Find one of the user's own tokens, whichever device it was issued to.
+     * Find one of the user's own working personal access tokens, whichever device it was issued to.
      *
      * Another user's token is indistinguishable from a missing one.
      */
-    public function handle(User $user, int $tokenId): PersonalAccessToken
+    public function handle(User $user, string $tokenId): OAuthToken
     {
-        /** @var PersonalAccessToken */
-        return $user->tokens()->findOrFail($tokenId);
+        /** @var OAuthToken */
+        return $user->tokens()
+            ->whereIn('client_id', ApiTokenListQuery::personalAccessClientIds())
+            ->where('revoked', false)
+            ->findOrFail($tokenId);
     }
 }
