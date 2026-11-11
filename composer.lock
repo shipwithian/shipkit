@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "138ae3054171d12a480a0db6fdc9ea8b",
+    "content-hash": "c5d155fb60f9ff7d64732d0f8f6f2d3b",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -5099,11 +5099,17 @@
         },
         {
             "name": "shipwithian/shipkit-core",
-            "version": "dev-feat/mcp-server",
+            "version": "v5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shipwithian/shipkit-core.git",
+                "reference": "51a82029abfca855d40e4b6b82128cd7d0e6af08"
+            },
             "dist": {
-                "type": "path",
-                "url": "packages/shipkit-core",
-                "reference": "b8afff7b469536f50934c7354d68847ebc8db320"
+                "type": "zip",
+                "url": "https://api.github.com/repos/shipwithian/shipkit-core/zipball/51a82029abfca855d40e4b6b82128cd7d0e6af08",
+                "reference": "51a82029abfca855d40e4b6b82128cd7d0e6af08",
+                "shasum": ""
             },
             "require": {
                 "laravel/framework": "^13.17",
@@ -5123,6 +5129,7 @@
                     "ShipKit\\Core\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5132,10 +5139,12 @@
                 "laravel",
                 "shipkit"
             ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/shipwithian/shipkit-core/issues",
+                "source": "https://github.com/shipwithian/shipkit-core/tree/v5.0.0"
+            },
+            "time": "2026-11-11T02:30:52+00:00",
+            "published-time": "2026-11-11T02:47:52+00:00"
         },
         {
             "name": "spatie/file-system-watcher",
@@ -13260,14 +13269,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "shipwithian/shipkit-core": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
