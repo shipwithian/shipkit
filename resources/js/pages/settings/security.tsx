@@ -7,8 +7,10 @@ import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
+import { ConnectedApps } from '@/pages/settings/partials/connected-apps';
 import { ManagePasskeys } from '@/pages/settings/partials/manage-passkeys';
 import { ManageTwoFactor } from '@/pages/settings/partials/manage-two-factor';
+import { PersonalAccessTokens } from '@/pages/settings/partials/personal-access-tokens';
 import type { SecurityEditProps } from '@/types';
 
 export default function Security(props: SecurityEditProps) {
@@ -127,6 +129,10 @@ export default function Security(props: SecurityEditProps) {
                 canManagePasskeys={props.canManagePasskeys}
                 passkeys={props.passkeys}
             />
+
+            <PersonalAccessTokens tokens={props.personalAccessTokens} />
+
+            <ConnectedApps apps={props.connectedApps} />
         </>
     );
 }

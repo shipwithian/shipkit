@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Settings;
 
 use App\Actions\Settings\UpdatePasswordAction;
 use App\Http\Controllers\Controller;
+use App\Http\Props\Settings\ConnectedAppListItem;
 use App\Http\Props\Settings\PasskeyListItem;
+use App\Http\Props\Settings\PersonalAccessTokenListItem;
 use App\Http\Props\Settings\SecurityEditProps;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use App\Models\User;
+use App\Queries\Auth\ApiTokenListQuery;
+use App\Queries\Auth\ConnectedAppListQuery;
 use App\Queries\Settings\PasskeyListQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -22,8 +26,12 @@ class SecurityController extends Controller
     /**
      * Show the user's security settings page.
      */
-    public function edit(TwoFactorAuthenticationRequest $request, PasskeyListQuery $passkeyList): Response
-    {
+    public function edit(
+        TwoFactorAuthenticationRequest $request,
+        PasskeyListQuery $passkeyList,
+        ApiTokenListQuery $apiTokenList,
+        ConnectedAppListQuery $connectedAppList,
+    ): Response {
         /** @var User $user */
         $user = $request->user();
 
@@ -45,6 +53,8 @@ class SecurityController extends Controller
                 ? array_values(array_map(PasskeyListItem::from(...), $passkeyList->handle($user)->all()))
                 : [],
             passwordRules: Password::defaults()->toPasswordRulesString(),
+            personalAccessTokens: array_values(array_map(PersonalAccessTokenListItem::from(...), $apiTokenList->handle($user)->all())),
+            connectedApps: array_values(array_map(ConnectedAppListItem::from(...), $connectedAppList->handle($user)->all())),
         ));
     }
 

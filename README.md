@@ -40,7 +40,7 @@ Without the Laravel installer, `composer create-project shipwithian/shipkit my-a
 
 Every project requires [`shipwithian/shipkit-core`](https://github.com/shipwithian/shipkit-core), the package that holds ShipKit's guards and checks, from Packagist. The rest of the code is yours to change. [Updating a project](#updating-a-project) explains what updates and how.
 
-ShipKit ships as a single template: web authentication, roles and permissions, and a versioned Sanctum API are all included.
+ShipKit ships as a single template: web authentication, roles and permissions, a versioned API, and an OAuth server are all included.
 
 ## Why ShipKit exists
 
@@ -72,14 +72,15 @@ Authentication is powered by Laravel Fortify and currently includes:
 - Passkey support
 - Protected account deletion
 
-The dashboard uses web/session authentication. API clients authenticate separately with Sanctum bearer tokens.
+The dashboard uses web/session authentication. API clients authenticate separately with Passport bearer tokens.
 
 ### API authentication
 
 The API foundation includes:
 
 - Versioned `/api/v1` authentication endpoints
-- Sanctum bearer tokens with configurable expiration
+- Personal access tokens with configurable expiration, created from the API or Settings → Security
+- An OAuth 2.1 server, so other apps can ask a user for access through a consent screen
 - API registration, login, logout, and current-user endpoints
 - TOTP and recovery-code two-factor challenges
 - API email verification and password reset flows
@@ -87,6 +88,27 @@ The API foundation includes:
 - A public `/api/up` health endpoint
 
 The API does not replace the web dashboard authentication and does not enable stateful SPA cookie authentication.
+
+#### Tokens, scopes, and connected apps
+
+ShipKit uses [Laravel Passport](https://laravel.com/docs/passport). There are two kinds of access:
+
+- **Personal access tokens** are for the user's own scripts and tools. API login, registration, and `POST /api/v1/tokens` return one, and Settings → Security creates, lists, and revokes them. Each expires after `PERSONAL_ACCESS_TOKEN_LIFETIME_DAYS` (90 by default) and its secret is shown once.
+- **Connected apps** are other applications a user lets act for them. The app sends the user to `/oauth/authorize`; the user signs in (with two-factor authentication when enabled), sees a consent screen naming the app, the scopes it asks for, and the account it will act as, and approves or denies. The app then exchanges the code at `/oauth/token`. Access tokens last an hour and refresh tokens 30 days. Settings → Security lists connected apps and disconnects them.
+
+Every `/api/v1` route requires the `api` scope, listed with its consent-screen description in `App\Enums\ApiScope`. Only the authorization-code (with PKCE for public clients), refresh-token, and personal-access grants are enabled.
+
+Create a client for an app with `passport:client`. Use `--public` for an app that cannot keep a secret, such as a CLI, desktop, or mobile app; it must use PKCE:
+
+```bash
+php artisan passport:client --public
+```
+
+A password reset revokes every personal access token and every connected app's tokens, and deleting an account removes them.
+
+#### Passport keys
+
+Passport signs tokens with a key pair. `composer setup` and project creation run `php artisan passport:keys`, which writes `storage/oauth-private.key` and `storage/oauth-public.key` (both gitignored). In production, set `PASSPORT_PRIVATE_KEY` and `PASSPORT_PUBLIC_KEY` instead, or run `passport:keys` once on the server. Keep the same keys across deploys: new keys invalidate every issued token.
 
 ### Roles and permissions
 
@@ -122,7 +144,7 @@ The application includes an Inertia and React interface with:
 | Frontend           | React 19, TypeScript, Inertia.js 3        |
 | Styling            | Tailwind CSS 4                            |
 | Authentication     | Laravel Fortify                           |
-| API authentication | Laravel Sanctum (API-enabled branch)      |
+| API authentication | Laravel Passport (OAuth 2.1)              |
 | Authorization      | Spatie Laravel Permission                 |
 | Typed routes       | Laravel Wayfinder                         |
 | Frontend tooling   | Vite+                                     |
@@ -231,7 +253,7 @@ Responsibilities are intentionally separated:
 - **Named exceptions** describe each broken business rule and render as validation errors.
 - **React pages** present server-provided state and improve usability without replacing backend authorization.
 
-There are no repositories, mappers, or separate domain entities: Fortify, Sanctum, Spatie Permission, and the Gate all work with Eloquent models, and so does ShipKit.
+There are no repositories, mappers, or separate domain entities: Fortify, Passport, Spatie Permission, and the Gate all work with Eloquent models, and so does ShipKit.
 
 The rules are checked by `vendor/shipwithian/shipkit-core/tests/ArchitectureTest.php`, including that each class sits in its standard folder, and each feature's vocabulary and invariants are documented for agents in `.ai/rules/features/`. For the complete architecture guidance, see [`vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md`](vendor/shipwithian/shipkit-core/resources/boost/guidelines/architecture.md).
 
@@ -382,7 +404,7 @@ SUPER_ADMIN_PASSWORD=use-a-unique-password
 
 The example Super Admin credentials are for local setup only. Replace them before seeding a real environment or deploying the application.
 
-Also review `SANCTUM_TOKEN_EXPIRATION` and the API authentication routes before exposing the application to API clients.
+Also review `PERSONAL_ACCESS_TOKEN_LIFETIME_DAYS` and the API authentication routes before exposing the application to API clients.
 
 SQLite is configured by default. Update the `DB_*` variables before setup if the project will use PostgreSQL, MySQL, or another supported database.
 
@@ -414,7 +436,8 @@ Before starting business features:
 - [ ] Set unique `SUPER_ADMIN_NAME`, `SUPER_ADMIN_EMAIL`, and `SUPER_ADMIN_PASSWORD` values.
 - [ ] Run migrations and seed the access-control defaults.
 - [ ] Sign in as the Super Admin and verify role and permission management.
-- [ ] Review Sanctum expiration, API policies, and bearer-token flows, or remove the API routes if the project does not need them.
+- [ ] Review token lifetimes, API policies, and bearer-token flows, or remove the API routes if the project does not need them.
+- [ ] Provide stable Passport keys in production (`PASSPORT_PRIVATE_KEY` and `PASSPORT_PUBLIC_KEY`).
 - [ ] Establish the project's independent semantic-version sequence and release tags.
 - [ ] (Optional) Configure `TYPESAFE_API_KEY`, install the TypeSafe Codex skill, and verify the project-scoped Jev MCP server.
 - [ ] Run the automated quality checks and production build.

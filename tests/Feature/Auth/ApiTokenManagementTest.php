@@ -2,7 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Passport\Token;
 
 describe('index', function () {
     it('rejects guests', function () {
@@ -12,13 +12,13 @@ describe('index', function () {
     it('lists only the caller\'s tokens without secrets', function () {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $current = $user->createToken('laptop', ['*'], now()->addDay());
-        $user->createToken('phone', ['*']);
-        $other->createToken('stranger', ['*']);
+        $current = $user->createToken('laptop', ['api']);
+        $user->createToken('phone', ['api']);
+        $other->createToken('stranger', ['api']);
 
-        $current->accessToken->forceFill(['last_used_at' => now()->subHour()])->save();
+        $current->token->forceFill(['last_used_at' => now()->subHour()])->save();
 
-        $response = $this->withToken($current->plainTextToken)
+        $response = $this->withToken($current->accessToken)
             ->getJson('/api/v1/tokens')
             ->assertOk()
             ->assertJsonCount(2, 'data')
@@ -27,7 +27,7 @@ describe('index', function () {
 
         expect(collect($response->json('data'))->pluck('name')->all())->toEqualCanonicalizing(['laptop', 'phone']);
         expect($response->json('data.0'))->not->toHaveKeys(['token', 'abilities']);
-        expect($response->getContent())->not->toContain($current->plainTextToken);
+        expect($response->getContent())->not->toContain($current->accessToken);
     });
 });
 
@@ -39,7 +39,7 @@ describe('store', function () {
     it('requires a name', function () {
         $user = User::factory()->create();
 
-        $this->actingAs($user, 'sanctum')
+        actingAsApi($user)
             ->postJson('/api/v1/tokens', ['name' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('name');
@@ -47,7 +47,7 @@ describe('store', function () {
 
     it('creates a token and shows the secret once', function () {
         $user = User::factory()->create();
-        $bearer = $user->createToken('existing', ['*'])->plainTextToken;
+        $bearer = $user->createToken('existing', ['api'])->accessToken;
 
         $response = $this->withToken($bearer)
             ->postJson('/api/v1/tokens', ['name' => 'CI'])
@@ -57,11 +57,11 @@ describe('store', function () {
             ->assertJsonStructure(['data' => ['id', 'name', 'created_at', 'last_used_at', 'expires_at'], 'token']);
 
         $secret = $response->json('token');
-        $stored = PersonalAccessToken::query()->findOrFail($response->json('data.id'));
+        $stored = Token::query()->findOrFail($response->json('data.id'));
 
-        expect($stored->tokenable_id)->toBe($user->id)
+        expect($stored->user_id)->toBe($user->id)
             ->and($stored->name)->toBe('CI')
-            ->and($stored->token)->not->toBe($secret);
+            ->and($stored->scopes)->toBe(['api']);
 
         Auth::forgetGuards();
 
@@ -79,46 +79,46 @@ describe('destroy', function () {
 
     it('does not reveal or revoke another user\'s token', function () {
         $user = User::factory()->create();
-        $victim = User::factory()->create()->createToken('victim', ['*']);
+        $victim = User::factory()->create()->createToken('victim', ['api']);
 
-        $this->actingAs($user, 'sanctum')
-            ->deleteJson("/api/v1/tokens/{$victim->accessToken->id}")
+        actingAsApi($user)
+            ->deleteJson("/api/v1/tokens/{$victim->token->id}")
             ->assertNotFound();
 
-        expect(PersonalAccessToken::query()->find($victim->accessToken->id))->not->toBeNull();
+        expect($victim->token->refresh()->revoked)->toBeFalse();
     });
 
     it('revokes a token issued to another device', function () {
         $user = User::factory()->create();
-        $current = $user->createToken('laptop', ['*']);
-        $phone = $user->createToken('phone', ['*']);
+        $current = $user->createToken('laptop', ['api']);
+        $phone = $user->createToken('phone', ['api']);
 
-        $this->withToken($current->plainTextToken)
-            ->deleteJson("/api/v1/tokens/{$phone->accessToken->id}")
+        $this->withToken($current->accessToken)
+            ->deleteJson("/api/v1/tokens/{$phone->token->id}")
             ->assertNoContent();
 
-        expect(PersonalAccessToken::query()->find($phone->accessToken->id))->toBeNull()
-            ->and(PersonalAccessToken::query()->find($current->accessToken->id))->not->toBeNull();
+        expect($phone->token->refresh()->revoked)->toBeTrue()
+            ->and($current->token->refresh()->revoked)->toBeFalse();
 
         Auth::forgetGuards();
 
-        $this->withToken($phone->plainTextToken)->getJson('/api/v1/user')->assertUnauthorized();
+        $this->withToken($phone->accessToken)->getJson('/api/v1/user')->assertUnauthorized();
     });
 
     it('can revoke the token making the request', function () {
         $user = User::factory()->create();
-        $current = $user->createToken('laptop', ['*']);
+        $current = $user->createToken('laptop', ['api']);
 
-        $this->withToken($current->plainTextToken)
-            ->deleteJson("/api/v1/tokens/{$current->accessToken->id}")
+        $this->withToken($current->accessToken)
+            ->deleteJson("/api/v1/tokens/{$current->token->id}")
             ->assertNoContent();
 
-        expect($user->tokens()->count())->toBe(0);
+        expect($user->tokens()->where('revoked', false)->count())->toBe(0);
     });
 
     it('returns not found for a missing token', function () {
         $user = User::factory()->create();
 
-        $this->actingAs($user, 'sanctum')->deleteJson('/api/v1/tokens/999999')->assertNotFound();
+        actingAsApi($user)->deleteJson('/api/v1/tokens/999999')->assertNotFound();
     });
 });

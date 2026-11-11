@@ -2,6 +2,13 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
+## Unreleased
+
+Released as 5.0.0 because `shipkit-core` shares the template's version, which moves to a new major with the switch from Sanctum to Passport. Core itself adds no check, and nothing in it can fail a project that passed 4.x.
+
+- **Guidance:** the `tests` rule's note about calling `Auth::forgetGuards()` before reusing a revoked bearer token no longer names Sanctum.
+- **Upgrade notes:** [UPGRADE.md](UPGRADE.md#upgrading-to-50) carries the template's Sanctum → Passport steps.
+
 ## 4.0.0 (2026-11-07)
 
 A major release because the architecture checks now expect Laravel's standard folders instead of `app/Domain/{Context}`. [UPGRADE.md](UPGRADE.md#upgrading-to-40) has the map.

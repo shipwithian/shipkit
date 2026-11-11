@@ -2,6 +2,16 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
+## Unreleased
+
+Requires `shipwithian/shipkit-core` 5.0. A major release because the API moves from Sanctum to Passport and existing tokens stop working. [UPGRADE.md](packages/shipkit-core/UPGRADE.md#upgrading-to-50) has the steps for a project created before 5.0.
+
+- **Passport replaces Sanctum:** the `/api/v1` endpoints keep their requests and responses, but issue Passport personal access tokens (longer, signed tokens), require the `api` scope on every authenticated route, and identify tokens by a string id. `PERSONAL_ACCESS_TOKEN_LIFETIME_DAYS` (90 by default) replaces `SANCTUM_TOKEN_EXPIRATION`.
+- **An OAuth 2.1 server:** other apps can ask a user for access through `/oauth/authorize`, with sign-in (and two-factor authentication) first and a consent screen in the app's own layout. Only the authorization-code (PKCE for public clients), refresh-token, and personal-access grants are enabled. Operators create clients with `php artisan passport:client`.
+- **Settings → Security:** new "Personal access tokens" (create, shown once, list, revoke) and "Connected apps" (approved apps, last used, disconnect) sections.
+- **Revocation:** a password reset, on the web or the API, revokes every personal access token and every connected app's tokens; deleting an account deletes them.
+- **Setup:** `composer setup` and project creation generate Passport's keys, and a migration creates the personal access client.
+
 ## 4.0.0 (2026-11-07)
 
 Requires `shipwithian/shipkit-core` 4.0.

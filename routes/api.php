@@ -1,12 +1,15 @@
 <?php
 
+use App\Enums\ApiScope;
 use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\V1\ApiTokenController;
 use App\Http\Controllers\Api\V1\AuthenticationController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Middleware\RecordApiTokenUse;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Http\Middleware\CheckToken;
 
 Route::get('up', HealthCheckController::class)->name('api.health');
 
@@ -36,7 +39,7 @@ Route::prefix('v1')
             ->middleware(['signed', 'throttle:6,1'])
             ->name('api.v1.email.verify');
 
-        Route::middleware('auth:sanctum')->group(function (): void {
+        Route::middleware(['auth:api', CheckToken::using(ApiScope::Api->value), RecordApiTokenUse::class])->group(function (): void {
             Route::post('logout', [AuthenticationController::class, 'logout'])
                 ->middleware('throttle:api-write')
                 ->name('api.v1.auth.logout');
@@ -52,7 +55,7 @@ Route::prefix('v1')
                 ->name('api.v1.tokens.store');
 
             Route::delete('tokens/{token}', [ApiTokenController::class, 'destroy'])
-                ->whereNumber('token')
+                ->where('token', '[A-Za-z0-9]+')
                 ->middleware('throttle:api-write')
                 ->name('api.v1.tokens.destroy');
 

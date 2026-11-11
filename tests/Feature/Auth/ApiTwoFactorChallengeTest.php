@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Passport\Token;
 use PragmaRX\Google2FA\Google2FA;
 
 it('does not issue a token for an invalid code', function () {
@@ -20,7 +20,7 @@ it('does not issue a token for an invalid code', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors('code');
 
-    expect(PersonalAccessToken::query()->count())->toBe(0);
+    expect(Token::query()->count())->toBe(0);
 });
 
 it('accepts a challenge only once', function () {
@@ -67,7 +67,7 @@ it('issues a token for a valid TOTP code', function () {
         ->assertJsonPath('token_type', 'Bearer')
         ->assertJsonPath('user.id', $user->id);
 
-    expect(PersonalAccessToken::query()->count())->toBe(1);
+    expect(Token::query()->count())->toBe(1);
 });
 
 it('issues a token for a valid recovery code', function () {

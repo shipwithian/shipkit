@@ -22,6 +22,12 @@ export type AuthUser = {
     readonly created_at: string | null;
     readonly updated_at: string | null;
 };
+export type ConnectedAppListItem = {
+    readonly id: string;
+    readonly name: string;
+    readonly approved_at_diff: string | null;
+    readonly last_used_at_diff: string | null;
+};
 export type ForgotPasswordProps = {
     readonly status: string | null;
 };
@@ -33,6 +39,22 @@ export type NavigationAbilities = {
     readonly viewRoles: boolean;
     readonly viewPermissions: boolean;
     readonly viewUsers: boolean;
+};
+export type OAuthAuthorizeProps = {
+    readonly clientName: string;
+    readonly scopes: OAuthScopeItem[];
+    readonly accountName: string;
+    readonly accountEmail: string;
+    readonly clientId: string;
+    readonly state: string;
+    readonly authToken: string;
+    readonly csrfToken: string;
+    readonly approveUrl: string;
+    readonly denyUrl: string;
+};
+export type OAuthScopeItem = {
+    readonly id: string;
+    readonly description: string;
 };
 export type Pagination = {
     readonly current_page: number;
@@ -66,6 +88,13 @@ export type PermissionListItem = {
     readonly roles_count: number;
     readonly users_count: number;
     readonly can: PermissionAbilities;
+};
+export type PersonalAccessTokenListItem = {
+    readonly id: string;
+    readonly name: string | null;
+    readonly created_at_diff: string | null;
+    readonly last_used_at_diff: string | null;
+    readonly expires_at_diff: string | null;
 };
 export type ProfileEditProps = {
     readonly mustVerifyEmail: boolean;
@@ -116,6 +145,8 @@ export type SecurityEditProps = {
     readonly canManagePasskeys: boolean;
     readonly passkeys: PasskeyListItem[];
     readonly passwordRules: string;
+    readonly personalAccessTokens: PersonalAccessTokenListItem[];
+    readonly connectedApps: ConnectedAppListItem[];
 };
 export type SharedProps = {
     readonly name: string;

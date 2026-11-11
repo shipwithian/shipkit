@@ -41,15 +41,15 @@ class ApiTokenController extends Controller
 
         $token = $createApiToken->handle($user, $request->string('name')->toString());
 
-        return (new ApiTokenResource($token->accessToken))
-            ->additional(['token' => $token->plainTextToken, 'token_type' => 'Bearer'])
+        return (new ApiTokenResource($token->getToken()))
+            ->additional(['token' => $token->accessToken, 'token_type' => 'Bearer'])
             ->response()
             ->setStatusCode(201);
     }
 
     public function destroy(
         Request $request,
-        int $token,
+        string $token,
         ApiTokenQuery $apiToken,
         RevokeApiTokenAction $revokeApiToken,
     ): Response {

@@ -6,7 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Models\User;
 use App\Notifications\ApiVerifyEmailNotification;
 use Illuminate\Support\Facades\DB;
-use Laravel\Sanctum\NewAccessToken;
+use Laravel\Passport\PersonalAccessTokenResult;
 
 class RegisterApiUserAction
 {
@@ -17,16 +17,19 @@ class RegisterApiUserAction
 
     /**
      * @param  array{name: string, email: string, password: string, password_confirmation: string}  $input
+     * @return PersonalAccessTokenResult<mixed>
      */
-    public function handle(array $input, string $deviceName): NewAccessToken
+    public function handle(array $input, string $deviceName): PersonalAccessTokenResult
     {
-        $token = DB::transaction(fn (): NewAccessToken => $this->createApiToken->handle(
-            $this->createNewUser->create($input),
-            $deviceName,
-        ));
+        $user = null;
+
+        $token = DB::transaction(function () use ($input, $deviceName, &$user): PersonalAccessTokenResult {
+            $user = $this->createNewUser->create($input);
+
+            return $this->createApiToken->handle($user, $deviceName);
+        });
 
         /** @var User $user */
-        $user = $token->accessToken->tokenable;
         $user->notify(new ApiVerifyEmailNotification);
 
         return $token;

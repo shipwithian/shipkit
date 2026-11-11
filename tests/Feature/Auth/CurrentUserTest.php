@@ -2,7 +2,7 @@
 
 it('returns current permissions without exposing secrets', function () {
     $user = userWithPermissions(['reports.view']);
-    $token = $user->createToken('test client', ['*'])->plainTextToken;
+    $token = $user->createToken('test client', ['api'])->accessToken;
 
     $this->withToken($token)
         ->getJson('/api/v1/user')

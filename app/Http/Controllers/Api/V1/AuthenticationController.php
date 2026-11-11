@@ -11,13 +11,15 @@ use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Requests\Api\V1\TwoFactorChallengeRequest;
 use App\Http\Resources\Api\V1\UserResource;
+use App\Models\OAuthToken;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Fortify\Fortify;
-use Laravel\Sanctum\NewAccessToken;
+use Laravel\Passport\AccessToken;
+use Laravel\Passport\PersonalAccessTokenResult;
 
 class AuthenticationController extends Controller
 {
@@ -38,10 +40,7 @@ class AuthenticationController extends Controller
             $validated['device_name'],
         );
 
-        /** @var User $user */
-        $user = $token->accessToken->tokenable;
-
-        return $this->tokenResponse($token, $user, 201);
+        return $this->tokenResponse($token, 201);
     }
 
     public function login(
@@ -54,17 +53,14 @@ class AuthenticationController extends Controller
             $request->string('device_name')->toString(),
         );
 
-        if (! $result instanceof NewAccessToken) {
+        if (! $result instanceof PersonalAccessTokenResult) {
             return response()->json([
                 'two_factor_required' => true,
                 ...$result,
             ]);
         }
 
-        /** @var User $user */
-        $user = $result->accessToken->tokenable;
-
-        return $this->tokenResponse($result, $user);
+        return $this->tokenResponse($result);
     }
 
     public function twoFactorChallenge(
@@ -80,10 +76,7 @@ class AuthenticationController extends Controller
             $validated['recovery_code'] ?? null,
         );
 
-        /** @var User $user */
-        $user = $token->accessToken->tokenable;
-
-        return $this->tokenResponse($token, $user);
+        return $this->tokenResponse($token);
     }
 
     public function logout(
@@ -95,23 +88,30 @@ class AuthenticationController extends Controller
 
         Gate::authorize('view', $user);
 
-        $token = $user->currentAccessToken();
+        /** @var AccessToken<mixed> $token */
+        $token = $user->token();
         $revokeApiToken->handle($token);
 
         return response()->noContent();
     }
 
+    /**
+     * @param  PersonalAccessTokenResult<mixed>  $token
+     */
     private function tokenResponse(
-        NewAccessToken $token,
-        User $user,
+        PersonalAccessTokenResult $token,
         int $status = 200,
     ): JsonResponse {
+        /** @var OAuthToken $issued */
+        $issued = $token->getToken();
+        /** @var User $user */
+        $user = $issued->user;
         $user->loadMissing(['permissions', 'roles.permissions']);
 
         return response()->json([
-            'token' => $token->plainTextToken,
+            'token' => $token->accessToken,
             'token_type' => 'Bearer',
-            'expires_at' => $token->accessToken->expires_at?->toIso8601String(),
+            'expires_at' => $issued->expires_at?->toIso8601String(),
             'user' => new UserResource($user),
         ], $status);
     }

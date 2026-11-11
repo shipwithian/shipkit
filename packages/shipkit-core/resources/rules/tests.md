@@ -43,7 +43,7 @@ When `composer ci:check` stops on formatting or Rector, run `composer fix` (Rect
 
 ## Reset the guard after revoking a bearer token
 
-A test that reuses a Sanctum bearer token after revoking it calls `Auth::forgetGuards()` first, so the guard authenticates again instead of returning its cached user.
+A test that reuses a bearer token after revoking it calls `Auth::forgetGuards()` first, so the guard authenticates again instead of returning its cached user.
 
 ## Tests do not need built assets
 

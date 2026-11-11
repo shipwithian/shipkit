@@ -12,7 +12,7 @@ describe('send', function () {
         Notification::fake();
 
         $user = User::factory()->unverified()->create();
-        $token = $user->createToken('mobile app', ['*'])->plainTextToken;
+        $token = $user->createToken('mobile app', ['api'])->accessToken;
 
         $this->withToken($token)
             ->postJson('/api/v1/email/verification-notification')
