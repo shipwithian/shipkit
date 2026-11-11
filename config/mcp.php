@@ -20,7 +20,7 @@ return [
         'https://chatgpt.com',
         'http://localhost',
         ...array_map(trim(...), explode(',', (string) env('MCP_REDIRECT_DOMAINS', ''))),
-    ])),
+    ], fn (string $domain): bool => $domain !== '' && $domain !== '*')),
 
     /*
     |--------------------------------------------------------------------------

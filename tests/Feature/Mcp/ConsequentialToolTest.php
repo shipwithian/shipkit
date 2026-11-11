@@ -145,6 +145,16 @@ it('rejects a token for different details', function () {
     expect(PlaceTestOrderTool::$placed)->toBe([]);
 });
 
+it('rejects a token that was already used when the details are different', function () {
+    $token = confirmationTokenFrom(callTestTool($this->customer, FLAT_WHITE));
+
+    callTestTool($this->customer, [...FLAT_WHITE, 'confirmation_token' => $token])->assertOk();
+
+    callTestTool($this->customer, ['item' => 'flat white', 'quantity' => 20, 'confirmation_token' => $token])->assertHasErrors();
+
+    expect(PlaceTestOrderTool::$placed)->toHaveCount(1);
+});
+
 it('rejects a token issued to another user', function () {
     $token = confirmationTokenFrom(callTestTool($this->customer, FLAT_WHITE));
 

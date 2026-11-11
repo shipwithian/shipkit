@@ -4,6 +4,7 @@ use App\Mcp\Servers\AppServer;
 use App\Mcp\Tools\Settings\ShowMyProfileTool;
 use App\Mcp\Tools\Settings\UpdateMyProfileTool;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 describe('show_my_profile', function () {
     it('returns exactly the listed profile fields', function () {
@@ -75,6 +76,23 @@ describe('update_my_profile', function () {
             ->assertStructuredContentPath('email_verified', false);
 
         expect($user->refresh()->email_verified_at)->toBeNull();
+    });
+
+    it('returns the first result without acting again when a confirmed email change is repeated', function () {
+        Log::spy();
+
+        $user = User::factory()->create();
+        $arguments = ['name' => $user->name, 'email' => 'new@example.com'];
+        $token = confirmationTokenFrom(AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, $arguments));
+
+        foreach ([1, 2] as $attempt) {
+            AppServer::actingAs($user)->tool(UpdateMyProfileTool::class, [...$arguments, 'confirmation_token' => $token])
+                ->assertOk()
+                ->assertStructuredContentPath('confirmed', true)
+                ->assertStructuredContentPath('email', 'new@example.com');
+        }
+
+        Log::shouldHaveReceived('info')->withArgs(fn (string $message): bool => str_starts_with($message, 'Profile updated via'))->once();
     });
 
     it('rejects a confirmation token for a different email', function () {

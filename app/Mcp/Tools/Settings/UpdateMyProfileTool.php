@@ -47,7 +47,9 @@ class UpdateMyProfileTool extends Tool
         ]);
 
         return $this->reportingDomainExceptions(function () use ($request, $user, $validated, $updateProfile, $confirmation, $channel): Response|ResponseFactory {
-            if ($validated['email'] === $user->email) {
+            $confirming = is_string($request->get('confirmation_token')) && $request->get('confirmation_token') !== '';
+
+            if ($validated['email'] === $user->email && ! $confirming) {
                 return Response::structured(ProfileFields::from($updateProfile->handle($user, $validated, $channel)));
             }
 

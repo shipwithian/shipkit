@@ -151,3 +151,15 @@ it('does not keep a client when a successful registration has no client id', fun
 
     expect(OAuthClient::query()->count())->toBe($before);
 });
+
+it('ignores a wildcard in MCP_REDIRECT_DOMAINS, so no site can register as a trusted client', function () {
+    putenv('MCP_REDIRECT_DOMAINS=*, https://app.acme.test');
+
+    try {
+        $domains = (require config_path('mcp.php'))['redirect_domains'];
+    } finally {
+        putenv('MCP_REDIRECT_DOMAINS');
+    }
+
+    expect($domains)->toBe(['https://claude.ai', 'https://chatgpt.com', 'http://localhost', 'https://app.acme.test']);
+});

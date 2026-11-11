@@ -58,7 +58,7 @@ A tool need not confirm every call. When only some calls are consequential, such
 
 ## Redirects and client identity
 
-An AI client registers itself, so anything it declares is unverified. `config/mcp.php` limits where a client may send the user after approval to `https://claude.ai`, `https://chatgpt.com`, and localhost, plus `MCP_REDIRECT_DOMAINS` (comma-separated, with scheme); the consent screen shows that destination. Never set `MCP_REDIRECT_DOMAINS=*`: it lets any site register as a trusted client and collect consent.
+An AI client registers itself, so anything it declares is unverified. `config/mcp.php` limits where a client may send the user after approval to `https://claude.ai`, `https://chatgpt.com`, and localhost, plus `MCP_REDIRECT_DOMAINS` (comma-separated, with scheme); the consent screen shows that destination. A `*` in `MCP_REDIRECT_DOMAINS` is ignored, because it would let any site register as a trusted client and collect consent.
 
 ## Scopes
 

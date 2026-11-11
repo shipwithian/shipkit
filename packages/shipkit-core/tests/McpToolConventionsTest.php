@@ -119,17 +119,15 @@ it('fails on a tool no server registers', function () {
     expect(violationsAfter('#[Name', '#[Name', "<?php\n\nclass AppServer { protected array \$tools = []; }\n"))->toBe(['app/Mcp/Tools/Billing/ListInvoicesTool.php: register ListInvoicesTool in a server under app/Mcp/Servers, or no AI client can call it']);
 });
 
-it('fails on a tool that does not authorize first', function (string $search, string $replace) {
-    expect(violationsAfter($search, $replace))->not->toBe([])
-        ->and(implode(' ', violationsAfter($search, $replace)))->toContain('app/Mcp/Tools/Billing/ListInvoicesTool.php: ');
+it('fails on a tool that does not authorize first', function (string $search, string $replace, string $violation) {
+    expect(violationsAfter($search, $replace))->toBe(["app/Mcp/Tools/Billing/ListInvoicesTool.php: {$violation}"]);
 })->with([
-    'no authorization' => ["        Gate::forUser(\$user)->authorize('viewAny', Invoice::class);\n\n", ''],
-    'Gate::inspect, which never throws' => ['Gate::forUser($user)->authorize(', 'Gate::forUser($user)->inspect('],
-    'plain Gate::authorize' => ['Gate::forUser($user)->authorize(', 'Gate::authorize('],
-    'validating first' => ['        Gate::forUser($user)', "        \$request->validate([]);\n        Gate::forUser(\$user)"],
-    'reading first' => ['        Gate::forUser($user)', "        \$invoices = Invoice::all();\n        Gate::forUser(\$user)"],
+    'no authorization' => ["        Gate::forUser(\$user)->authorize('viewAny', Invoice::class);\n\n", '', 'call Gate::forUser($user)->authorize() in handle(); Gate::inspect() never throws and a plain Gate::authorize() does not name the user'],
+    'Gate::inspect, which never throws' => ['Gate::forUser($user)->authorize(', 'Gate::forUser($user)->inspect(', 'call Gate::forUser($user)->authorize() in handle(); Gate::inspect() never throws and a plain Gate::authorize() does not name the user'],
+    'plain Gate::authorize' => ['Gate::forUser($user)->authorize(', 'Gate::authorize(', 'call Gate::forUser($user)->authorize() in handle(); Gate::inspect() never throws and a plain Gate::authorize() does not name the user'],
+    'validating first' => ['        Gate::forUser($user)', "        \$request->validate([]);\n        Gate::forUser(\$user)", 'authorize before anything else in handle(); only `$user = $request->user();` may come first'],
+    'reading first' => ['        Gate::forUser($user)', "        \$invoices = Invoice::all();\n        Gate::forUser(\$user)", 'authorize before anything else in handle(); only `$user = $request->user();` may come first'],
 ]);
-
 it('does not count a comment as authorization', function () {
     expect(violationsAfter("        Gate::forUser(\$user)->authorize('viewAny', Invoice::class);\n", "        // Gate::forUser(\$user)->authorize('viewAny', Invoice::class);\n"))
         ->toBe(['app/Mcp/Tools/Billing/ListInvoicesTool.php: call Gate::forUser($user)->authorize() in handle(); Gate::inspect() never throws and a plain Gate::authorize() does not name the user']);
