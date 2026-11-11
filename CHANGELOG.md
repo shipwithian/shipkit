@@ -2,7 +2,17 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
-## Unreleased
+## 5.1.0 (2026-11-11)
+
+Requires `shipwithian/shipkit-core` 5.1. [UPGRADE.md](packages/shipkit-core/UPGRADE.md#upgrading-to-51) says what to copy into a project created from 5.0.0.
+
+- **MCP hardening:** a self-registering AI client may redirect only to claude.ai, chatgpt.com, or localhost (`MCP_REDIRECT_DOMAINS` adds more; a `*` is ignored), and the consent screen shows where it will return the user. Before, 5.0.0 accepted any redirect, so any site could register as a trusted client and collect consent.
+- **Registration fails closed:** registering an AI client and limiting it to `mcp:use` is one transaction, rolled back on an error response, a missing client id, or a failure to limit it, so a client can never exist with unrestricted scopes.
+- **Confirmation:** a repeated confirmation that arrives while the first is running answers "still being processed", and the lock lasts at most two minutes instead of ten seconds. A call that carries a confirmation token always goes through the confirmation, so a replay returns the first result.
+- **`update_my_profile`:** it is marked destructive and confirms an email change, naming every change, before applying it. Its tool names, titles, and annotations are explicit.
+- **Channel in logs:** `UpdateProfileAction` takes the `Channel` and logs it, so a profile change records whether it came from the web, the API, or an AI client (with its name). `ShareChannel` shares only the trustworthy client id; `OAuthClientNameQuery` looks the self-declared name up for logs. The confirmation class moved to `App\Mcp\Support\ConsequentialActionConfirmation`.
+
+## 5.0.0 (2026-11-11)
 
 Requires `shipwithian/shipkit-core` 5.0. A major release because the API moves from Sanctum to Passport and existing tokens stop working. [UPGRADE.md](packages/shipkit-core/UPGRADE.md#upgrading-to-50) has the steps for a project created before 5.0.
 
@@ -12,10 +22,8 @@ Requires `shipwithian/shipkit-core` 5.0. A major release because the API moves f
 - **Revocation:** a password reset, on the web or the API, revokes every personal access token and every connected app's tokens; deleting an account deletes them.
 - **Setup:** `composer setup` and project creation generate Passport's keys, and a migration creates the personal access client.
 - **MCP server:** AI clients such as Claude Code, claude.ai, and ChatGPT connect at `/mcp`, discovering the app's sign-in, registering themselves (rate-limited and limited to the `mcp:use` scope), and approving on the consent screen. The first tools are `show_my_profile`, `update_my_profile`, and `list_roles`. Personal access tokens work on `/mcp` too. `laravel/mcp` ^1.2 is a direct dependency.
-- **Consequential tools:** a tool marked `#[IsDestructive]` returns a summary and a confirmation token first and acts only on the confirmed call, once per token (`App\Mcp\Support\ConsequentialActionConfirmation`). A broken business rule reaches the AI client as `field: message`.
+- **Consequential tools:** a tool marked `#[IsDestructive]` returns a summary and a confirmation token first and acts only on the confirmed call, once per token (`App\Mcp\Concerns\ConsequentialActionConfirmation`). A broken business rule reaches the AI client as `field: message`.
 - **Channel:** `ShareChannel` records whether a request came from the web, the API, or an AI client (with its name) in Laravel's `Context`.
-- **MCP hardening:** a self-registering AI client may redirect only to claude.ai, chatgpt.com, or localhost (`MCP_REDIRECT_DOMAINS` adds more), and the consent screen shows where it will return the user. Registration and the `mcp:use` limit are one transaction that is rolled back on any failure, a repeated confirmation that arrives while the first is running answers "still being processed" (the lock lasts at most two minutes), and `update_my_profile` is marked destructive and confirms an email change, naming every change, before applying it.
-- **Channel in logs:** `UpdateProfileAction` takes the `Channel` and logs it, so a profile change records whether it came from the web, the API, or an AI client (with its name). `ShareChannel` shares only the trustworthy client id; the name is looked up for logs by `OAuthClientNameQuery`.
 
 ## 4.0.0 (2026-11-07)
 
