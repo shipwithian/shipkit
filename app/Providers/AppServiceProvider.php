@@ -31,12 +31,20 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Throttle authenticated API requests that change state, per user.
+     * Throttle authenticated API requests that change state and MCP calls, per user, and AI client
+     * self-registration, per address.
      */
     protected function configureRateLimiting(): void
     {
         RateLimiter::for('api-write', fn (Request $request): Limit => Limit::perMinute(60)
             ->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        RateLimiter::for('mcp', fn (Request $request): Limit => Limit::perMinute(60)
+            ->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        RateLimiter::for('mcp-register', fn (Request $request): Limit => $request->isMethod('POST')
+            ? Limit::perMinute(10)->by($request->ip())
+            : Limit::none());
     }
 
     /**

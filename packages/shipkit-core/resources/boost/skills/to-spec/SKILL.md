@@ -59,6 +59,10 @@ Do NOT include specific file paths or code snippets. They may end up being outda
 
 Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it within the relevant decision and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
 
+## AI Client Access
+
+Whether users would act on this feature or ask about it through an AI client (Claude, ChatGPT, Codex) over MCP. Suggest the operations that would make good tools, mark which are consequential and so confirm before acting, or say in one line why none fit. The user decides; see `vendor/shipwithian/shipkit-core/resources/rules/mcp.md`.
+
 ## Testing Decisions
 
 A list of testing decisions that were made. Include:

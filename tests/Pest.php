@@ -7,7 +7,9 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\AccessControlSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
@@ -154,4 +156,58 @@ function connectedAppToken(User $user, ?OAuthClient $app = null): Token
     ]);
 
     return $token;
+}
+
+/**
+ * Tokens an app receives the real way: the user signs in, approves on the consent screen, and the
+ * app exchanges the code with its PKCE verifier.
+ *
+ * @return array{access_token: string, refresh_token: string}
+ */
+function tokensThroughConsent(User $user, OAuthClient $app, string $scope, string $redirectUri = 'https://partner.test/callback'): array
+{
+    $verifier = Str::random(64);
+    $authToken = null;
+
+    test()->actingAs($user)
+        ->get('/oauth/authorize?'.http_build_query([
+            'client_id' => (string) $app->getKey(),
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'scope' => $scope,
+            'state' => 'state-123',
+            'code_challenge' => strtr(rtrim(base64_encode(hash('sha256', $verifier, true)), '='), '+/', '-_'),
+            'code_challenge_method' => 'S256',
+        ]))
+        ->assertOk()
+        ->assertInertia(function (AssertableInertia $page) use (&$authToken): void {
+            $authToken = $page->toArray()['props']['authToken'];
+        });
+
+    $location = (string) test()->post('/oauth/authorize', [
+        'state' => 'state-123',
+        'client_id' => (string) $app->getKey(),
+        'auth_token' => $authToken,
+    ])->headers->get('Location');
+
+    parse_str((string) parse_url($location, PHP_URL_QUERY), $query);
+
+    Auth::forgetGuards();
+
+    /** @var array{access_token: string, refresh_token: string} */
+    return test()->postJson('/oauth/token', [
+        'grant_type' => 'authorization_code',
+        'client_id' => (string) $app->getKey(),
+        'redirect_uri' => $redirectUri,
+        'code_verifier' => $verifier,
+        'code' => $query['code'] ?? '',
+    ])->assertOk()->json();
+}
+
+/**
+ * An access token for an AI client the user connected, carrying only `mcp:use`.
+ */
+function connectedAppAccessToken(User $user, OAuthClient $app): string
+{
+    return tokensThroughConsent($user, $app, ApiScope::McpUse->value)['access_token'];
 }

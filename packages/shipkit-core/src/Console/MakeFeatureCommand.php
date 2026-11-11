@@ -9,7 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use ShipKit\Core\Architecture\ProjectLayout;
 
-#[Signature('make:feature {name : The feature name in StudlyCase, such as Billing}')]
+#[Signature('make:feature {name : The feature name in StudlyCase, such as Billing} {--mcp : Also create the MCP tool folder, app/Mcp/Tools/{Name}}')]
 #[Description('Scaffold a feature: its Actions, Queries, and feature test folders, its agent rule file, and its rules index row')]
 class MakeFeatureCommand extends Command
 {
@@ -48,6 +48,10 @@ class MakeFeatureCommand extends Command
             $this->ensureKeptDirectory($files, base_path("{$folder}/{$feature}"));
         }
 
+        if ($this->option('mcp')) {
+            $this->ensureKeptDirectory($files, base_path("app/Mcp/Tools/{$feature}"));
+        }
+
         $files->ensureDirectoryExists(base_path('.ai/rules/features'));
         $files->put(base_path(".ai/rules/features/{$slug}.md"), str_replace(
             ['{{ feature }}', '{{ title }}'],
@@ -63,6 +67,9 @@ class MakeFeatureCommand extends Command
             "Add writes as Actions in app/Actions/{$feature} and reads as Queries in app/Queries/{$feature}; list each one in the rule file.",
             'Put models in app/Models and guard their invariants with ensure...() methods called from guardCreate()/guardUpdate()/guardDelete(), using GuardsInvariants.',
             "Put web controllers and requests in app/Http/Controllers/{$feature} and app/Http/Requests/{$feature}.",
+            $this->option('mcp')
+                ? "Put MCP tools in app/Mcp/Tools/{$feature}, register them in the server, and follow the mcp rule."
+                : "If users would act on this feature through an AI client, rerun with --mcp, or create app/Mcp/Tools/{$feature} when you add its first tool.",
             'ShipKit\'s architecture checks already cover the new feature. Delete a folder\'s .gitkeep once it holds a class.',
         ]);
 

@@ -2,12 +2,14 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ShareChannel;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use ShipKit\Core\Channel;
 use ShipKit\Core\Exceptions\DomainException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -24,6 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            ShareChannel::class,
+        ]);
+
+        $middleware->api(append: [
+            ShareChannel::class.':'.Channel::API,
         ]);
 
     })

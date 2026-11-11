@@ -106,6 +106,24 @@ php artisan passport:client --public
 
 A password reset revokes every personal access token and every connected app's tokens, and deleting an account removes them.
 
+#### Connect an AI client
+
+ShipKit is an MCP server at `/mcp`. AI clients connect on their own: they find the app's sign-in through discovery, register themselves, open the consent screen, and keep refreshed tokens. Tools act as the signed-in user, through the same policies, Actions, and Queries as the web app.
+
+In Claude Code:
+
+```bash
+claude mcp add --transport http my-app https://my-app.example.com/mcp
+```
+
+```bash
+claude mcp login my-app
+```
+
+In claude.ai or ChatGPT, add `https://my-app.example.com/mcp` as a custom connector. A client without OAuth support can send a personal access token instead, as `Authorization: Bearer <token>`.
+
+The connected client then appears under Settings → Security → Connected apps, where the user can disconnect it. Its token works on `/mcp` only, never on `/api/v1`. The first tools are `show_my_profile`, `update_my_profile`, and `list_roles`; a feature adds its own in `app/Mcp/Tools/{Feature}`, following the `mcp` rule, and a tool that costs money or cannot be undone confirms with the user before acting.
+
 #### Passport keys
 
 Passport signs tokens with a key pair. `composer setup` and project creation run `php artisan passport:keys`, which writes `storage/oauth-private.key` and `storage/oauth-public.key` (both gitignored). In production, set `PASSPORT_PRIVATE_KEY` and `PASSPORT_PUBLIC_KEY` instead, or run `passport:keys` once on the server. Keep the same keys across deploys: new keys invalidate every issued token.

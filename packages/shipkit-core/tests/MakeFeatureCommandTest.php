@@ -63,6 +63,14 @@ it('scaffolds the Actions, Queries, and feature test folders and the rule file',
         ->not->toContain('{{');
 });
 
+it('creates the MCP tool folder only with --mcp', function () {
+    $this->artisan('make:feature', ['name' => 'Billing'])->assertSuccessful();
+    $this->artisan('make:feature', ['name' => 'Orders', '--mcp' => true])->assertSuccessful();
+
+    expect(is_dir($this->scratchPath.'/app/Mcp/Tools/Billing'))->toBeFalse()
+        ->and($this->scratchPath.'/app/Mcp/Tools/Orders/.gitkeep')->toBeFile();
+});
+
 it('adds the index row after the existing feature rows', function () {
     $this->artisan('make:feature', ['name' => 'Billing'])->assertSuccessful();
 

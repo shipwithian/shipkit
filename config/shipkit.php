@@ -39,6 +39,7 @@ return [
         'non_feature_folders' => [
             'app/Http/Controllers' => ['Api' => 'versioned API controllers, grouped by version'],
             'app/Http/Requests' => ['Api' => 'versioned API requests, grouped by version'],
+            'tests/Feature' => ['Mcp' => 'the MCP server as a whole: transport, rate limit, self-connect, and the confirmation pattern'],
         ],
         'protected_marker_exceptions' => [
             'tests/Feature/AccessControl/AccessControlInvariantsTest.php' => 'attempts to change the marker to prove the models refuse it',

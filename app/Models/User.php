@@ -50,6 +50,16 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     use Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
+     * The guard roles and permissions are stored on. Spatie would otherwise take the request's
+     * default guard, so an API or MCP request (the `api` guard) would see none of the user's
+     * permissions.
+     */
+    public function guardName(): string
+    {
+        return 'web';
+    }
+
+    /**
      * The column defaults, so a user created in memory reports the same values as one read back.
      *
      * @var array<string, mixed>

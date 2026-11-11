@@ -8,6 +8,7 @@ paths:
     - 'app/Models/RolePermission.php'
     - 'app/Policies/RolePolicy.php'
     - 'app/Policies/PermissionPolicy.php'
+    - 'app/Mcp/Tools/AccessControl/**'
 ---
 
 # Access Control
@@ -57,5 +58,6 @@ Use the fixed `web` guard for all roles and permissions.
 
 - Actions: `CreateRoleAction`, `UpdateRoleAction`, `DeleteRoleAction`, `CreatePermissionAction`, `UpdatePermissionAction`, `DeletePermissionAction`, `SyncRolePermissionsAction`, `SyncUserRolesAction`.
 - Queries: `RoleListQuery`, `PermissionListQuery`, `AssignablePermissionListQuery`, `UserRoleListQuery`.
+- MCP tools: `ListRolesTool` (`list_roles`, read-only, authorized by `RolePolicy::viewAny`).
 - Exceptions: `ProtectedRecordCannotBeChanged`, `RoleIsInUse`, `PermissionIsInUse`, `LastSuperAdminCannotBeRemoved`, `RoleExceedsActorPermissions`.
 - From `shipkit-core`, not this app: `BootstrapAccessControlAction`, `SystemRecordIsNotProtected`, `SystemPermission`, and `SystemRole` (`ShipKit\Core\AccessControl`). A change to them is a `shipkit-core` change, and a rename or retirement of an existing system record ships as a versioned data migration in `shipkit-core`.

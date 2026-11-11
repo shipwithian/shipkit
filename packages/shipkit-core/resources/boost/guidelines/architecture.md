@@ -20,6 +20,9 @@ app/
 ├── Models/                every Eloquent model, User included
 ├── Policies/              {Model}Policy, discovered by Laravel's naming convention
 ├── Exceptions/            {Model}CannotBeUpdated, one class per broken rule
+├── Mcp/
+│   ├── Servers/           the MCP server at /mcp
+│   └── Tools/{Feature}/   {Name}Tool, acting as the signed-in user
 ├── Notifications/, Concerns/, Providers/
 └── Http/
     ├── Controllers/       {Feature}/{Model}Controller, Api/V1/{Model}Controller
@@ -66,6 +69,10 @@ Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requ
 - Eloquent models own persistence, relationships, casts, scopes, small model-local behavior, and their `ensure...()` invariants.
 - Services are for logic shared across Actions, a named calculation, or an external capability. Avoid catch-all `{Model}Service` classes.
 - Events represent completed facts, such as `{Model}Created`. Do not hide workflow in observers; the one exception is a model's own guards.
+
+## AI clients
+
+The app is an MCP server at `/mcp`: AI clients connect through OAuth and call tools as the signed-in user. A tool is delivery code like a controller: it authorizes first, then calls one Query or Action, and a consequential tool confirms before acting. Details: `vendor/shipwithian/shipkit-core/resources/rules/mcp.md`. When planning a feature or a user-facing operation, suggest whether users would act on it or ask about it through an AI client, and which operations would be tools; the user decides.
 
 ## Testing and checks
 

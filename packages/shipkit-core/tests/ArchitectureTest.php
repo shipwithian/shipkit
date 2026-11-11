@@ -87,6 +87,12 @@ it('keeps each kind of class in its standard folder', function () {
     expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
 });
 
+it('follows the MCP tool conventions', function () {
+    $violations = ProjectLayout::current()->toolConventionViolations();
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
 it('authorizes policies through permissions, never role names', function () {
     $violations = [];
 

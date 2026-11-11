@@ -4,6 +4,7 @@ paths:
     - 'app/Queries/Settings/**'
     - 'app/Models/User.php'
     - 'app/Policies/UserPolicy.php'
+    - 'app/Mcp/Tools/Settings/**'
 ---
 
 # Settings
@@ -28,3 +29,4 @@ paths:
 
 - Actions: `UpdateProfileAction`, `UpdatePasswordAction`, `DeleteAccountAction`.
 - Queries: `PasskeyListQuery`.
+- MCP tools: `ShowMyProfileTool` (`show_my_profile`, read-only) and `UpdateMyProfileTool` (`update_my_profile`, idempotent; an email change marks the email unverified, as the web form does).
