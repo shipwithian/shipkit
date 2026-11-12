@@ -38,6 +38,7 @@ Compare the `v5.0.0` and `v5.1.0` tags, or copy these:
 - `app/Http/Middleware/LimitRegisteredClientsToMcp.php` (fails closed, acts only on registration), `ShareChannel`, the `Channel` binding in `AppServiceProvider`, `OAuthClientNameQuery`, and the `Channel` parameter of `UpdateProfileAction` with its callers.
 - `ConsequentialActionConfirmation` at `App\Mcp\Support`, with its separate token, lock, and result durations, and the `mcp.confirmation_lock_wait_seconds` setting.
 - `update_my_profile`'s confirmation of an email change.
+- From 5.1.1, `package.json`: `vite-plus` 1.6.0 clears eight Dependabot alerts in dev tooling. Set `"vite": "npm:@voidzero-dev/vite-plus-core@1.6.0"` in `dependencies`, add `"vite": "$vite"` and `"vitest": "5.1.0"` to `overrides`, set `"vite-plus": "1.6.0"`, and run `npm install`. Do not use `vp migrate`: it converts a project to pnpm.
 
 ## Upgrading to 5.0
 

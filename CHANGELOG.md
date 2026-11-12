@@ -2,6 +2,13 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
+## 5.1.1 (2026-11-12)
+
+Requires `shipwithian/shipkit-core` 5.1. No application code changes.
+
+- **Toolchain:** `vite-plus` moves from 0.3.0 to 1.6.0, which clears eight Dependabot alerts in dev tooling (the Vite dev server, `launch-editor`, and Vitest; one high). `vite-plus` 1.x needs the project's `vite` to be Vite+'s own build, so `package.json` aliases `vite` to `@voidzero-dev/vite-plus-core` and pins `vite` and `vitest` in `overrides`, as the package describes for npm. `vp migrate` is not used; it would convert the project to pnpm. [UPGRADE.md](packages/shipkit-core/UPGRADE.md#upgrading-to-51) says what to copy.
+- **Notes:** the 5.0.0 and 5.1.0 changelogs are dated, and `shipkit-core` ships its "Upgrading to 5.1" section, which the 5.1.0 package lacked because it was built before the notes reached `main`.
+
 ## 5.1.0 (2026-11-11)
 
 Requires `shipwithian/shipkit-core` 5.1. [UPGRADE.md](packages/shipkit-core/UPGRADE.md#upgrading-to-51) says what to copy into a project created from 5.0.0.
