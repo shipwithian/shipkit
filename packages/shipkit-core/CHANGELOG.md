@@ -2,6 +2,10 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
+## 5.1.1 (2026-11-12)
+
+A patch release with no change to the checks or the code. It ships the "Upgrading to 5.1" section of [UPGRADE.md](UPGRADE.md#upgrading-to-51) and the dated 5.0.0 and 5.1.0 notes, which the 5.1.0 package lacked: it was built before they reached `main`. UPGRADE.md also lists the template's `vite-plus` 1.6.0 change.
+
 ## 5.1.0 (2026-11-11)
 
 A minor release, although it makes the MCP tool checks stricter: they apply only to MCP tools, which no project had before 5.0.0 (released the same day), and ShipKit's own tools pass. A project that wrote tools against 5.0.0 follows [UPGRADE.md](UPGRADE.md#upgrading-to-51).
