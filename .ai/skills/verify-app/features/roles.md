@@ -10,20 +10,20 @@
 
 ## How to get to it (user POV)
 
-Sidebar → Roles (`/roles`), visible with `manage roles resource` or `assign permissions`. Each row's permissions action opens `/roles/{role}/permissions`.
+Settings → Roles (`/settings/roles`), visible with `manage roles resource` or `assign permissions`. Each row's permissions action opens `/settings/roles/{role}/permissions`.
 
 ## Driving it with drive.sh
 
 ```bash
 D=.ai/skills/verify-app/scripts/drive.sh
 $D login
-$D page /roles                                     # component roles/index; props.roles[].name
-$D send POST /roles '{"name":"editor"}'            # flash.toast.message "Role created."
-$D send POST /roles '{"name":""}'                  # props.errors.name
+$D page /settings/roles                                     # component roles/index; props.roles[].name
+$D send POST /settings/roles '{"name":"editor"}'            # flash.toast.message "Role created."
+$D send POST /settings/roles '{"name":""}'                  # props.errors.name
 ID=$(sqlite3 "$VERIFY_DIR/database.sqlite" "select id from roles where name='super-admin'")
-$D send PUT "/roles/$ID" '{"name":"renamed"}'      # props.errors.name "Protected roles cannot be renamed."
-$D send DELETE "/roles/$ID"                        # props.errors.role "Protected roles cannot be deleted."
-$D page "/roles/$ID/permissions"                   # props.permission_ids
+$D send PUT "/settings/roles/$ID" '{"name":"renamed"}'      # props.errors.name "Protected roles cannot be renamed."
+$D send DELETE "/settings/roles/$ID"                        # props.errors.role "Protected roles cannot be deleted."
+$D page "/settings/roles/$ID/permissions"                   # props.permission_ids
 ```
 
 Proof of a refusal: the error in `props.errors` **and** `sqlite3 "$VERIFY_DIR/database.sqlite" "select name from roles"` still showing the role.
