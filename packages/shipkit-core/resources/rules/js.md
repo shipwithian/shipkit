@@ -13,6 +13,16 @@ Show a control only when the page's props say the actor may use it: `can.create`
 
 The shared `auth` prop (`AuthProps`) holds the signed-in user, `null` for a guest, and `can`, the navigation abilities. A page a guest can reach handles `auth.user === null`; a page behind `auth` reads the user with `useAuthUser()`.
 
+## Build screens from shadcn/ui primitives
+
+Every control and data display comes from the shadcn/ui primitives in `resources/js/components/ui` (configured by `components.json`): `Button`, `Input`, `Label`, `Select`, `Textarea`, `Checkbox`, `RadioGroup`, `Table`, `Dialog`, and the rest. Never hand-build a `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` in a page, partial, or component; a hidden form field is the one exception, because it has no look.
+
+- When the primitive you need is missing, add it with the shadcn CLI, for example `npx shadcn@latest add table`, and commit the file it creates. Never write a look-alike by hand.
+- Adapt a primitive through its variants (`variant="ghost"`, `size="icon"`) and `className`, which `cn()` merges over its defaults. Never fork it inside a page.
+- Change a primitive itself in `components/ui` only for a change the whole app should share.
+
+`FrontendPrimitivesTest` in `shipkit-core` fails on a hand-built element outside `components/ui`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
+
 ## Organize pages by controller action
 
 A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it, in its feature's folder and never an audience's such as `pages/staff/` or `pages/admin/` (see the `routes` rule): `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
