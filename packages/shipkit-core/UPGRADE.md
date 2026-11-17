@@ -20,6 +20,38 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 5.2
+
+`shipkit-core` 5.2 adds commands and guidance; no check that passed on 5.1 can fail. `composer update shipwithian/shipkit-core` brings them. Then:
+
+1. **Install the agent definitions.** Run `php artisan shipkit:agents`, and add `"@php artisan shipkit:agents --ansi"` after `boost:update` in `post-update-cmd` (and in `setup` and `post-create-project-cmd`) in `composer.json`, so `composer update` keeps them current. It installs `shipkit-standards-reviewer`, `shipkit-spec-reviewer`, and `shipkit-explorer` into `.claude/agents` when `boost.json` lists Claude Code, and leaves your own agents alone. `review-diff` and `diagnosing-bugs` now spawn them, so their sub-agents run on a pinned model and effort instead of inheriting yours.
+2. **Name your integration branch.** Add the `workflow` and `agents` blocks to `config/shipkit.php` (copy them from the template's), and set `SHIPKIT_INTEGRATION_BRANCH` in `.env` when pull requests target `staging` rather than `main`.
+3. **Turn on "Automatically delete head branches"** in the GitHub repository's settings (General → Pull Requests), or run `gh api -X PATCH repos/{owner}/{repo} -F delete_branch_on_merge=true`. GitHub retargets a stacked pull request only when the branch below it is deleted.
+4. **Run `php artisan shipkit:doctor`.** It checks the GitHub setting, that the integration branch exists, and that the agent definitions are current. It needs `gh`, and skips with a warning where it cannot run, so keep it out of CI.
+5. **Optional:** copy `.github/workflows/pr-base.yml` from the template, which fails a pull request whose base branch was already merged. Set the `SHIPKIT_INTEGRATION_BRANCH` repository variable if it isn't `main`.
+
+To change a reviewer's model or effort, set it in `config/shipkit.php` (`'agents' => ['shipkit-standards-reviewer' => ['model' => 'sonnet', 'effort' => 'medium']]`) and run `shipkit:agents`; an edit to the installed file is overwritten on the next update. A user's own instructions about models still win over ShipKit's defaults.
+
+To make Claude Code refuse a sub-agent call that names neither a ShipKit agent nor a model and an effort, add this `PreToolUse` hook to your own `.claude/settings.json` (it needs `jq`). A hook that exits with code 2 blocks the call and shows the agent its message. ShipKit doesn't install it: Boost cannot sync hook settings, and agent settings are yours to own.
+
+```json
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Agent",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "jq -e '(.tool_input.subagent_type // \"\" | startswith(\"shipkit-\")) or ((.tool_input.model // \"\") != \"\" and (.tool_input.effort // \"\") != \"\")' > /dev/null || { echo 'Spawn a shipkit-* agent, or pass model and effort explicitly (see the subagents guideline).' >&2; exit 2; }"
+                    }
+                ]
+            }
+        ]
+    }
+}
+```
+
 ## Upgrading to 5.1
 
 `shipkit-core` 5.1 is a minor release: only a project that has MCP tools in `app/Mcp/Tools` can fail its checks, and only when a tool breaks a convention the 5.0.0 check did not yet enforce. A project without tools updates with `composer update shipwithian/shipkit-core` and nothing else. The template's own changes (below) are code you own, so `composer update` does not bring them.

@@ -100,3 +100,26 @@ it('fails when a mapped model does not use GuardsInvariants', function () {
         ->expectsOutputToContain(UnguardedVerifyRole::class)
         ->assertFailed();
 });
+
+it('fails when installed agent definitions are out of date', function () {
+    verifyInScratchProject([
+        'phpunit.xml' => phpunitXml(withShipKitSuite: true),
+        'config/shipkit.php' => '<?php return [];',
+        'boost.json' => '{"agents": ["claude_code"]}',
+        '.claude/agents/shipkit-explorer.md' => 'changed by hand',
+    ]);
+
+    $this->artisan('shipkit:verify')
+        ->expectsOutputToContain('shipkit:agents')
+        ->assertFailed();
+});
+
+it('does not look for agent definitions where none were installed, as in CI', function () {
+    verifyInScratchProject([
+        'phpunit.xml' => phpunitXml(withShipKitSuite: true),
+        'config/shipkit.php' => '<?php return [];',
+        'boost.json' => '{"agents": ["claude_code"]}',
+    ]);
+
+    $this->artisan('shipkit:verify')->assertSuccessful();
+});

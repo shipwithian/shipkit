@@ -31,6 +31,8 @@ Work ships on evidence, not on your summary. Collect all three items before you 
 
 ## Merge rule
 
+Open the pull request against the integration branch (`php artisan config:show shipkit.workflow.integration_branch`) and follow `vendor/shipwithian/shipkit-core/resources/rules/branches.md` for stacks. Before any merge, check the base with `gh pr view <n> --json baseRefName`: when it is not the integration branch and that branch's own pull request is already merged, retarget with `gh pr edit <n> --base <integration-branch>` and wait for the checks first. Merge with a merge commit and delete the head branch.
+
 An agent may merge a pull request on its own only when the user asked it to ship the work, all three items above are present, and the diff touches no maintainer-owned path. The maintainer-owned paths are the ones listed in the repository's CODEOWNERS file. Without one, use the list in the architecture guideline's agent workflow section. Compare `git diff --name-only <base>...HEAD` against that list.
 
 If the diff touches a maintainer-owned path, open the pull request with the evidence, request the maintainer's review, and stop. Never merge with an admin bypass, and never weaken, skip, or move a check to get a change merged.

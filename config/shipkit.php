@@ -24,6 +24,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Workflow
+    |--------------------------------------------------------------------------
+    |
+    | integration_branch: the branch every pull request targets, read by the `branches` rule, the
+    | skills that open and merge pull requests, and `shipkit:doctor`. Set it to `staging` when work
+    | collects there before a release to `main`.
+    |
+    */
+
+    'workflow' => [
+        'integration_branch' => env('SHIPKIT_INTEGRATION_BRANCH', 'main'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sub-agents
+    |--------------------------------------------------------------------------
+    |
+    | Overrides for the model and effort of ShipKit's Claude Code agents, keyed by agent name, which
+    | `php artisan shipkit:agents` applies when it installs them into .claude/agents. For example:
+    | 'shipkit-standards-reviewer' => ['model' => 'sonnet', 'effort' => 'medium'].
+    |
+    */
+
+    'agents' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Architecture exceptions
     |--------------------------------------------------------------------------
     |
