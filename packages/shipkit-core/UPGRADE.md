@@ -30,6 +30,10 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 4. **Run `php artisan shipkit:doctor`.** It checks the GitHub setting, that the integration branch exists, and that the agent definitions are current. It needs `gh`, and skips with a warning where it cannot run, so keep it out of CI.
 5. **Optional:** copy `.github/workflows/pr-base.yml` from the template, which fails a pull request whose base branch was already merged. Set the `SHIPKIT_INTEGRATION_BRANCH` repository variable if it isn't `main`.
 
+6. **Optional, from the template:** Settings → AI assistants and the public MCP server. Copy:
+    - for the page: `AiAssistantController`, `AiAssistantsEditProps`, `resources/js/pages/settings/ai-assistants.tsx`, its route in `routes/settings.php`, and its link in the settings layout, then drop `connectedApps` from the Security page and its props;
+    - for the public server: `app/Mcp/Servers/PublicServer.php`, `app/Mcp/Tools/AppInfo`, the `/mcp/public` route in `routes/ai.php`, the `mcp-public` rate limiter and the `viewAppInfo` ability in `AppServiceProvider`, and `public_description` in `config/mcp.php`.
+
 To change a reviewer's model or effort, set it in `config/shipkit.php` (`'agents' => ['shipkit-standards-reviewer' => ['model' => 'sonnet', 'effort' => 'medium']]`) and run `shipkit:agents`; an edit to the installed file is overwritten on the next update. A user's own instructions about models still win over ShipKit's defaults.
 
 To make Claude Code refuse a sub-agent call that names neither a ShipKit agent nor a model and an effort, add this `PreToolUse` hook to your own `.claude/settings.json` (it needs `jq`). A hook that exits with code 2 blocks the call and shows the agent its message. ShipKit doesn't install it: Boost cannot sync hook settings, and agent settings are yours to own.

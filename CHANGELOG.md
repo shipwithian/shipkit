@@ -5,6 +5,8 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 ## Unreleased
 
 - **Workflow:** `config/shipkit.php` names the integration branch (`workflow.integration_branch`, from `SHIPKIT_INTEGRATION_BRANCH`) and per-agent model overrides (`agents`). `composer update`, `setup`, and project creation run `shipkit:agents` after `boost:update`.
+- **Settings → AI assistants:** a new settings page shows the app's `/mcp` address with a copy button, short steps for Claude (claude.ai and Desktop, Claude Code) and ChatGPT, and the connected apps, which move here from Security. It asks for no password; personal access tokens stay on Security.
+- **Public MCP server:** `/mcp/public` (`App\Mcp\Servers\PublicServer`, marked `#[ForGuests]`) answers visitors who have not signed in, with read-only tools rate-limited to 30 calls a minute per address. Its first tool, `show_app_info`, returns the app's name, `MCP_PUBLIC_DESCRIPTION`, and the signed-in server's address. `/mcp` is unchanged.
 - **Pull request guard:** `.github/workflows/pr-base.yml` fails a pull request whose base branch was already merged, so a stacked pull request is retargeted before it merges into a leftover branch. It is not a required check.
 
 ## 5.1.1 (2026-11-12)

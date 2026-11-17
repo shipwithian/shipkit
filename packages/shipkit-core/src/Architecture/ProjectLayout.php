@@ -176,7 +176,8 @@ class ProjectLayout
      * snake_case `#[Name]`, a `#[Title]`, and `#[IsReadOnly]` or `#[IsDestructive]` explicitly (MCP
      * clients treat an unannotated tool as destructive), be registered in a server under
      * `app/Mcp/Servers`, authorize before anything else, reach no `DB` and query no model, declare an
-     * output schema, and, when destructive, confirm before acting.
+     * output schema, and, when destructive, confirm before acting. A tool registered in a server
+     * marked `#[ForGuests]` must be `#[IsReadOnly]`.
      *
      * The check does not see whether arguments use the shared validation rules, whether the result
      * lists its fields one by one, or whether a tool takes the acting user from its arguments; the
@@ -187,7 +188,16 @@ class ProjectLayout
     public function toolConventionViolations(): array
     {
         $violations = [];
-        $servers = implode("\n", array_map(fn (string $path): string => $this->withoutComments((string) file_get_contents($path)), $this->phpFiles('app/Mcp/Servers')));
+        $serverSources = array_map(fn (string $path): string => $this->withoutComments((string) file_get_contents($path)), $this->phpFiles('app/Mcp/Servers'));
+        $servers = implode("\n", $serverSources);
+        $guestTools = [];
+
+        foreach ($serverSources as $server) {
+            if (preg_match('/#\[ForGuests\b/', $server) && preg_match('/\$tools\s*=\s*\[(.*?)\]/s', $server, $list)) {
+                preg_match_all('/(\w+)::class/', $list[1], $registered);
+                $guestTools = [...$guestTools, ...$registered[1]];
+            }
+        }
 
         foreach ($this->phpFiles('app/Mcp/Tools') as $path) {
             $relative = substr($path, strlen($this->path()) + 1);
@@ -213,6 +223,10 @@ class ProjectLayout
 
             if (! preg_match('/#\[Is(?:ReadOnly|Destructive)\b/', $code)) {
                 $violations[] = "{$relative}: declare #[IsReadOnly] or #[IsDestructive(true|false)] explicitly; MCP clients treat a tool with neither as destructive";
+            }
+
+            if (in_array($class, $guestTools, true) && ! preg_match('/#\[IsReadOnly(?!\(\s*false)/', $code)) {
+                $violations[] = "{$relative}: {$class} is registered in a server marked #[ForGuests]; a tool for signed-out visitors must be #[IsReadOnly]";
             }
 
             if (! str_contains($servers, "{$class}::class")) {

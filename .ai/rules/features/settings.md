@@ -14,7 +14,7 @@ paths:
 - **Account**: the authenticated user's own `App\Models\User` record, managed through the settings pages.
 - **Protected account**: a user with `is_protected = true`, such as the seeded super admin.
 - **Passkey**: a WebAuthn credential registered to the account.
-- **API access**: the Security page also lists the account's personal access tokens and connected apps, read through Auth's Query objects and changed through Auth's Actions. `.ai/rules/features/auth.md` defines both.
+- **API access**: the Security page lists the account's personal access tokens, and the AI assistants page (`settings/ai-assistants`) shows how to connect an AI client and lists the connected apps. Both read through Auth's Query objects and change through Auth's Actions. `.ai/rules/features/auth.md` defines both.
 
 ## Invariants
 

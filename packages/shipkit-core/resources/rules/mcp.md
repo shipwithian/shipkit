@@ -18,7 +18,8 @@ An MCP tool lets an AI client (Claude, ChatGPT, Codex) act as the signed-in user
 - does not call `Gate::forUser($user)->authorize()` before anything but `$user = $request->user();`;
 - uses `DB`, or queries a model by import or by its full name;
 - declares no `outputSchema()`;
-- is `#[IsDestructive]` without type-hinting `ConsequentialActionConfirmation` and calling `confirmBeforeActing()`.
+- is `#[IsDestructive]` without type-hinting `ConsequentialActionConfirmation` and calling `confirmBeforeActing()`;
+- is registered in a server marked `#[ForGuests]` without being `#[IsReadOnly]`.
 
 It does not see these, so review them: validating with the shared rules and writing messages a client can act on, listing every result field one by one, using `ReportsDomainExceptions`, never taking the acting user from arguments, and an honest `#[IsIdempotent]`.
 
@@ -55,6 +56,10 @@ A tool need not confirm every call. When only some calls are consequential, such
 ## Record which client acted
 
 `App\Http\Middleware\ShareChannel` puts the request's `ShipKit\Core\Channel` into Laravel's `Context` (kind and OAuth client id), so every log line records where a change came from. A controller or tool type-hints `Channel` to receive it, with the client's name filled in, and passes it to the Action as an explicit parameter after the subject, as `UpdateProfileAction` does. The Action records it, in a log or on its own record; Actions never read the request or the context to find it. Trust the `client_id`, never the `client_name`: the name is whatever the client called itself when it registered.
+
+## Tools for signed-out visitors
+
+A server marked `#[ShipKit\Core\Mcp\ForGuests]` is for visitors who have not signed in, such as `App\Mcp\Servers\PublicServer` at `/mcp/public`. Its route has no authentication middleware and a per-address rate limit (`throttle:mcp-public`). Every tool it registers is `#[IsReadOnly]`. A guest tool still authorizes first, with `Gate::forUser($user)` where `$user` is null, against an ability whose closure or policy method takes `?User`. It returns only what anyone may read: public facts such as a menu or opening hours. Never return a user's data, other users' data, or anything an anonymous caller could use to enumerate accounts. Never register one tool in both a guest server and the signed-in server; give the guest version its own tool.
 
 ## Redirects and client identity
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\AiAssistantController;
 use App\Http\Controllers\Settings\ConnectedAppController;
 use App\Http\Controllers\Settings\PasskeyEndpointsController;
 use App\Http\Controllers\Settings\PersonalAccessTokenController;
@@ -34,6 +35,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->where('token', '[A-Za-z0-9]+')
         ->middleware('throttle:api-write')
         ->name('personal-access-tokens.destroy');
+
+    Route::get('settings/ai-assistants', [AiAssistantController::class, 'edit'])->name('ai-assistants.edit');
 
     Route::delete('settings/security/connected-apps/{client}', [ConnectedAppController::class, 'destroy'])
         ->whereUuid('client')
