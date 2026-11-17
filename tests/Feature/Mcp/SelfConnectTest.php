@@ -58,8 +58,7 @@ it('lists a self-registered AI client under connected apps only after the user a
     $claude = registerAiClient('Claude');
 
     $connectedApps = fn () => $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
-        ->get(route('security.edit'))
+        ->get(route('ai-assistants.edit'))
         ->inertiaProps('connectedApps');
 
     expect($connectedApps())->toBe([]);

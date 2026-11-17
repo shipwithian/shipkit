@@ -196,3 +196,29 @@ it('keeps tools in app/Mcp/Tools, grouped by feature, whatever their file is nam
         'app/Mcp/Tools/ListInvoicesTool.php: group it by feature, in app/Mcp/Tools/{Feature}',
     ]);
 });
+
+const GUEST_SERVER = "<?php\n\nuse ShipKit\\Core\\Mcp\\ForGuests;\n\n#[ForGuests]\nclass PublicServer { protected array \$tools = [ListInvoicesTool::class]; }\n";
+
+it('accepts a read-only tool in a server for guests', function () {
+    expect(violationsAfter('#[IsReadOnly]', '#[IsReadOnly]', GUEST_SERVER))->toBe([]);
+});
+
+it('fails on a tool in a server for guests that is not read-only', function (string $annotation) {
+    $source = str_replace(
+        ["#[IsReadOnly]\n", "    public function handle(Request \$request): Response\n", "        return Response::structured(['invoices' => []]);"],
+        ["{$annotation}\n", "    public function handle(Request \$request, ConsequentialActionConfirmation \$confirmation): Response\n", "        return \$confirmation->confirmBeforeActing(\$request, self::class, [], fn () => 'Pay', fn () => []);"],
+        VALID_TOOL,
+    );
+
+    expect(layoutOf(['app/Mcp/Tools/Billing/ListInvoicesTool.php' => $source], GUEST_SERVER)->toolConventionViolations())
+        ->toBe(['app/Mcp/Tools/Billing/ListInvoicesTool.php: ListInvoicesTool is registered in a server marked #[ForGuests]; a tool for signed-out visitors must be #[IsReadOnly]']);
+})->with([
+    'destructive' => ['#[IsDestructive]'],
+    'not destructive, but not read-only either' => ['#[IsDestructive(false)]'],
+]);
+
+it('does not count a commented-out marker as a server for guests', function () {
+    $server = str_replace('#[ForGuests]', '// #[ForGuests]', GUEST_SERVER);
+
+    expect(violationsAfter('#[IsReadOnly]', '#[IsDestructive(false)]', $server))->toBe([]);
+});

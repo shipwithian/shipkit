@@ -108,7 +108,9 @@ A password reset revokes every personal access token and every connected app's t
 
 #### Connect an AI client
 
-ShipKit is an MCP server at `/mcp`. AI clients connect on their own: they find the app's sign-in through discovery, register themselves, open the consent screen, and keep refreshed tokens. Tools act as the signed-in user, through the same policies, Actions, and Queries as the web app.
+ShipKit is an MCP server at `/mcp`. AI clients connect on their own: they find the app's sign-in through discovery, register themselves, open the consent screen, and keep refreshed tokens. Tools act as the signed-in user, through the same policies, Actions, and Queries as the web app. Users find the address and the steps for Claude and ChatGPT under Settings → AI assistants.
+
+Visitors without an account can connect `/mcp/public`, whose read-only tools answer questions about the app, starting with `show_app_info`. Describe the app for it in `MCP_PUBLIC_DESCRIPTION`. A server marked `#[ForGuests]` takes only read-only tools, which ShipKit's checks enforce.
 
 In Claude Code:
 
@@ -131,7 +133,7 @@ curl -X POST https://my-app.example.com/mcp \
 
 A client that registers itself may only redirect back to claude.ai, chatgpt.com, or localhost, so a look-alike site cannot register as a trusted client. To allow another client, add its origin to `MCP_REDIRECT_DOMAINS` (comma-separated, with scheme; a `*` is ignored, because it would let any site register as a trusted client), and for a desktop client with its own URL scheme, such as Cursor, add the scheme to `custom_schemes` in `config/mcp.php`.
 
-The connected client then appears under Settings → Security → Connected apps, where the user can disconnect it. Its token works on `/mcp` only, never on `/api/v1`. The first tools are `show_my_profile`, `update_my_profile`, and `list_roles`; a feature adds its own in `app/Mcp/Tools/{Feature}`, following the `mcp` rule, and a tool that costs money or cannot be undone confirms with the user before acting.
+The connected client then appears under Settings → AI assistants → Connected apps, where the user can disconnect it. Its token works on `/mcp` only, never on `/api/v1`. The first tools are `show_my_profile`, `update_my_profile`, and `list_roles`; a feature adds its own in `app/Mcp/Tools/{Feature}`, following the `mcp` rule, and a tool that costs money or cannot be undone confirms with the user before acting.
 
 #### Passport keys
 

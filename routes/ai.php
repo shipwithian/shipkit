@@ -5,6 +5,7 @@ use App\Http\Middleware\LimitRegisteredClientsToMcp;
 use App\Http\Middleware\RecordApiTokenUse;
 use App\Http\Middleware\ShareChannel;
 use App\Mcp\Servers\AppServer;
+use App\Mcp\Servers\PublicServer;
 use Illuminate\Support\Facades\Route;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Passport\Http\Middleware\CheckToken;
@@ -13,7 +14,8 @@ use ShipKit\Core\ChannelKind;
 /*
 | AI clients find the app's sign-in through discovery, register themselves (public, rate-limited,
 | and limited to `mcp:use`), and connect through the consent screen. Tools act as the signed-in
-| user, through the same policies, Actions, and Queries as the web app.
+| user, through the same policies, Actions, and Queries as the web app. `/mcp/public` needs no
+| account: its tools are read-only, return only public facts, and are rate-limited per address.
 */
 
 Route::middleware(['throttle:mcp-register', LimitRegisteredClientsToMcp::class])->group(function (): void {
@@ -27,3 +29,5 @@ Mcp::web('/mcp', AppServer::class)->middleware([
     RecordApiTokenUse::class,
     ShareChannel::class.':'.ChannelKind::Mcp->value,
 ]);
+
+Mcp::web('/mcp/public', PublicServer::class)->middleware(['throttle:mcp-public']);

@@ -1,5 +1,11 @@
 // Generated from app/Http/Props by `composer types:generate`. Do not edit.
 
+export type AiAssistantsEditProps = {
+    readonly serverName: string;
+    readonly mcpUrl: string;
+    readonly publicMcpUrl: string;
+    readonly connectedApps: ConnectedAppListItem[];
+};
 export type AssignablePermission = {
     readonly id: number;
     readonly name: string;
@@ -147,7 +153,6 @@ export type SecurityEditProps = {
     readonly passkeys: PasskeyListItem[];
     readonly passwordRules: string;
     readonly personalAccessTokens: PersonalAccessTokenListItem[];
-    readonly connectedApps: ConnectedAppListItem[];
 };
 export type SharedProps = {
     readonly name: string;

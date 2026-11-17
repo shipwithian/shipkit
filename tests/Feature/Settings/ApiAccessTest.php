@@ -95,6 +95,23 @@ describe('personal access tokens', function () {
     });
 });
 
+/**
+ * The AI assistants page as the user sees it.
+ */
+function aiAssistantsPage(User $user): Assert
+{
+    $page = null;
+
+    test()->actingAs($user)
+        ->get(route('ai-assistants.edit'))
+        ->assertOk()
+        ->assertInertia(function (Assert $assert) use (&$page): void {
+            $page = $assert;
+        });
+
+    return $page;
+}
+
 describe('connected apps', function () {
     it('lists only the apps the user approved', function () {
         $user = User::factory()->create();
@@ -103,7 +120,7 @@ describe('connected apps', function () {
         connectedAppToken(User::factory()->create(), oauthApp('Someone Else\'s App'));
         $user->createToken('Laptop', ['api']);
 
-        securityPage($user)
+        aiAssistantsPage($user)
             ->has('connectedApps', 1)
             ->where('connectedApps.0.name', 'Calendar Sync');
     });
@@ -122,7 +139,7 @@ describe('connected apps', function () {
             ->and($calendarToken->refreshToken->revoked)->toBeTrue()
             ->and($notesToken->refresh()->revoked)->toBeFalse();
 
-        securityPage($user)
+        aiAssistantsPage($user)
             ->has('connectedApps', 1)
             ->where('connectedApps.0.name', 'Notes');
     });

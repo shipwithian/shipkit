@@ -46,4 +46,16 @@ return [
 
     'confirmation_lock_wait_seconds' => 5,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Public Description
+    |--------------------------------------------------------------------------
+    |
+    | What the app is, in a sentence or two, which the public server's show_app_info tool tells
+    | visitors who have not signed in. Only put what anyone may read here.
+    |
+    */
+
+    'public_description' => env('MCP_PUBLIC_DESCRIPTION'),
+
 ];
