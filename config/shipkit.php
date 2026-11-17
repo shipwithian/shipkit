@@ -75,6 +75,8 @@ return [
             'tests/Feature/AccessControl/AccessControlInvariantsTest.php' => 'attempts to change the marker to prove the models refuse it',
         ],
         'long_frontend_files' => [],
+        'audience_words' => [],
+        'audience_exceptions' => [],
     ],
 
     /*

@@ -59,6 +59,7 @@ Cascades, row locks, and the full pattern: `vendor/shipwithian/shipkit-core/reso
 - Controllers coordinate HTTP: `Gate::authorize()` as the first statement, then one Action for a write or one Query object for a read, then the response. They do not query models or use `DB`. Route model binding does not replace authorization.
 - Form Requests validate and normalize input only. They never authorize.
 - Routes apply authentication, verification, and throttling, never permission middleware.
+- URLs, route names, and page folders are named after the feature and resource, never the role that uses them: `/orders` and `pages/orders/`, not `/staff/orders` or `pages/admin/`. Who may open a page is its policy's decision, and whether a link shows is the abilities' decision.
 - API resources and Inertia props list every exposed field and never a secret. Inertia props are typed PHP classes in `app/Http/Props`, and the frontend imports the TypeScript types `composer types:generate` produces from them; payload types are generated, never hand-written.
 
 Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requests.md`, `routes.md`, `policies.md`, `responses.md`.

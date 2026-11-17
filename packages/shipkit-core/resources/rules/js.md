@@ -15,7 +15,7 @@ The shared `auth` prop (`AuthProps`) holds the signed-in user, `null` for a gues
 
 ## Organize pages by controller action
 
-A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it: `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
+A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it, in its feature's folder and never an audience's such as `pages/staff/` or `pages/admin/` (see the `routes` rule): `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
 
 ## Keep files short by splitting them as they grow
 
