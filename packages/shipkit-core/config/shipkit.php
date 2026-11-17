@@ -35,6 +35,12 @@ return [
     | protected_marker_exceptions: files allowed to write is_protected, keyed by path, such as a test
     | that proves the marker cannot change. Application code never belongs here.
     |
+    | audience_words: the project's own role names, such as barista, that AudienceNamingTest also
+    | refuses in a route's path or name and in a page folder, besides admin, staff, manager, and the like.
+    |
+    | audience_exceptions: route paths or page folders that are a resource rather than an audience,
+    | keyed by path, with the reason, such as 'staff' in an HR app whose staff members are the records.
+    |
     | long_frontend_files: files under resources/js allowed past FrontendFileLengthTest's limit
     | (200 lines for a page, 400 for any other file), keyed by path, with the reason.
     |
@@ -91,6 +97,8 @@ return [
         'non_feature_folders' => [],
         'protected_marker_exceptions' => [],
         'long_frontend_files' => [],
+        'audience_words' => [],
+        'audience_exceptions' => [],
     ],
 
     /*

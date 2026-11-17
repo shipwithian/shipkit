@@ -35,6 +35,12 @@ To move to two branches, so that merging a pull request stops deploying:
 
 The template README's "Branches and deploys" section has the daily commands, the release, and the hotfix path.
 
+### Routes named after a role
+
+- **Fails:** `AudienceNamingTest`, with a message such as `staff/orders: the path names an audience ("staff")`.
+- **Fix:** move the route to its resource's path and name (`/orders`, `orders.index`) and its pages to the feature's folder (`pages/orders/`). Keep the policy check in the controller, and show the link by ability. If two audiences see different lists, scope the list in its Query to the actor. If the path really is a resource, such as `staff` in an HR app, record it in `shipkit.architecture.audience_exceptions` with the reason.
+- **Why:** a role in the URL protects nothing and splits one resource across several URLs. The policy and the abilities already decide who sees what.
+
 To stay on one branch, change nothing. If you copy the new `pr-base.yml`, also run `gh variable set SHIPKIT_INTEGRATION_BRANCH --body main`, because the workflow now expects `staging` by default.
 
 ## Upgrading to 5.2
