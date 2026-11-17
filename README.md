@@ -141,7 +141,7 @@ Passport signs tokens with a key pair. `composer setup` and project creation run
 
 ### Roles and permissions
 
-Authorization is powered by Spatie Laravel Permission and currently includes:
+Authorization is powered by Spatie Laravel Permission. Its pages live in Settings (`/settings/users`, `/settings/roles`, `/settings/permissions`), each shown only to who may open it, so the main sidebar stays free for the app's own work. It currently includes:
 
 - A protected, environment-configured Super Admin account
 - Protected system roles and permissions

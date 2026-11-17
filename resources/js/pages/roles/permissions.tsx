@@ -33,7 +33,7 @@ export default function RolePermissions({
         <>
             <Head title={`${role.name} permissions`} />
 
-            <div className="flex flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-col gap-6">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                     <Heading
                         title={`${role.name} permissions`}
