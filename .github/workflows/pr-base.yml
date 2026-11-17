@@ -1,16 +1,23 @@
 name: pull request base
 
-# Fails a pull request whose base is a branch that was already merged: GitHub retargets a stacked
-# pull request only when the merged branch is deleted, so merging it would land the work on a
-# leftover branch instead of the integration branch. See the `branches` rule in shipkit-core.
-# The integration branch comes from the SHIPKIT_INTEGRATION_BRANCH repository variable (main by default).
-# A pull request into main always passes, so the release pull request from a staging branch is allowed.
+# Keeps pull requests on the right branch. See the `branches` rule in shipkit-core.
+#
+# - Work targets the integration branch: the SHIPKIT_INTEGRATION_BRANCH repository variable,
+#   `staging` by default. Set the variable to `main` in a project that works on one branch.
+# - Only the release (from the integration branch) and a `hotfix/*` branch may target `main`,
+#   because a merge into `main` deploys.
+# - A pull request stacked on a branch that was already merged fails: GitHub retargets it only
+#   when the merged branch is deleted, so merging it would land the work on a leftover branch.
+#
+# Until the integration branch exists (`php artisan shipkit:doctor --fix` creates it), pull
+# requests into `main` pass with a notice.
 
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
 
 permissions:
+  contents: read
   pull-requests: read
 
 jobs:
@@ -18,17 +25,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check the base branch is still live
+      - name: Check the base branch
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           NUMBER: ${{ github.event.pull_request.number }}
           BASE: ${{ github.event.pull_request.base.ref }}
-          INTEGRATION: ${{ vars.SHIPKIT_INTEGRATION_BRANCH || 'main' }}
+          HEAD: ${{ github.event.pull_request.head.ref }}
+          INTEGRATION: ${{ vars.SHIPKIT_INTEGRATION_BRANCH || 'staging' }}
         run: |
-          if [ "$BASE" = "$INTEGRATION" ] || [ "$BASE" = "main" ]; then
-            echo "Targets $BASE."
+          if [ "$BASE" = "$INTEGRATION" ]; then
+            echo "Targets the integration branch, $INTEGRATION."
             exit 0
+          fi
+
+          if [ "$BASE" = "main" ]; then
+            if [ "$HEAD" = "$INTEGRATION" ]; then
+              echo "The release: $INTEGRATION into main."
+              exit 0
+            fi
+
+            case "$HEAD" in
+              hotfix/*)
+                echo "A hotfix into main. Bring it back with a pull request from main into $INTEGRATION afterwards."
+                exit 0
+                ;;
+            esac
+
+            if ! gh api "repos/$REPOSITORY/branches/$INTEGRATION" --silent 2>/dev/null; then
+              echo "::notice::The integration branch $INTEGRATION does not exist yet, so this pull request into main is allowed. Run: php artisan shipkit:doctor --fix"
+              exit 0
+            fi
+
+            echo "::error::Pull requests target $INTEGRATION; only the release and hotfix/* branches target main. Retarget this one: gh pr edit $NUMBER --base $INTEGRATION"
+            exit 1
           fi
 
           open=$(gh pr list --repo "$REPOSITORY" --head "$BASE" --state open --json number --jq 'length')

@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+- **Commands:** `shipkit:doctor` also fails when the integration branch is not GitHub's default branch (checked only when it is not `main`). `shipkit:doctor --fix` sets a project up: it installs the agent definitions, and, after listing the changes and asking (`--force` without a prompt), creates the integration branch from `main`, makes it the default branch, and turns on the deletion of merged branches.
+- **Guidance:** the `branches` rule covers the release (one pull request from the integration branch into `main`, merged with a merge commit, by the maintainer) and the hotfix path. The architecture guideline, which every session loads, gains a "Branches" paragraph, and a pull request into `main` is maintainer-owned when the integration branch is another branch. `implement`, `review-diff`, `to-tickets`, and `diagnosing-bugs` name the integration branch. `shipkit-core`'s own default stays `main`, so a project that never set the key is unaffected.
+
+## 5.2.0 (2026-11-17)
+
+A minor release: it adds commands, guidance, and one check that applies only to a server marked `#[ForGuests]`, which no project had. [UPGRADE.md](UPGRADE.md#upgrading-to-52) has the steps.
+
 - **Workflow:** a new `branches` rule. Every pull request targets the integration branch (`shipkit.workflow.integration_branch`, `main` by default, from `SHIPKIT_INTEGRATION_BRANCH`). Stack a pull request only on a real dependency, and merge a stack bottom-up with merge commits. Retarget a pull request whose base was already merged before merging it, and delete merged branches. The `implement` skill's merge rule applies it.
 - **Commands:** `shipkit:doctor` checks that GitHub deletes merged branches, that the integration branch exists, and that the agent definitions are current. It skips with a warning where `gh`, a GitHub remote, or the network is missing, so it never fails offline CI.
 - **MCP:** `ShipKit\Core\Mcp\ForGuests` marks a server for signed-out visitors, and "follows the MCP tool conventions" fails on a tool registered in one without `#[IsReadOnly]`. It applies only to servers with the marker, so no existing project can fail it. The `mcp` rule covers what a guest tool may return.

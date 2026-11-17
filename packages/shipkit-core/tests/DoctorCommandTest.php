@@ -62,6 +62,7 @@ afterEach(function () {
 });
 
 beforeEach(function () {
+    Process::preventStrayProcesses();
     doctorInScratchProject(['codex']);
     ghInstalled(true);
     config(['shipkit.workflow.integration_branch' => 'main']);
@@ -89,7 +90,10 @@ it('fails with the fix when GitHub keeps merged branches', function () {
 
 it('fails when the integration branch does not exist on GitHub', function () {
     config(['shipkit.workflow.integration_branch' => 'staging']);
-    fakeGitHub(['gh api repos/acme/cafe/branches/staging --jq .name' => Process::result('', 'gh: Branch not found (HTTP 404)', 1)]);
+    fakeGitHub([
+        'gh api repos/acme/cafe/branches/staging --jq .name' => Process::result('', 'gh: Branch not found (HTTP 404)', 1),
+        'gh api repos/acme/cafe --jq .default_branch' => Process::result("staging\n"),
+    ]);
 
     $this->artisan('shipkit:doctor')
         ->expectsOutputToContain('staging')
@@ -167,4 +171,159 @@ it('still checks the agent definitions when GitHub is skipped', function () {
         ->expectsOutputToContain('gh is not installed')
         ->expectsOutputToContain('php artisan shipkit:agents')
         ->assertFailed();
+});
+
+/**
+ * Fake a project on GitHub that works on `staging`, with every setting in place unless overridden.
+ *
+ * @param  array<string, FakeProcessResult>  $overrides
+ */
+function fakeGitHubOnStaging(array $overrides = []): void
+{
+    config(['shipkit.workflow.integration_branch' => 'staging']);
+
+    fakeGitHub([
+        'gh api repos/acme/cafe/branches/staging --jq .name' => Process::result("staging\n"),
+        'gh api repos/acme/cafe --jq .default_branch' => Process::result("staging\n"),
+        ...$overrides,
+    ]);
+}
+
+/**
+ * A repository as GitHub creates it: only `main`, which is the default, and merged branches kept.
+ *
+ * @param  array<string, FakeProcessResult>  $overrides
+ */
+function fakeFreshGitHubRepository(array $overrides = []): void
+{
+    fakeGitHubOnStaging([
+        'gh api repos/acme/cafe/branches/staging --jq .name' => Process::result('', 'gh: Branch not found (HTTP 404)', 1),
+        'gh api repos/acme/cafe --jq .default_branch' => Process::result("main\n"),
+        'gh api repos/acme/cafe --jq .delete_branch_on_merge' => Process::result("false\n"),
+        'gh api repos/acme/cafe/git/ref/heads/main --jq .object.sha' => Process::result("abc123\n"),
+        'gh api repos/acme/cafe/git/refs -f ref=refs/heads/staging -f sha=abc123 --silent' => Process::result(),
+        'gh api -X PATCH repos/acme/cafe -f default_branch=staging --silent' => Process::result(),
+        'gh api -X PATCH repos/acme/cafe -F delete_branch_on_merge=true --silent' => Process::result(),
+        ...$overrides,
+    ]);
+}
+
+const FIX_COMMANDS = [
+    'gh api repos/acme/cafe/git/refs -f ref=refs/heads/staging -f sha=abc123 --silent',
+    'gh api -X PATCH repos/acme/cafe -f default_branch=staging --silent',
+    'gh api -X PATCH repos/acme/cafe -F delete_branch_on_merge=true --silent',
+];
+
+it('passes for a project on staging when it is the default branch', function () {
+    fakeGitHubOnStaging();
+
+    $this->artisan('shipkit:doctor')
+        ->expectsOutputToContain('pull requests target `staging`')
+        ->assertSuccessful();
+});
+
+it('fails when the integration branch is not GitHub\'s default branch', function () {
+    fakeGitHubOnStaging(['gh api repos/acme/cafe --jq .default_branch' => Process::result("main\n")]);
+
+    $this->artisan('shipkit:doctor')
+        ->expectsOutputToContain('default branch is `main`')
+        ->expectsOutputToContain('php artisan shipkit:doctor --fix')
+        ->assertFailed();
+});
+
+it('does not ask for the default branch of a project that works on main', function () {
+    fakeGitHub();
+
+    $this->artisan('shipkit:doctor')->assertSuccessful();
+
+    Process::assertNotRan('gh api repos/acme/cafe --jq .default_branch');
+});
+
+it('sets up a fresh repository with --fix, after confirmation', function () {
+    fakeFreshGitHubRepository();
+
+    $this->artisan('shipkit:doctor --fix')
+        ->expectsOutputToContain('Create the `staging` branch from `main`')
+        ->expectsOutputToContain('Make `staging` the default branch')
+        ->expectsOutputToContain('Delete branches automatically after they merge')
+        ->expectsConfirmation('Make these changes to acme/cafe?', 'yes')
+        ->expectsOutputToContain('set the production environment\'s branch to main')
+        ->assertSuccessful();
+
+    foreach (FIX_COMMANDS as $command) {
+        Process::assertRan($command);
+    }
+});
+
+it('changes nothing when the confirmation is declined', function () {
+    fakeFreshGitHubRepository();
+
+    $this->artisan('shipkit:doctor --fix')
+        ->expectsConfirmation('Make these changes to acme/cafe?', 'no')
+        ->assertFailed();
+
+    foreach (FIX_COMMANDS as $command) {
+        Process::assertNotRan($command);
+    }
+});
+
+it('needs --force to fix without a prompt', function () {
+    fakeFreshGitHubRepository();
+
+    $this->artisan('shipkit:doctor --fix --no-interaction')
+        ->expectsOutputToContain('--force')
+        ->assertFailed();
+
+    foreach (FIX_COMMANDS as $command) {
+        Process::assertNotRan($command);
+    }
+
+    $this->artisan('shipkit:doctor --fix --force --no-interaction')->assertSuccessful();
+
+    foreach (FIX_COMMANDS as $command) {
+        Process::assertRan($command);
+    }
+});
+
+it('fixes only what is wrong', function () {
+    fakeGitHubOnStaging(['gh api repos/acme/cafe --jq .default_branch' => Process::result("main\n"),
+        'gh api -X PATCH repos/acme/cafe -f default_branch=staging --silent' => Process::result()]);
+
+    $this->artisan('shipkit:doctor --fix')
+        ->expectsConfirmation('Make these changes to acme/cafe?', 'yes')
+        ->assertSuccessful();
+
+    Process::assertRan('gh api -X PATCH repos/acme/cafe -f default_branch=staging --silent');
+    Process::assertNotRan('gh api -X PATCH repos/acme/cafe -F delete_branch_on_merge=true --silent');
+});
+
+it('reports a change GitHub refuses and stays failed', function () {
+    fakeFreshGitHubRepository(['gh api -X PATCH repos/acme/cafe -f default_branch=staging --silent' => Process::result('', 'gh: Must have admin rights to Repository. (HTTP 403)', 1)]);
+
+    $this->artisan('shipkit:doctor --fix')
+        ->expectsConfirmation('Make these changes to acme/cafe?', 'yes')
+        ->expectsOutputToContain('Must have admin rights')
+        ->assertFailed();
+
+    Process::assertRan('gh api -X PATCH repos/acme/cafe -F delete_branch_on_merge=true --silent');
+});
+
+it('says so when --fix finds nothing to change', function () {
+    fakeGitHubOnStaging();
+
+    $this->artisan('shipkit:doctor --fix')
+        ->expectsOutputToContain('Nothing to fix')
+        ->assertSuccessful();
+});
+
+it('installs the agent definitions with --fix, without asking, even when GitHub is skipped', function () {
+    $basePath = doctorInScratchProject(['claude_code']);
+    ghInstalled(false);
+    fakeGitHub();
+
+    $this->artisan('shipkit:doctor --fix')
+        ->expectsOutputToContain('Installed ShipKit\'s agent definitions')
+        ->assertSuccessful();
+
+    expect(File::exists("{$basePath}/.claude/agents/shipkit-explorer.md"))->toBeTrue();
 });

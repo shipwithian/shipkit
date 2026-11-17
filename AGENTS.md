@@ -298,16 +298,21 @@ ShipKit's path rules ship with `shipkit-core` in `vendor/shipwithian/shipkit-cor
 - **Shaping a feature's language:** `domain-modeling` or `grill-with-docs`.
 - **After a session, or when the same correction repeats:** `retro` and `correct`. `.ai/rules/enforcement.md` pairs every rule with the check that enforces it; prefer adding a check over adding a rule.
 
+### Branches
+
+Run `php artisan config:show shipkit.workflow.integration_branch` to find the integration branch, `staging` unless the project works on `main` alone. Start every branch from it and open every pull request against it. Never open a pull request into `main`, except the release from the integration branch or a `hotfix/*` branch the maintainer agreed to, and never merge either: merging into `main` deploys. Stacks, retargeting, the release, and hotfixes: `vendor/shipwithian/shipkit-core/resources/rules/branches.md`.
+
 ### What agents may merge
 
-Agents may merge project-owned feature code alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code.
+Agents may merge project-owned feature code into the integration branch alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code.
 
 A change to the checks themselves needs the maintainer. The repository's CODEOWNERS file lists those paths, and branch protection requires the maintainer's review on them. Without a CODEOWNERS file, these are maintainer-owned:
 
 - the `shipkit-core` version, and `config/shipkit.php`, where check exceptions are recorded;
 - agent guidance (`.ai/`, `boost.json`, and the `CLAUDE.md` and `AGENTS.md` compiled from them);
 - CI workflows, and the configuration of every check (PHPUnit, PHPStan, Rector, Pint, TypeScript, Vite, and the Composer and npm scripts);
-- the guarded models of protected records, and the tests that enforce a rule in `.ai/rules/enforcement.md`.
+- the guarded models of protected records, and the tests that enforce a rule in `.ai/rules/enforcement.md`;
+- every pull request into `main` when the integration branch is another branch: the release and hotfixes.
 
 Never weaken, skip, or work around a check to get a change merged.
 
