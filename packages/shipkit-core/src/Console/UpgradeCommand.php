@@ -19,8 +19,9 @@ use ShipKit\Core\Upgrade\TemplateVersion;
 #[Signature('shipkit:upgrade
     {--from= : The template version the project is on, when shipkit.json does not record it}
     {--to= : The template version to move to; the installed shipkit-core version by default}
-    {--source= : Where to fetch the template from; ShipKit on GitHub unless shipkit.json names another}')]
-#[Description('Show what moving the project\'s template files to a newer ShipKit release would change')]
+    {--source= : Where to fetch the template from; ShipKit on GitHub unless shipkit.json names another}
+    {--apply : Make the changes, instead of only showing them}')]
+#[Description('Show, and with --apply make, the changes that move the project\'s template files to a newer ShipKit release')]
 class UpgradeCommand extends Command
 {
     public function handle(TemplateVersion $template, TemplateUpgrade $upgrade): int
@@ -38,7 +39,8 @@ class UpgradeCommand extends Command
                 throw new RuntimeException('The installed shipkit-core has no release version. Pass the template version to move to, such as --to=5.3.0.');
             }
 
-            $plan = $upgrade->plan($from, $to, $source, $template->excluded());
+            $apply = (bool) $this->option('apply');
+            $plan = $upgrade->plan($from, $to, $source, $template->excluded(), $apply);
         } catch (RuntimeException|InvalidArgumentException $exception) {
             $this->components->error($exception->getMessage());
 
@@ -53,9 +55,40 @@ class UpgradeCommand extends Command
         }
 
         $this->newLine();
-        $this->components->info('Nothing was changed.');
+
+        if (! $apply) {
+            $this->components->info('Nothing was changed. Run again with --apply to make these changes.');
+
+            return self::SUCCESS;
+        }
+
+        $template->stamp($to);
+        $this->finish($to, $plan);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @param  array<string, FileChange>  $plan
+     */
+    private function finish(string $to, array $plan): void
+    {
+        $conflicts = array_keys(array_filter($plan, fn (FileChange $change): bool => $change === FileChange::Conflicts));
+
+        $this->components->info("Moved the template files to {$to} and recorded it in ".TemplateVersion::FILE.'. Nothing was staged or committed; `git diff` shows every change.');
+
+        if ($conflicts !== []) {
+            $this->components->warn('Resolve these files by hand. A text file has Git\'s conflict markers; a binary file, or one the template removed, kept your version, so compare it with the release:');
+            $this->components->bulletList($conflicts);
+        }
+
+        $this->components->info('Then:');
+        $this->components->bulletList([
+            'composer update, then npm install, to bring the dependencies the new composer.json and package.json ask for',
+            'php artisan migrate, for any new migrations',
+            'Follow the upgrade notes above for what files cannot carry: keys, environment variables, data',
+            'composer ci:check',
+        ]);
     }
 
     /**

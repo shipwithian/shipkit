@@ -14,6 +14,9 @@ use RuntimeException;
  * project's own repository, and always removes them again. Only files the template ships to new
  * projects count (what `git archive` of the tag holds, so the template's export rules apply), and
  * lock files, `shipkit.json`, and the project's excluded paths are left out.
+ *
+ * Applying writes the result into the working tree and nothing else: it never stages, commits, or
+ * touches a file the plan does not name.
  */
 class TemplateUpgrade
 {
@@ -28,18 +31,28 @@ class TemplateUpgrade
     public const array ALWAYS_EXCLUDED = ['composer.lock', 'package-lock.json', TemplateVersion::FILE];
 
     /**
+     * What the upgrade does to each changed template file, and with `$apply`, does it.
+     *
      * @param  list<string>  $excluded
      * @return array<string, FileChange> keyed by path, sorted
      *
      * @throws RuntimeException when the upgrade cannot run; nothing has changed
      */
-    public function plan(string $from, string $to, string $source, array $excluded = []): array
+    public function plan(string $from, string $to, string $source, array $excluded = [], bool $apply = false): array
     {
         $this->ensureCanRun($from, $to);
         $this->fetch($from, $to, $source);
 
         try {
-            return $this->classify([...self::ALWAYS_EXCLUDED, ...$excluded]);
+            $plan = $this->classify([...self::ALWAYS_EXCLUDED, ...$excluded]);
+
+            if ($apply) {
+                foreach ($plan as $path => $change) {
+                    $this->write($path, $change);
+                }
+            }
+
+            return $plan;
         } finally {
             $this->cleanUp();
         }
@@ -69,7 +82,7 @@ class TemplateUpgrade
             }
         }
 
-        uksort($notes, version_compare(...));
+        uksort($notes, fn (string $first, string $second): int => version_compare($first, $second));
 
         return array_values($notes);
     }
@@ -187,6 +200,63 @@ class TemplateUpgrade
         }
 
         return $this->merge($ours, $base, $theirs)['conflicts'] === 0 ? FileChange::MergesCleanly : FileChange::Conflicts;
+    }
+
+    /**
+     * Bring one file to what the plan says. A conflict keeps the project's version of a binary
+     * file and of a file the template removed, and writes Git's conflict markers into a text file.
+     */
+    private function write(string $path, FileChange $change): void
+    {
+        $file = base_path($path);
+        $ours = $this->ours($path);
+        $removedByTemplate = ! $this->existsIn(self::TO_REF, $path);
+
+        match ($change) {
+            FileChange::Updates, FileChange::New => $this->writeFromTemplate($path),
+            FileChange::MergesCleanly => file_put_contents($file, $this->merge((string) $ours, $this->blob(self::FROM_REF, $path), $this->blob(self::TO_REF, $path))['contents']),
+            FileChange::Removed => @unlink($file),
+            FileChange::Conflicts => $removedByTemplate || $this->isBinary($path)
+                ? null
+                : file_put_contents($file, $this->merge((string) $ours, $this->existsIn(self::FROM_REF, $path) ? $this->blob(self::FROM_REF, $path) : '', $this->blob(self::TO_REF, $path))['contents']),
+            FileChange::DeletedInProject, FileChange::AlreadyApplied => null,
+        };
+    }
+
+    /**
+     * Write the new release's version of a file, with its mode: executable, or a symbolic link.
+     */
+    private function writeFromTemplate(string $path): void
+    {
+        $file = base_path($path);
+        $mode = substr($this->git('ls-tree '.self::TO_REF.' -- '.escapeshellarg($path))->output(), 0, 6);
+
+        if (! is_dir(dirname($file))) {
+            mkdir(dirname($file), 0755, true);
+        }
+
+        if (is_link($file) || is_file($file)) {
+            unlink($file);
+        }
+
+        if ($mode === '120000') {
+            symlink($this->blob(self::TO_REF, $path), $file);
+
+            return;
+        }
+
+        file_put_contents($file, $this->blob(self::TO_REF, $path));
+        chmod($file, $mode === '100755' ? 0755 : 0644);
+    }
+
+    private function existsIn(string $ref, string $path): bool
+    {
+        return trim($this->git('ls-tree '.$ref.' -- '.escapeshellarg($path))->output()) !== '';
+    }
+
+    private function isBinary(string $path): bool
+    {
+        return isset($this->binaryChanges()[$path]) || str_contains((string) $this->ours($path), "\0");
     }
 
     /**

@@ -675,7 +675,19 @@ composer ci:check
 
 `composer update` also runs `php artisan boost:update`, so the refreshed agent rules and skills arrive with the package. The project's constraint, such as `^3.0`, keeps it within one major version, and a minor or patch release never makes a passing project fail. A new major version tightens a guard, so moving to it is a deliberate step: require it with `composer require shipwithian/shipkit-core:^4.0`, then follow its section in the package's [`UPGRADE.md`](packages/shipkit-core/UPGRADE.md), which names each check that may now fail and the fix.
 
-**Template code: controllers, Actions, Queries, models, pages, and configuration.** Nothing updates it. The project copied it once and owns it from then on. To adopt an improvement from a later ShipKit release, read its section in [`CHANGELOG.md`](CHANGELOG.md), compare the two release tags on GitHub, for example `https://github.com/shipwithian/shipkit/compare/v2.0.0...v3.0.0`, and copy the parts you want.
+**Template code: controllers, Actions, Queries, models, pages, and configuration.** The project copied it once and owns it. `shipkit:upgrade` brings a newer release's changes into it as a three-way merge, keeping the project's own edits. Update `shipkit-core` first, since the command moves the template files to the installed core version, then read the report:
+
+```bash
+php artisan shipkit:upgrade
+```
+
+It lists every template file that changed and what applying does to it (updates, merges cleanly, conflicts, new, removed), followed by the upgrade notes. Nothing changes until you apply:
+
+```bash
+php artisan shipkit:upgrade --apply
+```
+
+It writes the changes and records the new version in `shipkit.json`, without staging or committing, so `git diff` shows exactly what it did. Resolve the conflicts it lists, then run `composer update`, `npm install`, `php artisan migrate`, and `composer ci:check`. A project created before 5.3 passes `--from=<the release it was created from>` the first time. To skip files you have replaced entirely, list them under `exclude` in `shipkit.json`.
 
 ## Bringing improvements back to ShipKit
 
