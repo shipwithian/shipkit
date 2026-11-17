@@ -138,6 +138,7 @@ it('skips instead of failing when GitHub cannot be reached', function () {
         ->expectsOutputToContain('could not reach GitHub')
         ->assertSuccessful();
 });
+
 it('fails when the agent definitions are missing for Claude Code', function () {
     doctorInScratchProject(['claude_code']);
     fakeGitHub();

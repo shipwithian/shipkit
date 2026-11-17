@@ -17,6 +17,17 @@ class AgentDefinitions
     public const string TARGET_DIRECTORY = '.claude/agents';
 
     /**
+     * The effort levels an override may set. `max` is deliberately missing: the subagents guideline
+     * never allows it.
+     */
+    public const array EFFORT_LEVELS = ['low', 'medium', 'high', 'xhigh'];
+
+    /**
+     * The model aliases an override may set, besides a full model id such as `claude-sonnet-5-5`.
+     */
+    public const array MODEL_ALIASES = ['haiku', 'sonnet', 'opus', 'fable', 'inherit'];
+
+    /**
      * Whether the project's boost.json sets up Claude Code, the only client that reads these.
      */
     public function claudeCodeIsSetUp(): bool
@@ -36,7 +47,7 @@ class AgentDefinitions
      */
     public function rendered(): array
     {
-        /** @var array<string, array{model?: string, effort?: string}> $overrides */
+        /** @var array<string, array<string, mixed>> $overrides Config, so validated below rather than trusted. */
         $overrides = (array) config('shipkit.agents', []);
         $definitions = [];
 
@@ -51,8 +62,19 @@ class AgentDefinitions
                 throw new InvalidArgumentException("shipkit.agents names `{$agent}`, which ShipKit does not ship. Its agents are: ".implode(', ', array_map(fn (string $name): string => basename($name, '.md'), array_keys($definitions))).'.');
             }
 
+            $model = $fields['model'] ?? null;
+            $effort = $fields['effort'] ?? null;
+
+            if ($model !== null && (! is_string($model) || (! in_array($model, self::MODEL_ALIASES, true) && ! preg_match('/^claude-[a-z0-9.-]+$/', $model)))) {
+                throw new InvalidArgumentException("shipkit.agents.{$agent}.model must be one of ".implode(', ', self::MODEL_ALIASES).', or a full model id such as claude-sonnet-5-5.');
+            }
+
+            if ($effort !== null && (! is_string($effort) || ! in_array($effort, self::EFFORT_LEVELS, true))) {
+                throw new InvalidArgumentException("shipkit.agents.{$agent}.effort must be one of ".implode(', ', self::EFFORT_LEVELS).'; ShipKit never runs an agent at max.');
+            }
+
             foreach (array_intersect_key($fields, ['model' => true, 'effort' => true]) as $field => $value) {
-                $definitions[$file] = (string) preg_replace("/^{$field}: .*$/m", "{$field}: {$value}", $definitions[$file], 1);
+                $definitions[$file] = (string) preg_replace("/^{$field}: .*$/m", "{$field}: ".(string) $value, $definitions[$file], 1);
             }
         }
 

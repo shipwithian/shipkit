@@ -1,6 +1,6 @@
 ---
 paths:
-    - '.github/**'
+    - '**'
 ---
 
 # Branches and pull requests
@@ -9,7 +9,7 @@ The integration branch is the one every pull request targets: `php artisan confi
 
 ## Target the integration branch
 
-Open every pull request against the integration branch. Never merge one into a feature branch or another pull request's branch, except the bottom of a stack below.
+Open every pull request against the integration branch. Never merge one into a feature branch or another pull request's branch, except the bottom of a stack below. When the integration branch is not `main`, the one pull request that targets `main` is the release that brings the integration branch into it.
 
 ## Stack only on a real dependency
 

@@ -70,6 +70,28 @@ it('fails on an override for an agent ShipKit does not ship', function () {
         ->assertFailed();
 });
 
+it('fails on an override outside the allowed models and effort levels', function (array $override, string $message) {
+    agentsInScratchProject(['claude_code']);
+    config(['shipkit.agents' => ['shipkit-explorer' => $override]]);
+
+    $this->artisan('shipkit:agents')
+        ->expectsOutputToContain($message)
+        ->assertFailed();
+})->with([
+    'max effort' => [['effort' => 'max'], 'never runs an agent at max'],
+    'an unknown effort' => [['effort' => 'extreme'], 'shipkit.agents.shipkit-explorer.effort'],
+    'an unknown model' => [['model' => 'gpt-5'], 'shipkit.agents.shipkit-explorer.model'],
+]);
+
+it('accepts a full model id as an override', function () {
+    $basePath = agentsInScratchProject(['claude_code']);
+    config(['shipkit.agents' => ['shipkit-explorer' => ['model' => 'claude-sonnet-5-5']]]);
+
+    $this->artisan('shipkit:agents')->assertSuccessful();
+
+    expect(File::get("{$basePath}/.claude/agents/shipkit-explorer.md"))->toContain("model: claude-sonnet-5-5\n");
+});
+
 it('writes the same files when run again', function () {
     $basePath = agentsInScratchProject(['claude_code']);
 

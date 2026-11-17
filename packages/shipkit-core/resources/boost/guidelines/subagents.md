@@ -11,7 +11,7 @@ Pick the cheapest model and the lowest effort that does the task well, judged by
 | Searches, lookups, summaries, logs, mechanical edits     | haiku  | medium to xhigh |
 | Routine implementation, refactors, tests                 | sonnet | low to high     |
 | Code review, tricky debugging, planning                  | opus   | low to medium   |
-| The most ambitious technical or research work, sparingly | fable  | as needed       |
+| The most ambitious technical or research work, sparingly | fable  | low to xhigh    |
 
 - Never pass `max`.
 - Go lower in a range for lookups and mechanical changes, higher when the work needs care.

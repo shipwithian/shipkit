@@ -4,6 +4,7 @@ name: pull request base
 # pull request only when the merged branch is deleted, so merging it would land the work on a
 # leftover branch instead of the integration branch. See the `branches` rule in shipkit-core.
 # The integration branch comes from the SHIPKIT_INTEGRATION_BRANCH repository variable (main by default).
+# A pull request into main always passes, so the release pull request from a staging branch is allowed.
 
 on:
   pull_request:
@@ -30,6 +31,13 @@ jobs:
             exit 0
           fi
 
+          open=$(gh pr list --repo "$REPOSITORY" --head "$BASE" --state open --json number --jq 'length')
+
+          if [ "$open" != "0" ]; then
+            echo "Stacked on $BASE, which is still open."
+            exit 0
+          fi
+
           merged=$(gh pr list --repo "$REPOSITORY" --head "$BASE" --state merged --json number --jq 'map(.number) | join(", ")')
 
           if [ -n "$merged" ]; then
@@ -37,4 +45,4 @@ jobs:
             exit 1
           fi
 
-          echo "Stacked on $BASE, which is still open."
+          echo "Based on $BASE, which has no merged pull request."

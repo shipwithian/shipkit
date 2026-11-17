@@ -84,6 +84,7 @@ return [
     */
 
     'agents' => [],
+
     'architecture' => [
         'features_using_framework_exceptions' => [],
         'non_feature_folders' => [],

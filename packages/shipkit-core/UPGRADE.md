@@ -32,7 +32,25 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 
 To change a reviewer's model or effort, set it in `config/shipkit.php` (`'agents' => ['shipkit-standards-reviewer' => ['model' => 'sonnet', 'effort' => 'medium']]`) and run `shipkit:agents`; an edit to the installed file is overwritten on the next update. A user's own instructions about models still win over ShipKit's defaults.
 
-To make Claude Code refuse a sub-agent call that names no model, add a `PreToolUse` hook on the `Agent` tool in your own `.claude/settings.json`. ShipKit doesn't install one: Boost cannot sync hook settings, and agent settings are yours to own.
+To make Claude Code refuse a sub-agent call that names neither a ShipKit agent nor a model and an effort, add this `PreToolUse` hook to your own `.claude/settings.json` (it needs `jq`). A hook that exits with code 2 blocks the call and shows the agent its message. ShipKit doesn't install it: Boost cannot sync hook settings, and agent settings are yours to own.
+
+```json
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Agent",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "jq -e '(.tool_input.subagent_type // \"\" | startswith(\"shipkit-\")) or ((.tool_input.model // \"\") != \"\" and (.tool_input.effort // \"\") != \"\")' > /dev/null || { echo 'Spawn a shipkit-* agent, or pass model and effort explicitly (see the subagents guideline).' >&2; exit 2; }"
+                    }
+                ]
+            }
+        ]
+    }
+}
+```
 
 ## Upgrading to 5.1
 
