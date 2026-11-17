@@ -1,4 +1,12 @@
 import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { EditUserRolesDialog } from '@/pages/users/partials/edit-user-roles-dialog';
 import type { AssignableRole, UserRoleListItem } from '@/types';
 
@@ -13,28 +21,32 @@ export function UsersTable({ users, roles }: Props) {
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead className="bg-muted/50 border-b text-left">
-                        <tr>
-                            <th className="px-4 py-3 font-medium">User</th>
-                            <th className="px-4 py-3 font-medium">Roles</th>
-                            <th className="px-4 py-3 text-right font-medium">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead className="px-4 py-3 font-medium">
+                                User
+                            </TableHead>
+                            <TableHead className="px-4 py-3 font-medium">
+                                Roles
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-right font-medium">
                                 Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {users.map((user) => (
-                            <tr key={user.id}>
-                                <td className="px-4 py-3">
+                            <TableRow key={user.id}>
+                                <TableCell className="px-4 py-3">
                                     <div className="font-medium">
                                         {user.name}
                                     </div>
                                     <div className="text-muted-foreground">
                                         {user.email}
                                     </div>
-                                </td>
-                                <td className="px-4 py-3">
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
                                     <div className="flex flex-wrap gap-1">
                                         {user.role_ids.map((roleId) => (
                                             <Badge
@@ -50,29 +62,29 @@ export function UsersTable({ users, roles }: Props) {
                                             </span>
                                         )}
                                     </div>
-                                </td>
-                                <td className="px-4 py-3">
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
                                     <div className="flex justify-end">
                                         <EditUserRolesDialog
                                             user={user}
                                             roles={roles}
                                         />
                                     </div>
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         ))}
                         {users.length === 0 && (
-                            <tr>
-                                <td
+                            <TableRow>
+                                <TableCell
                                     colSpan={3}
                                     className="text-muted-foreground px-4 py-10 text-center"
                                 >
                                     No users found.
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );

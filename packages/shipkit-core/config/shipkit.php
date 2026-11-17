@@ -41,6 +41,10 @@ return [
     | audience_exceptions: route paths or page folders that are a resource rather than an audience,
     | keyed by path, with the reason, such as 'staff' in an HR app whose staff members are the records.
     |
+    | raw_element_exceptions: frontend files allowed to hand-build a button, input, label, select,
+    | textarea, table, or dialog instead of using its shadcn/ui primitive, keyed by path, with the
+    | reason, such as a printable receipt styled for paper.
+    |
     | long_frontend_files: files under resources/js allowed past FrontendFileLengthTest's limit
     | (200 lines for a page, 400 for any other file), keyed by path, with the reason.
     |
@@ -99,6 +103,7 @@ return [
         'long_frontend_files' => [],
         'audience_words' => [],
         'audience_exceptions' => [],
+        'raw_element_exceptions' => [],
     ],
 
     /*

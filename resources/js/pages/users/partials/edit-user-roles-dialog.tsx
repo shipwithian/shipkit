@@ -6,6 +6,7 @@ import UserRoleController from '@/actions/App/Http/Controllers/AccessControl/Use
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogClose,
@@ -82,12 +83,12 @@ export function EditUserRolesDialog({ user, roles }: Props) {
                                         toggleRole(role.id, value === true)
                                     }
                                 />
-                                <label
+                                <Label
                                     htmlFor={`user-${user.id}-role-${role.id}`}
-                                    className="cursor-pointer text-sm font-medium"
+                                    className="cursor-pointer"
                                 >
                                     {role.name}
-                                </label>
+                                </Label>
                             </div>
                         ))}
                         {roles.length === 0 && (

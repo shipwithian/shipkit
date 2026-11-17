@@ -329,6 +329,83 @@ class ProjectLayout
     }
 
     /**
+     * The shadcn/ui primitive that replaces each hand-built element, by tag; `input` depends on its type.
+     */
+    public const array PRIMITIVE_FOR_ELEMENT = [
+        'button' => ['Button', 'button'],
+        'input' => ['Input', 'input'],
+        'label' => ['Label', 'label'],
+        'select' => ['Select', 'select'],
+        'textarea' => ['Textarea', 'textarea'],
+        'table' => ['Table', 'table'],
+        'dialog' => ['Dialog', 'dialog'],
+    ];
+
+    /**
+     * Hand-built HTML elements in the project's screens where a shadcn/ui primitive belongs: a
+     * button, input, label, select, textarea, table, or dialog outside `components/ui`, each with
+     * the primitive to use and, when the project does not have it yet, the command that adds it.
+     * A hidden form field is allowed; it has no look. Files listed in
+     * `shipkit.architecture.raw_element_exceptions` are skipped.
+     *
+     * @return list<string>
+     */
+    public function rawElementViolations(): array
+    {
+        /** @var array<string, string> $exceptions */
+        $exceptions = (array) $this->config('architecture.raw_element_exceptions', []);
+        $violations = [];
+
+        foreach ($this->frontendFiles() as $relative) {
+            if (! str_ends_with($relative, '.tsx') || str_starts_with($relative, 'resources/js/components/ui/') || array_key_exists($relative, $exceptions)) {
+                continue;
+            }
+
+            $source = $this->withoutScriptComments((string) file_get_contents($this->path($relative)));
+            preg_match_all('/(?<![\w.$])<(button|input|label|select|textarea|table|dialog)(?=[\s>\/])([^<>]*?)\/?>/s', $source, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+
+            foreach ($matches as $match) {
+                $element = $match[1][0];
+                $attributes = $match[2][0];
+                [$primitive, $file] = self::PRIMITIVE_FOR_ELEMENT[$element];
+
+                if ($element === 'input') {
+                    $type = preg_match('/\btype=["\'](\w+)["\']/', $attributes, $typeMatch) ? $typeMatch[1] : 'text';
+
+                    if ($type === 'hidden') {
+                        continue;
+                    }
+
+                    [$primitive, $file] = match ($type) {
+                        'checkbox' => ['Checkbox', 'checkbox'],
+                        'radio' => ['RadioGroup', 'radio-group'],
+                        default => [$primitive, $file],
+                    };
+                }
+
+                $line = substr_count(substr($source, 0, $match[0][1]), "\n") + 1;
+                $missing = is_file($this->path("resources/js/components/ui/{$file}.tsx")) ? '' : " (add it with `npx shadcn@latest add {$file}`)";
+                $violations[] = "{$relative}:{$line}: <{$element}> is hand-built; use {$primitive} from @/components/ui/{$file}{$missing}";
+            }
+        }
+
+        return $violations;
+    }
+
+    /**
+     * TypeScript source with its comments blanked out, keeping line numbers, so a comment that
+     * mentions an element is not mistaken for one.
+     */
+    private function withoutScriptComments(string $source): string
+    {
+        $blank = fn (array $match): string => preg_replace('/[^\n]/', ' ', $match[0]) ?? '';
+
+        $source = (string) preg_replace_callback('#/\*.*?\*/#s', $blank, $source);
+
+        return (string) preg_replace_callback('#(?<![:"\'\w])//[^\n]*#', $blank, $source);
+    }
+
+    /**
      * Every TypeScript source below `resources/js`, relative to the project, except generated code.
      *
      * @return list<string>
