@@ -65,7 +65,7 @@ Each smell reads _what it is_ → _how to fix_; match it against the diff:
 
 ### 4. Spawn both sub-agents in parallel
 
-Issue both sub-agent calls together, in the foreground, and aggregate the reports they return.
+Issue both sub-agent calls together, in the foreground, and aggregate the reports they return. Spawn the `shipkit-standards-reviewer` and `shipkit-spec-reviewer` agents by name: their definitions pin opus at low effort and carry the role briefs below. For a large diff (over about 800 changed lines in `git diff --shortstat <fixed-point>...HEAD`), pass `effort: medium`. Where a client has no agent definitions, pass the model and effort explicitly, per the sub-agents guideline. A user or project instruction about models wins.
 
 **Standards sub-agent prompt** should include:
 

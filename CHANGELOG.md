@@ -2,6 +2,11 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
+## Unreleased
+
+- **Workflow:** `config/shipkit.php` names the integration branch (`workflow.integration_branch`, from `SHIPKIT_INTEGRATION_BRANCH`) and per-agent model overrides (`agents`). `composer update`, `setup`, and project creation run `shipkit:agents` after `boost:update`.
+- **Pull request guard:** `.github/workflows/pr-base.yml` fails a pull request whose base branch was already merged, so a stacked pull request is retargeted before it merges into a leftover branch. It is not a required check.
+
 ## 5.1.1 (2026-11-12)
 
 Requires `shipwithian/shipkit-core` 5.1. No application code changes.

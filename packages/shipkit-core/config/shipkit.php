@@ -55,6 +55,35 @@ return [
         'mailpit' => true,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Workflow
+    |--------------------------------------------------------------------------
+    |
+    | integration_branch: the branch every pull request targets, read by the `branches` rule, the
+    | skills that open and merge pull requests, and `shipkit:doctor`. Set it to `staging` when work
+    | collects there before a release to `main`. The published config/shipkit.php reads it from
+    | SHIPKIT_INTEGRATION_BRANCH.
+    |
+    */
+
+    'workflow' => [
+        'integration_branch' => 'main',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sub-agents
+    |--------------------------------------------------------------------------
+    |
+    | Overrides for the model and effort of ShipKit's Claude Code agents (shipkit-standards-reviewer,
+    | shipkit-spec-reviewer, shipkit-explorer), keyed by agent name, which `shipkit:agents` applies
+    | when it installs them into .claude/agents. For example:
+    | 'shipkit-standards-reviewer' => ['model' => 'sonnet', 'effort' => 'medium'].
+    |
+    */
+
+    'agents' => [],
     'architecture' => [
         'features_using_framework_exceptions' => [],
         'non_feature_folders' => [],

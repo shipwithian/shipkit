@@ -1,0 +1,40 @@
+name: pull request base
+
+# Fails a pull request whose base is a branch that was already merged: GitHub retargets a stacked
+# pull request only when the merged branch is deleted, so merging it would land the work on a
+# leftover branch instead of the integration branch. See the `branches` rule in shipkit-core.
+# The integration branch comes from the SHIPKIT_INTEGRATION_BRANCH repository variable (main by default).
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  base:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check the base branch is still live
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          INTEGRATION: ${{ vars.SHIPKIT_INTEGRATION_BRANCH || 'main' }}
+        run: |
+          if [ "$BASE" = "$INTEGRATION" ] || [ "$BASE" = "main" ]; then
+            echo "Targets $BASE."
+            exit 0
+          fi
+
+          merged=$(gh pr list --repo "$REPOSITORY" --head "$BASE" --state merged --json number --jq 'map(.number) | join(", ")')
+
+          if [ -n "$merged" ]; then
+            echo "::error::The base branch $BASE was already merged (#$merged). Retarget this pull request before merging: gh pr edit $NUMBER --base $INTEGRATION"
+            exit 1
+          fi
+
+          echo "Stacked on $BASE, which is still open."

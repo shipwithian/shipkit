@@ -2,6 +2,12 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
+## Unreleased
+
+- **Workflow:** a new `branches` rule. Every pull request targets the integration branch (`shipkit.workflow.integration_branch`, `main` by default, from `SHIPKIT_INTEGRATION_BRANCH`). Stack a pull request only on a real dependency, and merge a stack bottom-up with merge commits. Retarget a pull request whose base was already merged before merging it, and delete merged branches. The `implement` skill's merge rule applies it.
+- **Commands:** `shipkit:doctor` checks that GitHub deletes merged branches, that the integration branch exists, and that the agent definitions are current. It skips with a warning where `gh`, a GitHub remote, or the network is missing, so it never fails offline CI.
+- **Sub-agents:** a `subagents` guideline gives the model and effort for each kind of work, says to never pass `max`, and says a user or project instruction wins. `shipkit:agents` installs Claude Code agent definitions that pin both: `shipkit-standards-reviewer` and `shipkit-spec-reviewer` (opus, low) and `shipkit-explorer` (haiku, medium). Overrides go in `shipkit.agents`. `review-diff` spawns the reviewers by name, at medium effort for a large diff, and `diagnosing-bugs` uses the explorer for sweeps. Laravel Boost syncs skills and guidelines but not agent definitions, which is why a separate command installs them.
+
 ## 5.1.1 (2026-11-12)
 
 A patch release with no change to the checks or the code. It ships the "Upgrading to 5.1" section of [UPGRADE.md](UPGRADE.md#upgrading-to-51) and the dated 5.0.0 and 5.1.0 notes, which the 5.1.0 package lacked: it was built before they reached `main`. UPGRADE.md also lists the template's `vite-plus` 1.6.0 change.

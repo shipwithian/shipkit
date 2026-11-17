@@ -10,7 +10,7 @@ metadata:
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
 
-When exploring the codebase, read the feature rule file in `.ai/rules/features/` for the area you're touching to get its vocabulary and invariants, and check `docs/adr/` if it exists.
+When exploring the codebase, read the feature rule file in `.ai/rules/features/` for the area you're touching to get its vocabulary and invariants, and check `docs/adr/` if it exists. For a sweep across many files (every caller of a method, every place a column is written), spawn the `shipkit-explorer` agent rather than reading them all yourself; its definition pins haiku at medium effort. Do the reasoning about the cause yourself, and where a client has no agent definitions, pass the model and effort explicitly, per the sub-agents guideline.
 
 ## Redact
 
