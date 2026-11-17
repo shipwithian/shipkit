@@ -35,6 +35,7 @@
         "review-diff",
         "to-spec",
         "to-tickets",
+        "upgrade",
         "writing-for-agents",
         "laravel-permission-development",
         "verify-app"

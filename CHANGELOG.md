@@ -6,6 +6,7 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 - **Two branches by default:** a new project's integration branch is `staging` (`SHIPKIT_INTEGRATION_BRANCH`), so merging a pull request no longer deploys: `main` holds what is released, and one pull request from `staging` into `main` is a release. The README's new "Branches and deploys" section has copy-paste commands for setup, daily work, a release, and a hotfix. An existing project is unaffected until it sets the branch.
 - **Workflows:** the test and fresh-project workflows run on pushes to `main` and `staging`. `pull request base` expects `staging` unless the `SHIPKIT_INTEGRATION_BRANCH` repository variable says otherwise, and fails a pull request into `main` that is neither the release nor a `hotfix/*` branch. Until the integration branch exists, pull requests into `main` pass with a notice.
+- **Template version:** `shipkit.json` records the release a project was created from, stamped by each release, so `shipkit:upgrade` knows where to start. It may also name another template `source` and paths to `exclude`.
 - **Notes:** the 5.2.0 entry below is dated; the 5.2.0 release shipped it under "Unreleased".
 
 ## 5.2.0 (2026-11-17)

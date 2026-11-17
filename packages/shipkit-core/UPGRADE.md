@@ -1,5 +1,7 @@
 # Upgrade notes
 
+From 5.3, `php artisan shipkit:upgrade` brings a release's template changes into a project's own files as a three-way merge: it reports first, and `--apply` writes the result without committing. The sections below keep only what files cannot carry (keys, environment variables, data) and the checks a major release tightens. A project created before 5.3 passes `--from=<the release it was created from>` once; after that, `shipkit.json` records the version.
+
 `shipkit-core` follows [semantic versioning](https://semver.org), and its major version is a promise about what your CI will do. A release that tightens a guard, so that code which passed before can now fail a check, is a **major** release. Minor and patch releases never make a passing project fail.
 
 Every major release has a section below named for the version, and each entry in it names three things:
@@ -22,14 +24,14 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 
 ## Upgrading to 5.3
 
-`shipkit-core` 5.3 changes no check. `composer update shipwithian/shipkit-core` brings the new `shipkit:doctor --fix` and the guidance. Your project keeps working on the branch it uses today.
+`shipkit-core` 5.3 changes no check. `composer update shipwithian/shipkit-core` brings `shipkit:upgrade`, `shipkit:doctor --fix`, and the guidance. Then run `php artisan shipkit:upgrade --from=<your current template version>` to see the template's changes, and `--apply` to take them; the `upgrade` skill walks an agent through it. Your project keeps working on the branch it uses today.
 
 To move to two branches, so that merging a pull request stops deploying:
 
 1. Set `SHIPKIT_INTEGRATION_BRANCH=staging` in `.env` and `.env.example`. If `config/shipkit.php` has no `workflow` block yet, copy it from the template's.
 2. Run `php artisan shipkit:doctor --fix`. It lists its changes and asks first, then creates `staging` from `main`, makes it GitHub's default branch, and turns on the deletion of merged branches.
 3. Where the app is hosted, set the production environment's branch to `main`.
-4. Copy `.github/workflows/pr-base.yml` from the template, and add `staging` to the `push` branches of your test workflow.
+4. `shipkit:upgrade --apply` brings the template's `.github/workflows/pr-base.yml` and the `staging` push trigger of its workflows.
 
 The template README's "Branches and deploys" section has the daily commands, the release, and the hotfix path.
 
