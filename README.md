@@ -406,7 +406,7 @@ git remote add origin https://github.com/YOUR_GITHUB_OWNER/YOUR_PROJECT.git
 git push -u origin main
 ```
 
-The generated repository is now independent from ShipKit. Its version sequence and release tags should be established separately from the template.
+The generated repository is now independent from ShipKit. Its version sequence and release tags should be established separately from the template. Next, set up its two branches: see [Branches and deploys](#branches-and-deploys).
 
 ### 2. Install and initialize the application
 
@@ -453,11 +453,105 @@ The development command starts the configured Laravel and frontend development p
 
 Local mail goes to [Mailpit](https://mailpit.axllent.org) on `127.0.0.1:1025`. When the `mailpit` binary is installed (`brew install mailpit`), `composer dev` runs it as the `mail` process (registered by `shipkit-core`; set `dev.mailpit` to `false` in `config/shipkit.php` to turn it off), and verification, password reset, and other emails land in the inbox at http://localhost:8025. Without Mailpit, set `MAIL_MAILER=log` to write emails to `storage/logs/laravel.log` instead. Tests always use the `array` mailer.
 
+## Branches and deploys
+
+A ShipKit project works on two branches, so merging a pull request never deploys by itself:
+
+```text
+your branch ──pull request──▶ staging ──release pull request──▶ main ──▶ deploy
+```
+
+- **`staging`** is where work collects. Every pull request targets it, and it is GitHub's default branch, so `gh pr create` and Dependabot pick it without being told.
+- **`main`** is what is live. The only pull requests into it are the release, from `staging`, and an urgent hotfix. Point your host's production environment at `main`: on Laravel Cloud, which deploys on every push to an environment's branch, a release is then the only thing that deploys.
+
+Agents follow the same flow: it is in the guidelines every session loads and in the `branches` rule, and the `pull request base` workflow fails a pull request that targets the wrong branch.
+
+### Set it up once
+
+After the first push, with the [GitHub CLI](https://cli.github.com) signed in:
+
+```bash
+php artisan shipkit:doctor --fix
+```
+
+It lists what it will change and asks before it does anything. It creates `staging` from `main`, makes `staging` the default branch, turns on "Automatically delete head branches", and installs ShipKit's agent definitions. Then, where the app is hosted, set the production environment's branch to `main`. On Laravel Cloud you can add a second environment on `staging` to preview what the next release holds.
+
+Check the setup at any time:
+
+```bash
+php artisan shipkit:doctor
+```
+
+### Every day
+
+Start from `staging`:
+
+```bash
+git switch -c my-change origin/staging
+```
+
+Open a pull request. It targets `staging` because that is the default branch:
+
+```bash
+gh pr create --fill
+```
+
+Merge it once the checks pass, and delete the branch:
+
+```bash
+gh pr merge --merge --delete-branch
+```
+
+### Release
+
+When `staging` holds what you want live, open the release:
+
+```bash
+gh pr create --base main --head staging --title "Release"
+```
+
+Merge it with a merge commit, never a squash or a rebase, so the two branches stay in step. Merging it is what deploys, so it is the maintainer's to merge, never an agent's:
+
+```bash
+gh pr merge --merge
+```
+
+### Hotfix
+
+For a fix that cannot wait for the next release, branch from `main`:
+
+```bash
+git switch -c hotfix/short-name origin/main
+```
+
+Open it against `main`, and merge it:
+
+```bash
+gh pr create --base main --fill
+```
+
+Then bring the fix back, so the next release does not undo it:
+
+```bash
+gh pr create --base staging --head main --title "Bring the hotfix back to staging"
+```
+
+### One branch instead
+
+To work on `main` alone, set `SHIPKIT_INTEGRATION_BRANCH=main` in `.env`, and tell the workflow:
+
+```bash
+gh variable set SHIPKIT_INTEGRATION_BRANCH --body main
+```
+
+Every pull request then targets `main`, and every merge deploys.
+
 ## New-project checklist
 
 Before starting business features:
 
 - [ ] Create the project with the Laravel installer, or initialize an empty repository from a ShipKit release tag.
+- [ ] Run `php artisan shipkit:doctor --fix` to create `staging` and set the GitHub settings, and point the host's production environment at `main` ([Branches and deploys](#branches-and-deploys)).
 - [ ] Update `APP_NAME`, `APP_URL`, and project branding.
 - [ ] Update the root package name, description, and keywords in `composer.json`.
 - [ ] Replace the placeholder landing page copy in `resources/js/pages/welcome/partials/content.ts`.

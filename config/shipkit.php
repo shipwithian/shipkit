@@ -28,13 +28,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | integration_branch: the branch every pull request targets, read by the `branches` rule, the
-    | skills that open and merge pull requests, and `shipkit:doctor`. Set it to `staging` when work
-    | collects there before a release to `main`.
+    | skills that open and merge pull requests, and `shipkit:doctor`. Work collects on `staging`, and
+    | one pull request from it into `main` is a release, so merging a change never deploys by
+    | itself. Set it to `main` to work on one branch. `php artisan shipkit:doctor --fix` creates the
+    | branch and sets it as GitHub's default.
     |
     */
 
     'workflow' => [
-        'integration_branch' => env('SHIPKIT_INTEGRATION_BRANCH', 'main'),
+        'integration_branch' => env('SHIPKIT_INTEGRATION_BRANCH', 'staging'),
     ],
 
     /*

@@ -92,11 +92,12 @@ Close the report with a `## Handoff` section that decides whether an agent may m
 - **Independence:** did this session write any of the diff? If it did, say so. The report then cannot serve as the independent review.
 - **Regression test:** if the diff changes an invariant or fixes a bug, is there a test recorded as failing without the production change and passing with it? Missing evidence is a hard finding.
 - **Checks:** did `composer ci:check` pass on this HEAD? Run it if nobody has.
+- **Base branch:** does the pull request target the integration branch (`php artisan config:show shipkit.workflow.integration_branch`), or a still-open branch it is stacked on? A feature pull request into `main` when the integration branch is another branch is a hard finding; a release or hotfix into `main` needs the maintainer.
 - **Maintainer-owned paths:** list every changed file that matches the repository's CODEOWNERS file (without one, the list in the architecture guideline's agent workflow section). Do this with `git diff --name-only <fixed-point>...HEAD`.
 
 Give one verdict:
 
-- **Agent may merge:** independent, no hard findings on either axis, the evidence is present, and no maintainer-owned path is touched.
+- **Agent may merge:** independent, no hard findings on either axis, the evidence is present, the base is the integration branch, and no maintainer-owned path is touched.
 - **Needs the maintainer:** everything else is in order, but a maintainer-owned path is touched.
 - **Not ready:** a hard finding or a missing piece of evidence remains. Name it.
 

@@ -139,3 +139,4 @@ Required before declaring done:
 - [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
+- [ ] A fix pull request targets the integration branch; a fix that cannot wait for a release follows the hotfix path in `vendor/shipwithian/shipkit-core/resources/rules/branches.md`

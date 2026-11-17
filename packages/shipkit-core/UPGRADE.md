@@ -20,6 +20,21 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
+## Upgrading to 5.3
+
+`shipkit-core` 5.3 changes no check. `composer update shipwithian/shipkit-core` brings the new `shipkit:doctor --fix` and the guidance. Your project keeps working on the branch it uses today.
+
+To move to two branches, so that merging a pull request stops deploying:
+
+1. Set `SHIPKIT_INTEGRATION_BRANCH=staging` in `.env` and `.env.example`. If `config/shipkit.php` has no `workflow` block yet, copy it from the template's.
+2. Run `php artisan shipkit:doctor --fix`. It lists its changes and asks first, then creates `staging` from `main`, makes it GitHub's default branch, and turns on the deletion of merged branches.
+3. Where the app is hosted, set the production environment's branch to `main`.
+4. Copy `.github/workflows/pr-base.yml` from the template, and add `staging` to the `push` branches of your test workflow.
+
+The template README's "Branches and deploys" section has the daily commands, the release, and the hotfix path.
+
+To stay on one branch, change nothing. If you copy the new `pr-base.yml`, also run `gh variable set SHIPKIT_INTEGRATION_BRANCH --body main`, because the workflow now expects `staging` by default.
+
 ## Upgrading to 5.2
 
 `shipkit-core` 5.2 adds commands and guidance; no check that passed on 5.1 can fail. `composer update shipwithian/shipkit-core` brings them. Then:
