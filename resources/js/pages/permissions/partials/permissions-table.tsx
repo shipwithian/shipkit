@@ -13,8 +13,10 @@ import type { PermissionListItem } from '@/types';
 
 export function PermissionsTable({
     permissions,
+    emptyMessage,
 }: {
     permissions: PermissionListItem[];
+    emptyMessage: string;
 }) {
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
@@ -79,7 +81,7 @@ export function PermissionsTable({
                                     colSpan={4}
                                     className="text-muted-foreground px-4 py-10 text-center"
                                 >
-                                    No permissions have been created.
+                                    {emptyMessage}
                                 </TableCell>
                             </TableRow>
                         )}

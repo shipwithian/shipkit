@@ -17,9 +17,10 @@ import type { RoleListItem } from '@/types';
 
 type Props = {
     roles: RoleListItem[];
+    emptyMessage: string;
 };
 
-export function RolesTable({ roles }: Props) {
+export function RolesTable({ roles, emptyMessage }: Props) {
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
@@ -95,7 +96,7 @@ export function RolesTable({ roles }: Props) {
                                     colSpan={4}
                                     className="text-muted-foreground px-4 py-10 text-center"
                                 >
-                                    No roles have been created.
+                                    {emptyMessage}
                                 </TableCell>
                             </TableRow>
                         )}

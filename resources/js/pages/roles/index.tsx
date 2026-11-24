@@ -1,11 +1,15 @@
 import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
+import { ListToolbar } from '@/components/list-toolbar';
+import { useListFilters } from '@/hooks/use-list-filters';
 import { CreateRoleDialog } from '@/pages/roles/partials/create-role-dialog';
 import { RolesTable } from '@/pages/roles/partials/roles-table';
 import { index } from '@/routes/roles';
 import type { RoleIndexProps } from '@/types';
 
-export default function RolesIndex({ roles, can }: RoleIndexProps) {
+export default function RolesIndex({ roles, can, filters }: RoleIndexProps) {
+    const { apply } = useListFilters(filters);
+
     return (
         <>
             <Head title="Roles" />
@@ -20,7 +24,20 @@ export default function RolesIndex({ roles, can }: RoleIndexProps) {
                     {can.create && <CreateRoleDialog />}
                 </div>
 
-                <RolesTable roles={roles} />
+                <ListToolbar
+                    search={filters.search}
+                    onSearch={(search) => apply({ search })}
+                    placeholder="Search roles"
+                />
+
+                <RolesTable
+                    roles={roles}
+                    emptyMessage={
+                        filters.search
+                            ? 'No roles match your search.'
+                            : 'No roles have been created.'
+                    }
+                />
             </div>
         </>
     );

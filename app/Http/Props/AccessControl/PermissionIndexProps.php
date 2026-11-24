@@ -3,6 +3,7 @@
 namespace App\Http\Props\AccessControl;
 
 use App\Http\Props\PageProps;
+use App\Http\Props\SearchFilters;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -17,5 +18,6 @@ final readonly class PermissionIndexProps extends PageProps
     public function __construct(
         public array $permissions,
         public PermissionIndexAbilities $can,
+        public SearchFilters $filters,
     ) {}
 }

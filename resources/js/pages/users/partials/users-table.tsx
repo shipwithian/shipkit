@@ -13,9 +13,10 @@ import type { AssignableRole, UserRoleListItem } from '@/types';
 type Props = {
     users: UserRoleListItem[];
     roles: AssignableRole[];
+    emptyMessage: string;
 };
 
-export function UsersTable({ users, roles }: Props) {
+export function UsersTable({ users, roles, emptyMessage }: Props) {
     const roleNames = new Map(roles.map((role) => [role.id, role.name]));
 
     return (
@@ -79,7 +80,7 @@ export function UsersTable({ users, roles }: Props) {
                                     colSpan={3}
                                     className="text-muted-foreground px-4 py-10 text-center"
                                 >
-                                    No users found.
+                                    {emptyMessage}
                                 </TableCell>
                             </TableRow>
                         )}

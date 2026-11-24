@@ -10,6 +10,8 @@ use App\Http\Props\AccessControl\PermissionAbilities;
 use App\Http\Props\AccessControl\PermissionIndexAbilities;
 use App\Http\Props\AccessControl\PermissionIndexProps;
 use App\Http\Props\AccessControl\PermissionListItem;
+use App\Http\Props\SearchFilters;
+use App\Http\Requests\AccessControl\ListRequest;
 use App\Http\Requests\AccessControl\StorePermissionRequest;
 use App\Http\Requests\AccessControl\UpdatePermissionRequest;
 use App\Models\Permission;
@@ -21,7 +23,7 @@ use Inertia\Response;
 
 class PermissionController extends Controller
 {
-    public function index(PermissionListQuery $permissionList): Response
+    public function index(ListRequest $request, PermissionListQuery $permissionList): Response
     {
         Gate::authorize('viewAny', Permission::class);
 
@@ -31,8 +33,9 @@ class PermissionController extends Controller
                     update: Gate::allows('update', $permission),
                     delete: Gate::allows('delete', $permission),
                 )),
-                $permissionList->handle()->all(),
+                $permissionList->handle($request->search())->all(),
             )),
+            filters: new SearchFilters(search: $request->search()),
             can: new PermissionIndexAbilities(create: Gate::allows('create', Permission::class)),
         ));
     }

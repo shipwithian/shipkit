@@ -20,5 +20,6 @@ final readonly class UserRoleIndexProps extends PageProps
         public array $users,
         public Pagination $pagination,
         public array $roles,
+        public UserListFilters $filters,
     ) {}
 }
