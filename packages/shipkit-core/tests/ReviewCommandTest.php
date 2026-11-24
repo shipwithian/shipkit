@@ -57,6 +57,12 @@ function fakeReview(string $verdict = 'needs-maintainer', array $overrides = [],
             'number' => 12, 'baseRefName' => 'staging', 'headRefOid' => REVIEWED_SHA, 'body' => "Implements #41.\n\nCloses #42",
         ])),
         'git rev-parse HEAD' => Process::result(REVIEWED_SHA."\n"),
+        "git fetch --quiet origin 'staging'" => Process::result(),
+        "git diff 'origin/staging...HEAD'" => Process::result("diff --git a/app/Models/User.php b/app/Models/User.php\n+// a change\n"),
+        "git diff --name-only 'origin/staging...HEAD'" => Process::result("app/Models/User.php\n"),
+        "git log --oneline 'origin/staging..HEAD'" => Process::result("abc1234 change the user\n"),
+        'gh pr checks 12' => Process::result("ci\tpass\n"),
+        'gh issue view * --comments' => Process::result("title: the spec\n"),
         'claude -p *' => reviewerSays($verdict),
         'gh api repos/acme/cafe/issues/12/comments --paginate --jq *' => Process::result($existingComment),
         'gh api -X PATCH repos/acme/cafe/issues/comments/*' => Process::result(),
@@ -210,18 +216,33 @@ it('lets the reviewer read but never write', function () {
             return false;
         }
 
-        return array_intersect(preg_split('/\s+(?![^(]*\))/', $tools[1]), ['Edit', 'Write', 'NotebookEdit', 'Bash', 'Bash(git push:*)', 'Bash(git commit:*)']) === [];
+        return preg_split('/\s+/', $tools[1]) === ['Read', 'Glob', 'Grep', 'Agent', 'Skill'];
     });
 });
 
-it('tells the reviewer to use the pinned reviewers, plain commands, and CI as reported rather than gating', function () {
+it('hands the reviewers the diff, commits, spec, and CI as files, so they need no shell, and clears them after', function () {
     fakeReview();
+    $material = storage_path('framework/cache/shipkit-review');
 
     $this->artisan('shipkit:review')->assertSuccessful();
 
     Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ')
+        && str_contains($process->command, 'storage/framework/cache/shipkit-review/diff.patch')
+        && str_contains($process->command, 'storage/framework/cache/shipkit-review/spec.md')
         && str_contains($process->command, 'shipkit-standards-reviewer')
         && str_contains($process->command, 'shipkit-spec-reviewer')
-        && str_contains($process->command, 'no pipes')
-        && str_contains($process->command, 'do not base the verdict on CI that is still running'));
+        && str_contains($process->command, 'do not base the verdict on CI that is still running')
+        && str_contains($process->command, "--allowedTools 'Read Glob Grep Agent Skill'"));
+
+    expect(is_dir($material))->toBeFalse();
+});
+
+it('refuses a pull request with nothing to review', function () {
+    fakeReview(overrides: ["git diff 'origin/staging...HEAD'" => Process::result('')]);
+
+    $this->artisan('shipkit:review')
+        ->expectsOutputToContain('nothing to review')
+        ->assertFailed();
+
+    Process::assertNotRan(fn ($process) => str_starts_with($process->command, 'claude -p '));
 });

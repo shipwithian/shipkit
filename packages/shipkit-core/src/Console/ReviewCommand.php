@@ -40,10 +40,17 @@ class ReviewCommand extends Command
     ];
 
     /**
-     * What the reviewer session may do: read the code, the history, the spec, and the checks, and
-     * spawn the two reviewers. Nothing that edits, commits, pushes, or comments.
+     * What the reviewer session may do: read files and spawn the two reviewers. The command gathers
+     * the diff, the commit list, the spec, and CI itself and hands them over as files, so neither
+     * the session nor its reviewers needs a shell, which sub-agents of a headless session are not
+     * reliably allowed.
      */
-    public const string ALLOWED_TOOLS = 'Read Glob Grep Agent Skill Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(git rev-parse:*) Bash(gh issue view:*) Bash(gh pr view:*) Bash(gh pr diff:*) Bash(gh pr checks:*)';
+    public const string ALLOWED_TOOLS = 'Read Glob Grep Agent Skill';
+
+    /**
+     * Where the material for one review is written, inside the project's gitignored cache.
+     */
+    public const string MATERIAL_DIRECTORY = 'framework/cache/shipkit-review';
 
     public function handle(ExecutableFinder $executables): int
     {
@@ -79,7 +86,13 @@ class ReviewCommand extends Command
             }
 
             $issue = $this->stringOption('issue') ?? $this->specIssue($pull['body']);
-            $review = $this->review($pull['baseRefName'], $issue);
+            $material = $this->gatherMaterial($pull, $issue);
+
+            try {
+                $review = $this->review($pull['baseRefName'], $issue, $material);
+            } finally {
+                $this->clearMaterial();
+            }
         } catch (RuntimeException $exception) {
             $this->components->error($exception->getMessage());
 
@@ -147,21 +160,82 @@ class ReviewCommand extends Command
     }
 
     /**
+     * Write the diff, the commit list, the spec, and the CI state where the reviewers can read
+     * them, so they need no shell.
+     *
+     * @param  array{number: int, baseRefName: string, headRefOid: string, body: string}  $pull
+     * @return array<string, string> file name => path relative to the project
+     *
+     * @throws RuntimeException when the diff cannot be read
+     */
+    private function gatherMaterial(array $pull, ?string $issue): array
+    {
+        $base = $pull['baseRefName'];
+        $fetch = Process::run('git fetch --quiet origin '.escapeshellarg($base));
+
+        if ($fetch->failed()) {
+            throw new RuntimeException("Could not fetch origin/{$base} to compare with: ".trim($fetch->errorOutput()));
+        }
+
+        $diff = Process::run('git diff '.escapeshellarg("origin/{$base}...HEAD"));
+
+        if ($diff->failed() || trim($diff->output()) === '') {
+            throw new RuntimeException("There is nothing to review between origin/{$base} and this commit.");
+        }
+
+        $files = [
+            'diff.patch' => $diff->output(),
+            'commits.txt' => Process::run('git log --oneline '.escapeshellarg("origin/{$base}..HEAD"))->output(),
+            'changed-files.txt' => Process::run('git diff --name-only '.escapeshellarg("origin/{$base}...HEAD"))->output(),
+            'checks.txt' => Process::run("gh pr checks {$pull['number']}")->output(),
+        ];
+
+        if ($issue !== null) {
+            $files['spec.md'] = Process::run('gh issue view '.escapeshellarg($issue).' --comments')->output();
+        }
+
+        $directory = storage_path(self::MATERIAL_DIRECTORY);
+        $this->clearMaterial();
+        mkdir($directory, 0755, true);
+
+        $paths = [];
+
+        foreach ($files as $name => $contents) {
+            file_put_contents("{$directory}/{$name}", $contents);
+            $paths[$name] = substr("{$directory}/{$name}", strlen(base_path()) + 1);
+        }
+
+        return $paths;
+    }
+
+    private function clearMaterial(): void
+    {
+        $directory = storage_path(self::MATERIAL_DIRECTORY);
+
+        foreach (glob("{$directory}/*") ?: [] as $file) {
+            @unlink($file);
+        }
+
+        @rmdir($directory);
+    }
+
+    /**
+     * @param  array<string, string>  $material
      * @return array{verdict: string, report: string}
      */
-    private function review(string $base, ?string $issue): array
+    private function review(string $base, ?string $issue, array $material): array
     {
         $spec = $issue === null
             ? 'There is no spec issue; say so on the Spec axis.'
-            : "The spec is GitHub issue #{$issue}; read it with `gh issue view {$issue} --comments`.";
+            : "The spec is GitHub issue #{$issue}, saved in {$material['spec.md']}.";
 
         $prompt = implode(' ', [
             "Run the review-diff skill on this branch, with fixed point origin/{$base}.",
+            "The material is already gathered, so skip the skill's git and gh commands: the diff is {$material['diff.patch']}, the commits {$material['commits.txt']}, the changed files {$material['changed-files.txt']}, and CI {$material['checks.txt']}.",
             $spec,
             'You are the independent review: you did not write this code.',
-            'Spawn the shipkit-standards-reviewer and shipkit-spec-reviewer agents with the Agent tool, as the skill says, and report what they find; never review the diff yourself in their place.',
-            'Run one command per Bash call, with no pipes, `&&`, redirects, or `cd`: only plain git and gh commands are allowed, and a compound command is refused.',
-            'Branch protection requires CI separately, so for the Checks item read it with `gh pr checks` and report its state, but do not base the verdict on CI that is still running; never run composer ci:check.',
+            'Spawn the shipkit-standards-reviewer and shipkit-spec-reviewer agents with the Agent tool, in the foreground, as the skill says. Give each the paths of the material files to read instead of commands to run, and report what they find; never review the diff yourself in their place.',
+            'Branch protection requires CI separately, so report the CI state from the file, but do not base the verdict on CI that is still running.',
             'Do not edit, stage, commit, push, or comment; this command publishes your report.',
             'Return the full report, as markdown, in `report`, and the Handoff verdict in `verdict`: agent-may-merge, needs-maintainer, or not-ready.',
         ]);
