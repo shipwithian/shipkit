@@ -17,15 +17,15 @@ Agents' `gh` and `git` then authenticate as that identity, for example with a `G
 
 ## The ruleset
 
-| Setting                                                | Value                                                               | Why                                                                                                                                                              |
-| ------------------------------------------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Target                                                 | the default branch (`staging`)                                      |                                                                                                                                                                  |
-| Restrict deletions, block force pushes                 | on                                                                  | Keeps history, and the evidence it carries, intact.                                                                                                              |
-| Require a pull request before merging                  | on, **0** approvals                                                 | Every change goes through a pull request, but feature code needs no human approval.                                                                              |
-| Require review from Code Owners                        | on                                                                  | A pull request that touches a path in `.github/CODEOWNERS` waits for the maintainer.                                                                             |
-| Dismiss stale approvals, require approval of last push | on                                                                  | A code-owner approval covers the exact diff that merges.                                                                                                         |
-| Require status checks to pass, branch up to date       | `ci`, `concurrency (mysql)`, `concurrency (pgsql)`, `fresh-project` | `composer ci:check`, the MySQL and Postgres concurrency group, and the fresh-project job must pass on the merged result.                                         |
-| Bypass list                                            | Repository admin, **for pull requests only**                        | GitHub never lets the author approve their own pull request, so this lets the maintainer merge their own changes to owned paths. Nobody can push straight to it. |
+| Setting                                                | Value                                                                                 | Why                                                                                                                                                              |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Target                                                 | the default branch (`staging`)                                                        |                                                                                                                                                                  |
+| Restrict deletions, block force pushes                 | on                                                                                    | Keeps history, and the evidence it carries, intact.                                                                                                              |
+| Require a pull request before merging                  | on, **0** approvals                                                                   | Every change goes through a pull request, but feature code needs no human approval.                                                                              |
+| Require review from Code Owners                        | on                                                                                    | A pull request that touches a path in `.github/CODEOWNERS` waits for the maintainer.                                                                             |
+| Dismiss stale approvals, require approval of last push | on                                                                                    | A code-owner approval covers the exact diff that merges.                                                                                                         |
+| Require status checks to pass, branch up to date       | `ci`, `concurrency (mysql)`, `concurrency (pgsql)`, `fresh-project`, `shipkit/review` | `composer ci:check`, the MySQL and Postgres concurrency group, and the fresh-project job must pass on the merged result.                                         |
+| Bypass list                                            | Repository admin, **for pull requests only**                                          | GitHub never lets the author approve their own pull request, so this lets the maintainer merge their own changes to owned paths. Nobody can push straight to it. |
 
 Rename the required checks here whenever a job in `.github/workflows` is renamed. A required check that never reports blocks every merge.
 
@@ -64,7 +64,8 @@ gh api repos/shipwithian/shipkit/rulesets --method POST --input - <<'EOF'
           { "context": "ci" },
           { "context": "concurrency (mysql)" },
           { "context": "concurrency (pgsql)" },
-          { "context": "fresh-project" }
+          { "context": "fresh-project" },
+          { "context": "shipkit/review" }
         ]
       }
     }
@@ -74,6 +75,10 @@ EOF
 ```
 
 `actor_id` 5 is GitHub's built-in Repository admin role.
+
+### The review check
+
+`shipkit/review` is a commit status, not a workflow: `php artisan shipkit:review` sets it from a developer's machine after `review-diff` runs in a fresh read-only Claude Code session there (see the README). It is `success` for "Agent may merge" and "Needs the maintainer", and `failure` for "Not ready". Because it is set on one commit, a push leaves the new commit without it, so every change that merges was reviewed as it is. To add it to a ruleset that already exists, edit the ruleset's required checks in Settings → Rules, or `PUT` the ruleset again with the list above.
 
 ## The second ruleset: `main`
 

@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
 use InvalidArgumentException;
 use ShipKit\Core\Agents\AgentDefinitions;
+use ShipKit\Core\Console\Concerns\ReadsGitHubRepository;
 use Symfony\Component\Process\ExecutableFinder;
 
 /**
@@ -27,6 +28,8 @@ use Symfony\Component\Process\ExecutableFinder;
 #[Description('Check, and with --fix set up, the GitHub settings and agent definitions ShipKit\'s workflow relies on')]
 class DoctorCommand extends Command
 {
+    use ReadsGitHubRepository;
+
     /**
      * What is wrong, each with the change that would fix it when the command can make it.
      *
@@ -293,20 +296,6 @@ class DoctorCommand extends Command
     private function integrationBranch(): string
     {
         return (string) config('shipkit.workflow.integration_branch', 'main');
-    }
-
-    /**
-     * The `owner/name` of the origin remote when it is on GitHub.
-     */
-    private function gitHubRepository(): ?string
-    {
-        $remote = Process::run('git remote get-url origin');
-
-        if ($remote->failed() || ! preg_match('#github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?/?$#', trim($remote->output()), $match)) {
-            return null;
-        }
-
-        return $match[1];
     }
 
     private function skip(string $reason): void

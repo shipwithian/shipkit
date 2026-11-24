@@ -4,6 +4,7 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+- **Independent review, enforced:** `php artisan shipkit:review` (from `shipkit-core`) reviews the current pull request locally and sets the `shipkit/review` status; `docs/branch-protection.md` adds it to the required checks of `staging`, and `config/shipkit.php` gains the `review` block.
 - **Dependencies:** `laravel/framework` 13.43 (clears the concurrency advisory), `laravel/passport` 13.12 with `phpseclib` 4.0.4 (Passport no longer pins the version with the PBKDF advisory, so a full `composer update` works again), and `symfony/serializer` and `symfony/yaml` 8.1.11. `composer audit` reports nothing. The template's redirects answer GET and HEAD only: `Route::redirect()` registers every verb, `QUERY` included since Laravel 13.40, which Wayfinder's generated types reject.
 - **Dependabot** watches Composer and npm as well as GitHub Actions, against `staging`, with minor and patch updates grouped weekly.
 - **Save buttons wait for changes:** the profile, password, role, permission, token, role-permission, and user-role forms keep their save button disabled until something changes, and while saving. Sign-in, confirmation, delete, and two-factor buttons are actions and stay as they were.
