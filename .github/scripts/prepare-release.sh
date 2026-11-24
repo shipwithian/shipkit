@@ -50,7 +50,7 @@ git rm -r -q packages/shipkit-core
 
 echo "Recording template version $version in shipkit.json, where shipkit:upgrade reads it"
 
-jq --arg version "$version" '.template = $version' shipkit.json >shipkit.json.tmp
+jq --indent 4 --arg version "$version" '.template = $version' shipkit.json >shipkit.json.tmp
 mv shipkit.json.tmp shipkit.json
 
 # The checks that listed the package's folders for the development checkout.
