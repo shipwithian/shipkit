@@ -40,7 +40,8 @@ describe('a prepared release', function () {
 
     it('records its own version as the template version, where shipkit:upgrade reads it', function () {
         expect(json_decode((string) file_get_contents(base_path('shipkit.json')), true))->toBe(['template' => 'dev'])
-            ->and(json_decode((string) file_get_contents($this->checkout.'/shipkit.json'), true))->toBe(['template' => '1.4.2']);
+            ->and(json_decode((string) file_get_contents($this->checkout.'/shipkit.json'), true))->toBe(['template' => '1.4.2'])
+            ->and((string) file_get_contents($this->checkout.'/shipkit.json'))->toBe("{\n    \"template\": \"1.4.2\"\n}\n", 'The stamped file keeps the 4-space indent the formatter requires, or a project created from the release fails vp check.');
     });
 
     it("drops main's branch alias, which only exists to rank main below the releases", function () {
