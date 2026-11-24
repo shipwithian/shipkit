@@ -4,6 +4,8 @@ ShipKit follows [semantic versioning](https://semver.org). A project created fro
 
 ## Unreleased
 
+- **Dependencies:** `laravel/framework` 13.43 (clears the concurrency advisory), `laravel/passport` 13.12 with `phpseclib` 4.0.4 (Passport no longer pins the version with the PBKDF advisory, so a full `composer update` works again), and `symfony/serializer` and `symfony/yaml` 8.1.11. `composer audit` reports nothing. The template's redirects answer GET and HEAD only: `Route::redirect()` registers every verb, `QUERY` included since Laravel 13.40, which Wayfinder's generated types reject.
+- **Dependabot** watches Composer and npm as well as GitHub Actions, against `staging`, with minor and patch updates grouped weekly.
 - **Save buttons wait for changes:** the profile, password, role, permission, token, role-permission, and user-role forms keep their save button disabled until something changes, and while saving. Sign-in, confirmation, delete, and two-factor buttons are actions and stay as they were.
 - **Settings icons:** every Settings menu item has a lucide icon, as the main sidebar's do.
 - **List pages:** Settings → Users searches by name or email and filters by role; Roles and Permissions search by name. All three are built from new shared pieces: `ListToolbar`, `ListFilter`, `ListPagination` (on shadcn's `Pagination`, added to `components/ui` and wired to Inertia's `Link`), and the `useListFilters` hook, which keeps the filters in the URL. Each page gets a validated `filters` prop, and its Query a `SearchesText` search that matches case-insensitively and takes `%` and `_` literally on every database. A search that hides every row says so instead of "No roles have been created."

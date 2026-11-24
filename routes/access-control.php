@@ -4,6 +4,7 @@ use App\Http\Controllers\AccessControl\PermissionController;
 use App\Http\Controllers\AccessControl\RoleController;
 use App\Http\Controllers\AccessControl\RolePermissionController;
 use App\Http\Controllers\AccessControl\UserRoleController;
+use Illuminate\Routing\RedirectController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,10 +33,16 @@ Route::middleware(['auth', 'verified'])->prefix('settings')->group(function () {
 });
 
 /*
-| The addresses before 5.3, kept so links and bookmarks still arrive.
+| The addresses before access control moved into Settings, kept so links and bookmarks still arrive. They answer GET and HEAD
+| only: Route::permanentRedirect() registers every verb, QUERY included since Laravel 13.40, and
+| Wayfinder's generated types do not know QUERY yet.
 */
 
-Route::permanentRedirect('roles', '/settings/roles');
-Route::permanentRedirect('roles/{role}/permissions', '/settings/roles/{role}/permissions');
-Route::permanentRedirect('permissions', '/settings/permissions');
-Route::permanentRedirect('users', '/settings/users');
+foreach ([
+    'roles' => '/settings/roles',
+    'roles/{role}/permissions' => '/settings/roles/{role}/permissions',
+    'permissions' => '/settings/permissions',
+    'users' => '/settings/users',
+] as $old => $new) {
+    Route::get($old, RedirectController::class)->defaults('destination', $new)->defaults('status', 301);
+}
