@@ -10,7 +10,7 @@ describe('users', function () {
         $this->actor = userWithPermissions(['assign roles']);
         $this->barista = Role::create(['name' => 'barista', 'guard_name' => 'web']);
 
-        User::factory()->create(['name' => 'Ana Reyes', 'email' => 'ana@cafe.test'])->assignRole($this->barista);
+        User::factory()->create(['name' => 'Anaxquill Reyes', 'email' => 'anaxquill@cafe.test'])->assignRole($this->barista);
         User::factory()->create(['name' => 'Ben Cruz', 'email' => 'ben@cafe.test']);
         User::factory()->create(['name' => 'Cora Lim', 'email' => 'cora@guests.cafe.test'])->assignRole($this->barista);
     });
@@ -19,7 +19,7 @@ describe('users', function () {
         $this->actingAs($this->actor)
             ->get(route('users.index'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('users', fn ($users) => collect(['Ana Reyes', 'Ben Cruz', 'Cora Lim'])->diff(collect($users)->pluck('name'))->isEmpty())
+                ->where('users', fn ($users) => collect(['Anaxquill Reyes', 'Ben Cruz', 'Cora Lim'])->diff(collect($users)->pluck('name'))->isEmpty())
                 ->where('pagination.total', User::query()->count())
                 ->where('filters', ['search' => null, 'role' => null]));
     });
@@ -31,16 +31,16 @@ describe('users', function () {
                 ->where('users', fn ($users) => collect($users)->pluck('name')->all() === $names)
                 ->where('filters.search', $search));
     })->with([
-        'part of a name' => ['ANA', ['Ana Reyes']],
+        'part of a name' => ['ANAXQUILL', ['Anaxquill Reyes']],
         'part of an email' => ['guests.cafe', ['Cora Lim']],
-        'nobody' => ['zed', []],
+        'nobody' => ['zzqxnobody', []],
     ]);
 
     it('narrows to the holders of one role, and combines with search', function () {
         $this->actingAs($this->actor)
             ->get(route('users.index', ['role' => $this->barista->id]))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('users', fn ($users) => collect($users)->pluck('name')->all() === ['Ana Reyes', 'Cora Lim'])
+                ->where('users', fn ($users) => collect($users)->pluck('name')->all() === ['Anaxquill Reyes', 'Cora Lim'])
                 ->where('filters.role', $this->barista->id));
 
         $this->actingAs($this->actor)
