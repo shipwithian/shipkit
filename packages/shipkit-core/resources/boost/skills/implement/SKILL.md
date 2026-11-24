@@ -27,7 +27,7 @@ Work ships on evidence, not on your summary. Collect all three items before you 
 
 1. **Regression test.** For a change to an invariant (an `ensure...()` method, a guard, a pivot rule, or a multi-model rule in an Action) and for every bug fix, name the test that proves it. Revert only the production change, run that test, and record that it fails for the expected reason. Restore the change and record that it passes.
 2. **`composer ci:check` passes**, locally and in CI on the pull request.
-3. **An independent review.** A `review-diff` report on the full diff, produced by an agent session that did not write the code, with every hard finding fixed or answered. Your own review from the step above does not count. Ask the user to run it in a fresh session, or start one if you can.
+3. **An independent review.** A `review-diff` report on the full diff, produced by an agent session that did not write the code, with every hard finding fixed or answered. Your own review from the step above does not count. Once the pull request is open and pushed, run `php artisan shipkit:review`: it runs `review-diff` in a fresh read-only session, posts the report on the pull request, and sets the `shipkit/review` status that branch protection requires. After fixing a finding, push and run it again; a new commit needs a new review.
 
 ## Merge rule
 

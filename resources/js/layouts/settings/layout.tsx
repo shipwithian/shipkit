@@ -1,4 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
+import {
+    Bot,
+    KeyRound,
+    LockKeyhole,
+    Palette,
+    ShieldCheck,
+    UserRound,
+    Users,
+} from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -18,22 +27,22 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: edit(),
-        icon: null,
+        icon: UserRound,
     },
     {
         title: 'Security',
         href: editSecurity(),
-        icon: null,
+        icon: LockKeyhole,
     },
     {
         title: 'AI assistants',
         href: editAiAssistants(),
-        icon: null,
+        icon: Bot,
     },
     {
         title: 'Appearance',
         href: editAppearance(),
-        icon: null,
+        icon: Palette,
     },
 ];
 
@@ -47,13 +56,19 @@ function accessControlNavItems(can: {
 }): NavItem[] {
     return [
         ...(can.viewUsers
-            ? [{ title: 'Users', href: usersIndex(), icon: null }]
+            ? [{ title: 'Users', href: usersIndex(), icon: Users }]
             : []),
         ...(can.viewRoles
-            ? [{ title: 'Roles', href: rolesIndex(), icon: null }]
+            ? [{ title: 'Roles', href: rolesIndex(), icon: ShieldCheck }]
             : []),
         ...(can.viewPermissions
-            ? [{ title: 'Permissions', href: permissionsIndex(), icon: null }]
+            ? [
+                  {
+                      title: 'Permissions',
+                      href: permissionsIndex(),
+                      icon: KeyRound,
+                  },
+              ]
             : []),
     ];
 }

@@ -132,7 +132,7 @@ export default function RolePermissions({
                     </div>
 
                     <div className="flex justify-end">
-                        <Button disabled={form.processing}>
+                        <Button disabled={form.processing || !form.isDirty}>
                             Save permissions
                         </Button>
                     </div>

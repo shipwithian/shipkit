@@ -280,7 +280,7 @@ Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requ
 
 ## Frontend
 
-Screens are built from the shadcn/ui primitives in `resources/js/components/ui` (`Button`, `Input`, `Label`, `Select`, `Table`, `Dialog`, and the rest), never hand-built `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` elements. A missing primitive is added with `npx shadcn@latest add {name}`, and a primitive is adapted with its variants and `className`. Details: `vendor/shipwithian/shipkit-core/resources/rules/js.md`.
+Screens are built from the shadcn/ui primitives in `resources/js/components/ui` (`Button`, `Input`, `Label`, `Select`, `Table`, `Dialog`, and the rest), never hand-built `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` elements. A missing primitive is added with `npx shadcn@latest add {name}`, and a primitive is adapted with its variants and `className`. A form that edits or creates something keeps its save button disabled until it has changes (`processing || !isDirty`), list pages use the shared list components, and every navigation item has a lucide icon. Details: `vendor/shipwithian/shipkit-core/resources/rules/js.md`.
 
 ## AI clients
 
@@ -310,7 +310,7 @@ Run `php artisan config:show shipkit.workflow.integration_branch` to find the in
 
 ### What agents may merge
 
-Agents may merge project-owned feature code into the integration branch alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code.
+Agents may merge project-owned feature code into the integration branch alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code, which `php artisan shipkit:review` produces and records on the pull request as the `shipkit/review` status.
 
 A change to the checks themselves needs the maintainer. The repository's CODEOWNERS file lists those paths, and branch protection requires the maintainer's review on them. Without a CODEOWNERS file, these are maintainer-owned:
 

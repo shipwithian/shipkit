@@ -21,7 +21,15 @@ Every control and data display comes from the shadcn/ui primitives in `resources
 - Adapt a primitive through its variants (`variant="ghost"`, `size="icon"`) and `className`, which `cn()` merges over its defaults. Never fork it inside a page.
 - Change a primitive itself in `components/ui` only for a change the whole app should share.
 
-`FrontendPrimitivesTest` in `shipkit-core` fails on a hand-built element outside `components/ui`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
+The template's linter (`vp check`, oxlint's `react/forbid-elements`) flags a hand-built element in the editor as you type, and `FrontendPrimitivesTest` in `shipkit-core` fails on one outside `components/ui` in `composer ci:check`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
+
+## Enable a save button only when there is something to save
+
+A form that edits or creates something keeps its submit button disabled until the form has changes, and while it is submitting: `disabled={processing || !isDirty}` with `<Form>`, or `disabled={form.processing || !form.isDirty}` with `useForm`. Saving an unchanged form only reloads the page, and a button that wakes up as you type tells you the change was noticed. Actions are not edits, so a sign-in, confirmation, delete, revoke, or two-factor button keeps `disabled={processing}` only; a sign-in form also cannot rely on `isDirty`, because browser autofill does not always mark it changed. `FrontendPrimitivesTest` fails on a `pages/{feature}/partials/edit-*.tsx` or `create-*.tsx` dialog whose form never reads `isDirty`; review covers forms with other names, such as the profile page.
+
+## Give navigation items an icon
+
+Every item in a navigation list, the main sidebar and the Settings menu alike, has a `lucide-react` icon (`icon: Users`), so the lists scan at a glance and collapse to icons on a narrow screen.
 
 ## Build list pages from the list components
 

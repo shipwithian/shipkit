@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "staging"
     schedule:
       interval: "weekly"
     cooldown:
@@ -10,3 +11,34 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # Composer and npm were not watched before, so advisories in them (laravel/framework,
+  # phpseclib, symfony/*) were only found with `composer audit` by hand. Security updates open
+  # their own pull requests at once; version updates come weekly, grouped, after a cooldown.
+  - package-ecosystem: "composer"
+    directory: "/"
+    target-branch: "staging"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      composer:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "staging"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      npm:
+        update-types:
+          - "minor"
+          - "patch"

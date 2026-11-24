@@ -104,7 +104,9 @@ export function EditUserRolesDialog({ user, roles }: Props) {
                                 Cancel
                             </Button>
                         </DialogClose>
-                        <Button disabled={form.processing}>Save roles</Button>
+                        <Button disabled={form.processing || !form.isDirty}>
+                            Save roles
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
