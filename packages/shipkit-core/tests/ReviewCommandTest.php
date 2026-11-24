@@ -53,7 +53,6 @@ function fakeReview(string $verdict = 'needs-maintainer', array $overrides = [],
     Process::fake([
         'git status --porcelain --untracked-files=no' => Process::result(),
         'git remote get-url origin' => Process::result("git@github.com:acme/cafe.git\n"),
-        'gh auth status' => Process::result(),
         'gh pr view --json number,baseRefName,headRefOid,body' => Process::result((string) json_encode([
             'number' => 12, 'baseRefName' => 'staging', 'headRefOid' => REVIEWED_SHA, 'body' => "Implements #41.\n\nCloses #42",
         ])),
@@ -160,4 +159,57 @@ it('publishes nothing when the reviewer gives no verdict', function () {
         ->assertFailed();
 
     Process::assertNotRan(fn ($process) => str_contains($process->command, '/statuses/'));
+});
+
+it('fails, and says so, when GitHub refuses the status or the comment', function (string $refused, string $message) {
+    fakeReview(overrides: [$refused => Process::result('', 'HTTP 403: Resource not accessible by integration', 1)]);
+
+    $this->artisan('shipkit:review')
+        ->expectsOutputToContain("Not published: GitHub refused {$message}")
+        ->assertFailed();
+})->with([
+    'the status' => ['gh api repos/acme/cafe/statuses/*', 'setting the shipkit/review status'],
+    'the comment' => ['gh api repos/acme/cafe/issues/12/comments -F *', 'posting the report'],
+]);
+
+it('refuses a checkout whose git commands fail', function () {
+    fakeReview(overrides: ['git status --porcelain --untracked-files=no' => Process::result('', 'fatal: not a git repository', 128)]);
+
+    $this->artisan('shipkit:review')
+        ->expectsOutputToContain('git status failed')
+        ->assertFailed();
+});
+
+it('reviews the pull request it is given', function () {
+    fakeReview(overrides: ['gh pr view 12 --json number,baseRefName,headRefOid,body' => Process::result((string) json_encode([
+        'number' => 12, 'baseRefName' => 'staging', 'headRefOid' => REVIEWED_SHA, 'body' => 'Fixes #7',
+    ]))]);
+
+    $this->artisan('shipkit:review --pr=12')->assertSuccessful();
+
+    Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ') && str_contains($process->command, '#7'));
+});
+
+it('reads the verdict from the result text when the session returns no structured output', function () {
+    fakeReview(overrides: ['claude -p *' => Process::result((string) json_encode([
+        'type' => 'result', 'is_error' => false, 'result' => (string) json_encode(['verdict' => 'not-ready', 'report' => 'Missing tests.']),
+    ]))]);
+
+    $this->artisan('shipkit:review --dry-run')
+        ->expectsOutputToContain('Missing tests.')
+        ->assertFailed();
+});
+
+it('lets the reviewer read but never write', function () {
+    fakeReview();
+
+    $this->artisan('shipkit:review')->assertSuccessful();
+
+    Process::assertRan(function ($process): bool {
+        if (! str_starts_with($process->command, 'claude -p ') || ! preg_match("/--allowedTools '([^']+)'/", $process->command, $tools)) {
+            return false;
+        }
+
+        return array_intersect(preg_split('/\s+(?![^(]*\))/', $tools[1]), ['Edit', 'Write', 'NotebookEdit', 'Bash', 'Bash(git push:*)', 'Bash(git commit:*)']) === [];
+    });
 });

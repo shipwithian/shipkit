@@ -56,13 +56,25 @@ class ReviewCommand extends Command
 
             $repository = $this->gitHubRepository() ?? throw new RuntimeException('The origin remote is not on GitHub, so there is no pull request to review.');
 
-            if (trim(Process::run('git status --porcelain --untracked-files=no')->output()) !== '') {
+            $status = Process::run('git status --porcelain --untracked-files=no');
+
+            if ($status->failed()) {
+                throw new RuntimeException('git status failed: '.trim($status->errorOutput()));
+            }
+
+            if (trim($status->output()) !== '') {
                 throw new RuntimeException('The working tree has uncommitted changes. Commit and push them first: the review covers what the pull request would merge.');
             }
 
             $pull = $this->pullRequest();
 
-            if (trim(Process::run('git rev-parse HEAD')->output()) !== $pull['headRefOid']) {
+            $head = Process::run('git rev-parse HEAD');
+
+            if ($head->failed()) {
+                throw new RuntimeException('git rev-parse HEAD failed: '.trim($head->errorOutput()));
+            }
+
+            if (trim($head->output()) !== $pull['headRefOid']) {
                 throw new RuntimeException("This checkout is not at pull request #{$pull['number']}'s latest commit. Push your commits, or pull the branch, so the review covers what would merge.");
             }
 
@@ -85,7 +97,13 @@ class ReviewCommand extends Command
             return $state === 'success' ? self::SUCCESS : self::FAILURE;
         }
 
-        $this->publish($repository, $pull, $review['report'], $label, $state);
+        try {
+            $this->publish($repository, $pull, $review['report'], $label, $state);
+        } catch (RuntimeException $exception) {
+            $this->components->error('Not published: '.$exception->getMessage()." The verdict was {$label}; run it again.");
+
+            return self::FAILURE;
+        }
 
         $state === 'success'
             ? $this->components->info("Verdict: {$label}. Published on pull request #{$pull['number']} and set ".self::STATUS_CONTEXT.' on '.substr($pull['headRefOid'], 0, 7).'.')
@@ -100,7 +118,12 @@ class ReviewCommand extends Command
     private function pullRequest(): array
     {
         $number = $this->stringOption('pr');
-        $view = Process::run('gh pr view'.($number === null ? '' : ' '.escapeshellarg($number)).' --json number,baseRefName,headRefOid,body');
+
+        if ($number !== null && ! ctype_digit($number)) {
+            throw new RuntimeException("--pr takes a pull request number, such as --pr=12; got \"{$number}\".");
+        }
+
+        $view = Process::run('gh pr view'.($number === null ? '' : " {$number}").' --json number,baseRefName,headRefOid,body');
         $pull = json_decode($view->output(), true);
 
         if ($view->failed() || ! is_array($pull) || ! isset($pull['number'], $pull['baseRefName'], $pull['headRefOid'])) {
@@ -136,6 +159,7 @@ class ReviewCommand extends Command
             "Run the review-diff skill on this branch, with fixed point origin/{$base}.",
             $spec,
             'You are the independent review: you did not write this code.',
+            'For the Checks item, read the pull request\'s CI with `gh pr checks`; do not run composer ci:check.',
             'Do not edit, stage, commit, push, or comment; this command publishes your report.',
             'Return the full report, as markdown, in `report`, and the Handoff verdict in `verdict`: agent-may-merge, needs-maintainer, or not-ready.',
         ]);
@@ -191,16 +215,31 @@ class ReviewCommand extends Command
         file_put_contents((string) $file, $body);
 
         try {
-            $existing = trim(strtok(Process::run("gh api repos/{$repository}/issues/{$pull['number']}/comments --paginate --jq ".escapeshellarg('.[] | select(.body | startswith("'.self::COMMENT_MARKER.'")) | .id'))->output(), "\n") ?: '');
+            $comments = $this->gh("gh api repos/{$repository}/issues/{$pull['number']}/comments --paginate --jq ".escapeshellarg('.[] | select(.body | startswith("'.self::COMMENT_MARKER.'")) | .id'), 'reading the pull request\'s comments');
+            $existing = explode("\n", trim($comments))[0];
 
-            Process::run($existing !== ''
+            $this->gh($existing !== ''
                 ? "gh api -X PATCH repos/{$repository}/issues/comments/{$existing} -F body=@{$file}"
-                : "gh api repos/{$repository}/issues/{$pull['number']}/comments -F body=@{$file}");
+                : "gh api repos/{$repository}/issues/{$pull['number']}/comments -F body=@{$file}", 'posting the report');
         } finally {
             @unlink((string) $file);
         }
 
-        Process::run("gh api repos/{$repository}/statuses/{$pull['headRefOid']} -f state={$state} -f context=".self::STATUS_CONTEXT.' -f '.escapeshellarg("description={$label}"));
+        $this->gh("gh api repos/{$repository}/statuses/{$pull['headRefOid']} -f state={$state} -f context=".self::STATUS_CONTEXT.' -f '.escapeshellarg("description={$label}"), 'setting the '.self::STATUS_CONTEXT.' status');
+    }
+
+    /**
+     * Run a gh command, and fail with what it was doing when GitHub refuses it.
+     */
+    private function gh(string $command, string $doing): string
+    {
+        $result = Process::run($command);
+
+        if ($result->failed()) {
+            throw new RuntimeException("GitHub refused {$doing}: ".trim($result->errorOutput()));
+        }
+
+        return $result->output();
     }
 
     private function stringOption(string $name): ?string
