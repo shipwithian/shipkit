@@ -2,6 +2,10 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
+## Unreleased
+
+- **Guidance:** the `subagents` guideline also covers the session's own model. An agent can't switch it, so it names which model suits each workflow skill (opus to plan, sonnet to build), and the agent suggests a switch once when a skill starts on the wrong one.
+
 ## 6.0.0 (2026-11-24)
 
 A major release, because two checks fail code that passed 5.2: `FrontendPrimitivesTest` (a hand-built control instead of its shadcn/ui primitive) and `AudienceNamingTest` (a route or page folder named after a role). [UPGRADE.md](UPGRADE.md#upgrading-to-60) names each failure and its fix. Everything else is new: `shipkit:upgrade`, `shipkit:review`, `shipkit:doctor --fix`, and guidance.
