@@ -2,6 +2,10 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
+## Unreleased
+
+- **`shipkit:review` respects CODEOWNERS:** the command matches the changed files against the base branch's CODEOWNERS file, the one GitHub enforces, and gives the reviewer the list as `maintainer-owned.txt`. When a listed file changed, an "Agent may merge" verdict becomes "Needs the maintainer", whatever the reviewer concluded. Before this, the reviewer only saw the architecture guideline's list, so 6.0.1's release notes were marked "Agent may merge" although CODEOWNERS owns `packages/shipkit-core/`. The matching follows GitHub's rules: anchored and unanchored patterns, `*`, `**`, and the last matching line wins.
+
 ## 6.0.1 (2026-11-24)
 
 - **Guidance:** the `subagents` guideline also covers the session's own model. An agent can't switch it, so it names which model suits each workflow skill (opus to plan, sonnet to build), and the agent suggests a switch once when a skill starts on the wrong one.

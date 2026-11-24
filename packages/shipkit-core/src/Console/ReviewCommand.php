@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
 use ShipKit\Core\Console\Concerns\ReadsGitHubRepository;
+use ShipKit\Core\Review\CodeOwners;
 use Symfony\Component\Process\ExecutableFinder;
 
 /**
@@ -52,6 +53,14 @@ class ReviewCommand extends Command
      */
     public const string MATERIAL_DIRECTORY = 'framework/cache/shipkit-review';
 
+    /**
+     * The changed files the base branch's CODEOWNERS file owns, or null where the base branch has
+     * no CODEOWNERS file. An agent may never merge a change to an owned file.
+     *
+     * @var list<string>|null
+     */
+    private ?array $maintainerOwned = null;
+
     public function handle(ExecutableFinder $executables): int
     {
         try {
@@ -93,6 +102,8 @@ class ReviewCommand extends Command
             } finally {
                 $this->clearMaterial();
             }
+
+            $review = $this->capAtMaintainer($review, $pull['baseRefName']);
         } catch (RuntimeException $exception) {
             $this->components->error($exception->getMessage());
 
@@ -183,13 +194,20 @@ class ReviewCommand extends Command
             throw new RuntimeException("There is nothing to review between origin/{$base} and this commit.");
         }
 
+        $changedFiles = Process::run('git diff --name-only '.escapeshellarg("origin/{$base}...HEAD"))->output();
+        $this->maintainerOwned = $this->codeOwners($base)?->owned(array_values(array_filter(explode("\n", trim($changedFiles)))));
+
         $files = [
             'diff.patch' => $diff->output(),
             'commits.txt' => Process::run('git log --oneline '.escapeshellarg("origin/{$base}..HEAD"))->output(),
-            'changed-files.txt' => Process::run('git diff --name-only '.escapeshellarg("origin/{$base}...HEAD"))->output(),
+            'changed-files.txt' => $changedFiles,
             'checks.txt' => Process::run("gh pr checks {$pull['number']}")->output(),
             'pull-request.md' => $pull['body'],
         ];
+
+        if ($this->maintainerOwned !== null) {
+            $files['maintainer-owned.txt'] = implode("\n", $this->maintainerOwned)."\n";
+        }
 
         if ($issue !== null) {
             $files['spec.md'] = Process::run('gh issue view '.escapeshellarg($issue).' --comments')->output();
@@ -207,6 +225,44 @@ class ReviewCommand extends Command
         }
 
         return $paths;
+    }
+
+    /**
+     * The CODEOWNERS file on the base branch, which is the one GitHub enforces, so a pull request
+     * cannot take its own files out of the maintainer's hands by editing it.
+     */
+    private function codeOwners(string $base): ?CodeOwners
+    {
+        foreach (CodeOwners::LOCATIONS as $location) {
+            $file = Process::run('git show '.escapeshellarg("origin/{$base}:{$location}"));
+
+            if ($file->successful()) {
+                return CodeOwners::parse($file->output());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Never let an "Agent may merge" stand on a change to a maintainer-owned file, whatever the
+     * reviewer concluded.
+     *
+     * @param  array{verdict: string, report: string}  $review
+     * @return array{verdict: string, report: string}
+     */
+    private function capAtMaintainer(array $review, string $base): array
+    {
+        if ($review['verdict'] !== 'agent-may-merge' || $this->maintainerOwned === null || $this->maintainerOwned === []) {
+            return $review;
+        }
+
+        $files = implode(', ', array_map(fn (string $file): string => "`{$file}`", $this->maintainerOwned));
+
+        return [
+            'verdict' => 'needs-maintainer',
+            'report' => $review['report']."\n\n**Verdict changed to Needs the maintainer** by `shipkit:review`: CODEOWNERS on `{$base}` owns {$files}.",
+        ];
     }
 
     private function clearMaterial(): void
@@ -230,10 +286,17 @@ class ReviewCommand extends Command
             ? 'There is no spec issue; say so on the Spec axis.'
             : "The spec is GitHub issue #{$issue}, saved in {$material['spec.md']}.";
 
+        $owners = match (true) {
+            $this->maintainerOwned === null => "The base branch has no CODEOWNERS file, so the maintainer-owned paths are the architecture guideline's list.",
+            $this->maintainerOwned === [] => "No changed file matches the base branch's CODEOWNERS file, so no maintainer-owned path is touched.",
+            default => "These changed files match the base branch's CODEOWNERS file, so they are maintainer-owned and the verdict can be no better than needs-maintainer: {$material['maintainer-owned.txt']}.",
+        };
+
         $prompt = implode(' ', [
-            "Run the review-diff skill on this branch, with fixed point origin/{$base}.",
+            "Run the review-diff skill on this branch, with fixed point origin/{$base}. The pull request targets {$base}.",
             "The material is already gathered, so skip the skill's git and gh commands: the diff is {$material['diff.patch']}, the commits {$material['commits.txt']}, the changed files {$material['changed-files.txt']}, CI {$material['checks.txt']}, and the pull request's description, which carries its handoff evidence, {$material['pull-request.md']}.",
             $spec,
+            $owners,
             'You are the independent review: you did not write this code.',
             'Spawn the shipkit-standards-reviewer and shipkit-spec-reviewer agents with the Agent tool, in the foreground, as the skill says. Give each the paths of the material files to read instead of commands to run, and report what they find; never review the diff yourself in their place.',
             'Branch protection requires CI separately, so report the CI state from the file, but do not base the verdict on CI that is still running.',
