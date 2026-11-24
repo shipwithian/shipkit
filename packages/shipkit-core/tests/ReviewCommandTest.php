@@ -229,6 +229,7 @@ it('hands the reviewers the diff, commits, spec, and CI as files, so they need n
     Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ')
         && str_contains($process->command, 'storage/framework/cache/shipkit-review/diff.patch')
         && str_contains($process->command, 'storage/framework/cache/shipkit-review/spec.md')
+        && str_contains($process->command, 'storage/framework/cache/shipkit-review/pull-request.md')
         && str_contains($process->command, 'shipkit-standards-reviewer')
         && str_contains($process->command, 'shipkit-spec-reviewer')
         && str_contains($process->command, 'do not base the verdict on CI that is still running')

@@ -188,6 +188,7 @@ class ReviewCommand extends Command
             'commits.txt' => Process::run('git log --oneline '.escapeshellarg("origin/{$base}..HEAD"))->output(),
             'changed-files.txt' => Process::run('git diff --name-only '.escapeshellarg("origin/{$base}...HEAD"))->output(),
             'checks.txt' => Process::run("gh pr checks {$pull['number']}")->output(),
+            'pull-request.md' => $pull['body'],
         ];
 
         if ($issue !== null) {
@@ -231,7 +232,7 @@ class ReviewCommand extends Command
 
         $prompt = implode(' ', [
             "Run the review-diff skill on this branch, with fixed point origin/{$base}.",
-            "The material is already gathered, so skip the skill's git and gh commands: the diff is {$material['diff.patch']}, the commits {$material['commits.txt']}, the changed files {$material['changed-files.txt']}, and CI {$material['checks.txt']}.",
+            "The material is already gathered, so skip the skill's git and gh commands: the diff is {$material['diff.patch']}, the commits {$material['commits.txt']}, the changed files {$material['changed-files.txt']}, CI {$material['checks.txt']}, and the pull request's description, which carries its handoff evidence, {$material['pull-request.md']}.",
             $spec,
             'You are the independent review: you did not write this code.',
             'Spawn the shipkit-standards-reviewer and shipkit-spec-reviewer agents with the Agent tool, in the foreground, as the skill says. Give each the paths of the material files to read instead of commands to run, and report what they find; never review the diff yourself in their place.',
