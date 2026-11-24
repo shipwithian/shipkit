@@ -2,7 +2,7 @@
 
 `shipkit-core` follows [semantic versioning](https://semver.org). A release that tightens a guard is a major version, and its entry in [UPGRADE.md](UPGRADE.md) names the failing check and the fix.
 
-## Unreleased
+## 6.0.1 (2026-11-24)
 
 - **Guidance:** the `subagents` guideline also covers the session's own model. An agent can't switch it, so it names which model suits each workflow skill (opus to plan, sonnet to build), and the agent suggests a switch once when a skill starts on the wrong one.
 

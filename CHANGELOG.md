@@ -2,6 +2,12 @@
 
 ShipKit follows [semantic versioning](https://semver.org). A project created from ShipKit is a one-time copy and starts its own version sequence; the enforcement that must keep improving after creation lives in [`shipwithian/shipkit-core`](packages/shipkit-core/CHANGELOG.md), which projects update with Composer.
 
+## 6.0.1 (2026-11-24)
+
+Requires `shipwithian/shipkit-core` 6.0.1. Nothing to upgrade by hand: `composer update shipwithian/shipkit-core` runs `boost:update`, which recompiles `CLAUDE.md` and `AGENTS.md`.
+
+- **Agent guidance:** the `subagents` guideline also covers the session's own model, naming which model suits each workflow skill (opus to plan, sonnet to build). The agent suggests a switch once when a skill starts on the wrong one.
+
 ## 6.0.0 (2026-11-24)
 
 Requires `shipwithian/shipkit-core` 6.0, a major release: two of its checks fail code that passed 5.2. [UPGRADE.md](packages/shipkit-core/UPGRADE.md#upgrading-to-60) has the steps, and from this release `php artisan shipkit:upgrade --from=5.2.0` brings the template's changes into a project's own files.
