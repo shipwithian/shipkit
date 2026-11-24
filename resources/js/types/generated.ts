@@ -87,6 +87,7 @@ export type PermissionIndexAbilities = {
 export type PermissionIndexProps = {
     readonly permissions: PermissionListItem[];
     readonly can: PermissionIndexAbilities;
+    readonly filters: SearchFilters;
 };
 export type PermissionListItem = {
     readonly id: number;
@@ -126,6 +127,7 @@ export type RoleIndexAbilities = {
 export type RoleIndexProps = {
     readonly roles: RoleListItem[];
     readonly can: RoleIndexAbilities;
+    readonly filters: SearchFilters;
 };
 export type RoleListItem = {
     readonly id: number;
@@ -145,6 +147,9 @@ export type RoleWithPermissionIds = {
     readonly is_protected: boolean;
     readonly permission_ids: number[];
 };
+export type SearchFilters = {
+    readonly search: string | null;
+};
 export type SecurityEditProps = {
     readonly canManageTwoFactor: boolean;
     readonly twoFactorEnabled: boolean;
@@ -159,10 +164,15 @@ export type SharedProps = {
     readonly auth: AuthProps;
     readonly sidebarOpen: boolean;
 };
+export type UserListFilters = {
+    readonly search: string | null;
+    readonly role: number | null;
+};
 export type UserRoleIndexProps = {
     readonly users: UserRoleListItem[];
     readonly pagination: Pagination;
     readonly roles: AssignableRole[];
+    readonly filters: UserListFilters;
 };
 export type UserRoleListItem = {
     readonly id: number;

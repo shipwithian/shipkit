@@ -23,6 +23,18 @@ Every control and data display comes from the shadcn/ui primitives in `resources
 
 `FrontendPrimitivesTest` in `shipkit-core` fails on a hand-built element outside `components/ui`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
 
+## Build list pages from the list components
+
+A page that lists records (an `index` page) is built from the same pieces, so every list searches, filters, and pages the same way:
+
+- `ListToolbar` from `@/components/list-toolbar`: a search box that searches as you type, with the page's filters as its children;
+- `ListFilter` from `@/components/list-filter`: one choice of options, or all of them;
+- `useListFilters(filters)` from `@/hooks/use-list-filters`: `apply({ search })` reloads the page with the filters in the URL, so a filtered list can be shared, bookmarked, and paged;
+- the feature's table partial, built from `Table`, with an empty message that says when filters hide every row;
+- `ListPagination` from `@/components/list-pagination` under a paginated list.
+
+The page receives the filters it was rendered with as a `filters` prop (see the `responses` rule) and passes them straight to `useListFilters`. Settings → Users is the example: search by name or email, a role filter, and pagination.
+
 ## Organize pages by controller action
 
 A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it, in its feature's folder and never an audience's such as `pages/staff/` or `pages/admin/` (see the `routes` rule): `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.

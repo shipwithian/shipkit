@@ -10,6 +10,8 @@ use App\Http\Props\AccessControl\RoleAbilities;
 use App\Http\Props\AccessControl\RoleIndexAbilities;
 use App\Http\Props\AccessControl\RoleIndexProps;
 use App\Http\Props\AccessControl\RoleListItem;
+use App\Http\Props\SearchFilters;
+use App\Http\Requests\AccessControl\ListRequest;
 use App\Http\Requests\AccessControl\StoreRoleRequest;
 use App\Http\Requests\AccessControl\UpdateRoleRequest;
 use App\Models\Role;
@@ -21,7 +23,7 @@ use Inertia\Response;
 
 class RoleController extends Controller
 {
-    public function index(RoleListQuery $roleList): Response
+    public function index(ListRequest $request, RoleListQuery $roleList): Response
     {
         Gate::authorize('viewAny', Role::class);
 
@@ -32,8 +34,9 @@ class RoleController extends Controller
                     delete: Gate::allows('delete', $role),
                     assignPermissions: Gate::allows('assignPermissions', $role),
                 )),
-                $roleList->handle()->all(),
+                $roleList->handle($request->search())->all(),
             )),
+            filters: new SearchFilters(search: $request->search()),
             can: new RoleIndexAbilities(create: Gate::allows('create', Role::class)),
         ));
     }
