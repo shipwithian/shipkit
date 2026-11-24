@@ -21,7 +21,7 @@ Every control and data display comes from the shadcn/ui primitives in `resources
 - Adapt a primitive through its variants (`variant="ghost"`, `size="icon"`) and `className`, which `cn()` merges over its defaults. Never fork it inside a page.
 - Change a primitive itself in `components/ui` only for a change the whole app should share.
 
-`FrontendPrimitivesTest` in `shipkit-core` fails on a hand-built element outside `components/ui`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
+The template's linter (`vp check`, oxlint's `react/forbid-elements`) flags a hand-built element in the editor as you type, and `FrontendPrimitivesTest` in `shipkit-core` fails on one outside `components/ui` in `composer ci:check`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
 
 ## Enable a save button only when there is something to save
 
