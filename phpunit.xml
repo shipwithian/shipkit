@@ -23,7 +23,6 @@
     <source>
         <include>
             <directory>app</directory>
-            <directory>packages/shipkit-core/src</directory>
         </include>
     </source>
     <php>
