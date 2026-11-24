@@ -42,7 +42,7 @@ export function CreatePermissionDialog() {
                     resetOnSuccess
                     className="space-y-4"
                 >
-                    {({ errors, processing }) => (
+                    {({ errors, processing, isDirty }) => (
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="new-permission-name">
@@ -62,7 +62,7 @@ export function CreatePermissionDialog() {
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button disabled={processing}>
+                                <Button disabled={processing || !isDirty}>
                                     Create permission
                                 </Button>
                             </DialogFooter>

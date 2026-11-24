@@ -393,6 +393,33 @@ class ProjectLayout
     }
 
     /**
+     * Edit and create dialogs (`pages/{feature}/partials/edit-*.tsx` and `create-*.tsx`, as the `js`
+     * rule names them) whose form never reads `isDirty`, so their save button can submit a form
+     * nobody changed. Delete dialogs and other files are left alone: deleting is an action, not
+     * an edit.
+     *
+     * @return list<string>
+     */
+    public function formsSubmittingWithoutChanges(): array
+    {
+        $violations = [];
+
+        foreach ($this->frontendFiles() as $relative) {
+            if (! preg_match('#^resources/js/pages/.+/partials/(edit|create)-[^/]+\.tsx$#', $relative)) {
+                continue;
+            }
+
+            $source = $this->withoutScriptComments((string) file_get_contents($this->path($relative)));
+
+            if (preg_match('/<Form\b|\buseForm\s*[<(]/', $source) && ! str_contains($source, 'isDirty')) {
+                $violations[] = "{$relative}: its save button can submit an unchanged form; disable it with `processing || !isDirty` (or `form.isDirty` with useForm)";
+            }
+        }
+
+        return $violations;
+    }
+
+    /**
      * TypeScript source with its comments blanked out, keeping line numbers, so a comment that
      * mentions an element is not mistaken for one.
      */

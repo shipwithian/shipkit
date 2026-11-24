@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **Checks:** `FrontendPrimitivesTest` also fails on an `edit-*` or `create-*` dialog whose form never reads `isDirty`, so a save button cannot submit an unchanged form. The `js` rule and the architecture guideline cover change-aware save buttons and icons on every navigation item.
 - **Guidance:** the `js` rule describes list pages (toolbar, filter, URL-kept filters, empty message, pagination), the `responses` rule the `filters` prop, and the `queries` rule searching with `SearchesText`.
 - **Skills:** `grill-with-docs`, which only called `grilling` and `domain-modeling`, is folded into `grilling`: it records a term or invariant through `domain-modeling` as soon as it settles. Remove `grill-with-docs` from `boost.json`.
 - **Checks:** `FrontendPrimitivesTest` fails on a hand-built `<button>`, `<input>` (other than a hidden field), `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` outside `resources/js/components/ui`, naming the shadcn/ui primitive to use and, when the project lacks it, the `npx shadcn@latest add` command. `shipkit.architecture.raw_element_exceptions` records a file that genuinely needs raw markup. The `js` rule and the architecture guideline say so, so an agent reaches for the primitives without being told.

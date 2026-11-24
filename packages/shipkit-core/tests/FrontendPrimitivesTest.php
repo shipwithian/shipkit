@@ -93,3 +93,29 @@ it('skips a file recorded as a deliberate exception', function () {
 
     expect($layout->rawElementViolations())->toBe([]);
 });
+
+it('waits for changes before an edit or create dialog can submit', function () {
+    $violations = ProjectLayout::current()->formsSubmittingWithoutChanges();
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
+it('fails on an edit or create dialog whose form never checks for changes', function (string $path, string $form) {
+    $layout = primitivesLayout([$path => $form]);
+
+    expect($layout->formsSubmittingWithoutChanges())->toBe(["{$path}: its save button can submit an unchanged form; disable it with `processing || !isDirty` (or `form.isDirty` with useForm)"]);
+})->with([
+    'a Form component' => ['resources/js/pages/menu/partials/edit-item-dialog.tsx', "<Form>{({ processing }) => <Button disabled={processing}>Save</Button>}</Form>\n"],
+    'useForm' => ['resources/js/pages/menu/partials/create-item-dialog.tsx', "const form = useForm({ name: '' });\n<Button disabled={form.processing}>Create</Button>\n"],
+]);
+
+it('passes a dialog that waits for changes, and leaves delete dialogs and other files alone', function () {
+    $layout = primitivesLayout([
+        'resources/js/pages/menu/partials/edit-item-dialog.tsx' => "<Form>{({ processing, isDirty }) => <Button disabled={processing || !isDirty}>Save</Button>}</Form>\n",
+        'resources/js/pages/menu/partials/create-item-dialog.tsx' => "const form = useForm({});\n<Button disabled={form.processing || !form.isDirty}>Create</Button>\n",
+        'resources/js/pages/menu/partials/delete-item-dialog.tsx' => "<Form>{({ processing }) => <Button disabled={processing}>Delete</Button>}</Form>\n",
+        'resources/js/pages/menu/partials/edit-item-preview.tsx' => "export const Preview = () => <p>Not a form</p>;\n",
+    ]);
+
+    expect($layout->formsSubmittingWithoutChanges())->toBe([]);
+});

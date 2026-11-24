@@ -73,7 +73,7 @@ Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requ
 
 ## Frontend
 
-Screens are built from the shadcn/ui primitives in `resources/js/components/ui` (`Button`, `Input`, `Label`, `Select`, `Table`, `Dialog`, and the rest), never hand-built `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` elements. A missing primitive is added with `npx shadcn@latest add {name}`, and a primitive is adapted with its variants and `className`. Details: `vendor/shipwithian/shipkit-core/resources/rules/js.md`.
+Screens are built from the shadcn/ui primitives in `resources/js/components/ui` (`Button`, `Input`, `Label`, `Select`, `Table`, `Dialog`, and the rest), never hand-built `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` elements. A missing primitive is added with `npx shadcn@latest add {name}`, and a primitive is adapted with its variants and `className`. A form that edits or creates something keeps its save button disabled until it has changes (`processing || !isDirty`), list pages use the shared list components, and every navigation item has a lucide icon. Details: `vendor/shipwithian/shipkit-core/resources/rules/js.md`.
 
 ## AI clients
 
