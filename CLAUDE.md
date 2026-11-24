@@ -278,6 +278,10 @@ Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requ
 - Services are for logic shared across Actions, a named calculation, or an external capability. Avoid catch-all `{Model}Service` classes.
 - Events represent completed facts, such as `{Model}Created`. Do not hide workflow in observers; the one exception is a model's own guards.
 
+## Frontend
+
+Screens are built from the shadcn/ui primitives in `resources/js/components/ui` (`Button`, `Input`, `Label`, `Select`, `Table`, `Dialog`, and the rest), never hand-built `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` elements. A missing primitive is added with `npx shadcn@latest add {name}`, and a primitive is adapted with its variants and `className`. Details: `vendor/shipwithian/shipkit-core/resources/rules/js.md`.
+
 ## AI clients
 
 The app is an MCP server at `/mcp`: AI clients connect through OAuth and call tools as the signed-in user. A tool is delivery code like a controller: it authorizes first, then calls one Query or Action, and a consequential tool confirms before acting. Details: `vendor/shipwithian/shipkit-core/resources/rules/mcp.md`. When planning a feature or a user-facing operation, suggest whether users would act on it or ask about it through an AI client, and which operations would be tools; the user decides.

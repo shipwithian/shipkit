@@ -77,6 +77,7 @@ return [
         'long_frontend_files' => [],
         'audience_words' => [],
         'audience_exceptions' => [],
+        'raw_element_exceptions' => [],
     ],
 
     /*

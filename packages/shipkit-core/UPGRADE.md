@@ -35,6 +35,12 @@ To move to two branches, so that merging a pull request stops deploying:
 
 The template README's "Branches and deploys" section has the daily commands, the release, and the hotfix path.
 
+### Hand-built controls instead of shadcn/ui primitives
+
+- **Fails:** `FrontendPrimitivesTest`, with a message such as `resources/js/pages/orders/index.tsx:12: <table> is hand-built; use Table from @/components/ui/table (add it with npx shadcn@latest add table)`.
+- **Fix:** replace each element with its primitive, adding a missing one with the command the message gives. Keep layout classes through `className`, and pick a variant (`ghost`, `link`, `icon`) instead of restyling. A file that genuinely needs raw markup goes in `shipkit.architecture.raw_element_exceptions` with the reason.
+- **Why:** hand-built controls drift from the app's look, its focus states, and its accessibility, and agents kept writing them unless told otherwise.
+
 ### Routes named after a role
 
 - **Fails:** `AudienceNamingTest`, with a message such as `staff/orders: the path names an audience ("staff")`.
