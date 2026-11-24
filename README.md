@@ -642,7 +642,7 @@ It lists every template file that changed and what applying does to it (updates,
 php artisan shipkit:upgrade --apply
 ```
 
-It writes the changes and records the new version in `shipkit.json`, without staging or committing, so `git diff` shows exactly what it did. Resolve the conflicts it lists, then run `composer update`, `npm install`, `php artisan migrate`, and `composer ci:check`. A project created before 5.3 passes `--from=<the release it was created from>` the first time. To skip files you have replaced entirely, list them under `exclude` in `shipkit.json`.
+It writes the changes and records the new version in `shipkit.json`, without staging or committing, so `git diff` shows exactly what it did. Resolve the conflicts it lists, then run `composer update`, `npm install`, `php artisan migrate`, and `composer ci:check`. A project created before 6.0 passes `--from=<the release it was created from>` the first time. To skip files you have replaced entirely, list them under `exclude` in `shipkit.json`.
 
 ## Bringing improvements back to ShipKit
 

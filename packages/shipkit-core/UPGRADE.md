@@ -1,6 +1,6 @@
 # Upgrade notes
 
-From 5.3, `php artisan shipkit:upgrade` brings a release's template changes into a project's own files as a three-way merge: it reports first, and `--apply` writes the result without committing. The sections below keep only what files cannot carry (keys, environment variables, data) and the checks a major release tightens. A project created before 5.3 passes `--from=<the release it was created from>` once; after that, `shipkit.json` records the version.
+From 6.0, `php artisan shipkit:upgrade` brings a release's template changes into a project's own files as a three-way merge: it reports first, and `--apply` writes the result without committing. The sections below keep only what files cannot carry (keys, environment variables, data) and the checks a major release tightens. A project created before 6.0 passes `--from=<the release it was created from>` once; after that, `shipkit.json` records the version.
 
 `shipkit-core` follows [semantic versioning](https://semver.org), and its major version is a promise about what your CI will do. A release that tightens a guard, so that code which passed before can now fail a check, is a **major** release. Minor and patch releases never make a passing project fail.
 
@@ -22,9 +22,11 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
 
-## Upgrading to 5.3
+## Upgrading to 6.0
 
-`shipkit-core` 5.3 changes no check. `composer update shipwithian/shipkit-core` brings `shipkit:upgrade`, `shipkit:doctor --fix`, and the guidance. Then run `php artisan shipkit:upgrade --from=<your current template version>` to see the template's changes, and `--apply` to take them; the `upgrade` skill walks an agent through it. Your project keeps working on the branch it uses today.
+`shipkit-core` 6.0 is a major release: the two checks below fail code that passed 5.2. Require it with `composer require shipwithian/shipkit-core:^6.0`, then run `php artisan shipkit:upgrade --from=<your current template version>` to see the template's changes, and `--apply` to take them; the `upgrade` skill walks an agent through it. Your project keeps working on the branch it uses today.
+
+Once the project is on 6.0, have every pull request reviewed with `php artisan shipkit:review`, and add the `shipkit/review` status to the integration branch's required checks (`docs/branch-protection.md` in the template), so an unreviewed commit cannot merge.
 
 To move to two branches, so that merging a pull request stops deploying:
 

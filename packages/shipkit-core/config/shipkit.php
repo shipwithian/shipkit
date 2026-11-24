@@ -72,7 +72,7 @@ return [
     |
     | integration_branch: the branch every pull request targets, read by the `branches` rule, the
     | skills that open and merge pull requests, and `shipkit:doctor`. A project created from ShipKit
-    | 5.3 or later sets it to `staging`, in its own config/shipkit.php from SHIPKIT_INTEGRATION_BRANCH:
+    | 6.0 or later sets it to `staging`, in its own config/shipkit.php from SHIPKIT_INTEGRATION_BRANCH:
     | work collects there, and one pull request into `main` is a release. This default stays `main`,
     | so a project that never set the key keeps working on one branch.
     |
