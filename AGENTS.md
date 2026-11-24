@@ -345,7 +345,7 @@ Pick the cheapest model and the lowest effort that does the task well, judged by
 
 ## The session's own model
 
-An agent cannot change the model it runs on; only the user can (in Claude Code, `/model`). The same table decides which model suits the work. When a workflow skill starts and the session runs on a model that doesn't suit it, say so in one line and name the model to switch to, then carry on unless the user switches. Suggest it once per skill, and never when the user chose the model for this work.
+An agent cannot change the model it runs on; only the user can (in Claude Code, `/model`). The Work table above decides which model suits the work, and this table applies it to the workflow skills. When a workflow skill starts and the session runs on a model that doesn't suit it, say so in one line and name the model to switch to, then carry on unless the user switches. Suggest it once per skill, and never when the user chose the model for this work.
 
 | Skill                                                                     | Session model |
 | ------------------------------------------------------------------------- | ------------- |

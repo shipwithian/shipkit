@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- **Guidance:** the `subagents` guideline also covers the session's own model. An agent can't switch it, so when a workflow skill starts on a model that doesn't suit the skill, the agent suggests a switch once. The guideline maps each skill to a model: opus for `to-spec`, `to-tickets`, `grilling`, `domain-modeling` and `diagnosing-bugs`, and sonnet for `implement`, `new-feature`, `upgrade`, `verify-app`, `retro` and `correct`.
+- **Guidance:** the `subagents` guideline also covers the session's own model. An agent can't switch it, so it names which model suits each workflow skill (opus to plan, sonnet to build), and the agent suggests a switch once when a skill starts on the wrong one.
 
 ## 6.0.0 (2026-11-24)
 
