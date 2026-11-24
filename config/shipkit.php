@@ -54,6 +54,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Review
+    |--------------------------------------------------------------------------
+    |
+    | The session `php artisan shipkit:review` starts to run review-diff. The two reviewers it
+    | spawns keep the model and effort their agent definitions pin.
+    |
+    */
+
+    'review' => [
+        'model' => 'sonnet',
+        'effort' => 'low',
+        'timeout' => 1800,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Architecture exceptions
     |--------------------------------------------------------------------------
     |

@@ -96,6 +96,24 @@ return [
 
     'agents' => [],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Review
+    |--------------------------------------------------------------------------
+    |
+    | `php artisan shipkit:review` runs review-diff on the current pull request in a fresh
+    | read-only Claude Code session on this machine, on the user's own Claude plan, and publishes
+    | the report and a shipkit/review commit status. The session coordinates; the two reviewers it
+    | spawns keep the model and effort their agent definitions pin.
+    |
+    */
+
+    'review' => [
+        'model' => 'sonnet',
+        'effort' => 'low',
+        'timeout' => 1800,
+    ],
+
     'architecture' => [
         'features_using_framework_exceptions' => [],
         'non_feature_folders' => [],

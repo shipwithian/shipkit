@@ -310,7 +310,7 @@ Run `php artisan config:show shipkit.workflow.integration_branch` to find the in
 
 ### What agents may merge
 
-Agents may merge project-owned feature code into the integration branch alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code.
+Agents may merge project-owned feature code into the integration branch alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code, which `php artisan shipkit:review` produces and records on the pull request as the `shipkit/review` status.
 
 A change to the checks themselves needs the maintainer. The repository's CODEOWNERS file lists those paths, and branch protection requires the maintainer's review on them. Without a CODEOWNERS file, these are maintainer-owned:
 

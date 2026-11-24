@@ -425,6 +425,14 @@ php artisan shipkit:doctor --fix
 
 It lists what it will change and asks before it does anything. It creates `staging` from `main`, makes `staging` the default branch, turns on "Automatically delete head branches", and installs ShipKit's agent definitions. Then, where the app is hosted, set the production environment's branch to `main`. On Laravel Cloud you can add a second environment on `staging` to preview what the next release holds.
 
+Before a pull request merges, have it reviewed by a session that did not write it. With the [Claude Code CLI](https://code.claude.com) signed in, on the pull request's branch:
+
+```bash
+php artisan shipkit:review
+```
+
+It runs the `review-diff` skill in a fresh read-only session on your machine (on your Claude plan; nothing runs in CI), posts the report on the pull request, and sets the `shipkit/review` status that branch protection requires. `--dry-run` prints the review without publishing it.
+
 Check the setup at any time:
 
 ```bash
