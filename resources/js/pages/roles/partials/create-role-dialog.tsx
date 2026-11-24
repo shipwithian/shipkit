@@ -42,7 +42,7 @@ export function CreateRoleDialog() {
                     resetOnSuccess
                     className="space-y-4"
                 >
-                    {({ errors, processing }) => (
+                    {({ errors, processing, isDirty }) => (
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="new-role-name">Name</Label>
@@ -60,7 +60,7 @@ export function CreateRoleDialog() {
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button disabled={processing}>
+                                <Button disabled={processing || !isDirty}>
                                     Create role
                                 </Button>
                             </DialogFooter>

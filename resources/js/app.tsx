@@ -30,7 +30,9 @@ void createInertiaApp({
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
-            case name.startsWith('settings/'):
+            case ['settings/', 'roles/', 'permissions/', 'users/'].some(
+                (prefix) => name.startsWith(prefix),
+            ):
                 return [AppLayout, SettingsLayout];
             default:
                 return AppLayout;

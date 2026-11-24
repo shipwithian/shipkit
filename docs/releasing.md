@@ -19,13 +19,14 @@ Only the maintainer can do these. A release fails with a message that names the 
 
 ## Release
 
-1. **Prepare the notes in a pull request.** In `CHANGELOG.md` and `packages/shipkit-core/CHANGELOG.md`, replace `(unreleased)` with the version and date. A major release must also have its section in `packages/shipkit-core/UPGRADE.md` (see below). Merge it.
-2. **Run the release.** From the Actions tab, run **release** on `main` with the version, such as `1.0.0`. It runs three jobs in order and stops at the first failure:
+1. **Prepare the notes in a pull request into `staging`.** In `CHANGELOG.md` and `packages/shipkit-core/CHANGELOG.md`, replace `Unreleased` with the version and date. The release does not do this for you: 5.2.0 shipped under "Unreleased" because this step was skipped. A major release must also have its section in `packages/shipkit-core/UPGRADE.md` (see below). Merge it.
+2. **Release `staging` into `main`.** Work collects on `staging`, and the release workflow runs on `main`. Open the release pull request with `gh pr create --base main --head staging --title "Release 1.0.0"`, once the notes from step 1 are on `staging`, and merge it with a merge commit.
+3. **Run the release.** From the Actions tab, run **release** on `main` with the version, such as `1.0.0`. It runs three jobs in order and stops at the first failure:
     1. **verify** splits `packages/shipkit-core` without publishing it, builds the release commit, creates a project from it with the split package standing in for version `1.0.0`, and runs `composer ci:check` in that project. It also checks that `ci:check` fails when the checks are unregistered or a mapped model is unguarded. Nothing is tagged yet, so a release that cannot work leaves nothing behind.
     2. **shipkit-core** tags the split `v1.0.0` in `shipwithian/shipkit-core` and waits up to 10 minutes for Packagist to list it.
     3. **ShipKit** builds the release commit again, this time locked to the package from Packagist, repeats the project check against it, and pushes the tag `v1.0.0` to this repository.
-3. **Check it as a user would.** In an empty folder, run `laravel new release-check --using=shipwithian/shipkit`, then `cd release-check && composer ci:check`. Delete the folder afterwards.
-4. **Publish the notes.** Create the GitHub release for the tag from the matching `CHANGELOG.md` section:
+4. **Check it as a user would.** In an empty folder, run `laravel new release-check --using=shipwithian/shipkit`, then `cd release-check && composer ci:check`. Delete the folder afterwards.
+5. **Publish the notes.** Create the GitHub release for the tag from the matching `CHANGELOG.md` section:
 
 ```bash
 gh release create v1.0.0 --title "ShipKit 1.0.0" --notes-file notes.md

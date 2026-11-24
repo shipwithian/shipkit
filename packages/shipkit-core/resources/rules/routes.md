@@ -9,6 +9,16 @@ paths:
 
 Retain authentication and verification middleware on protected routes, but do not add permission middleware. Controllers invoke policies for authorization.
 
+## Name routes after the resource, never the role that uses it
+
+A URL, a route name, and a page folder say what the page is, never who it is for: `/orders`, `orders.index`, and `pages/orders/`, not `/staff/orders`, `admin.orders.index`, or `pages/staff/`. A role prefix protects nothing. What protects a page is:
+
+- `auth` on the route;
+- the policy the controller authorizes with;
+- the abilities the page receives to show or hide its links, as the roles, permissions, and users pages do.
+
+When different people see different things on one resource, keep one URL and let its Query scope the list to the actor: a customer sees their own orders, and staff with `view orders` see every order. When they are genuinely different resources, name each for what it is (`/orders` and `/kitchen/queue`), not for who opens it. `AudienceNamingTest` in `shipkit-core` fails on an application route whose path or name has a segment naming an audience (`admin`, `staff`, `manager`, `employee`, the system role names, and `shipkit.architecture.audience_words`) and on a page folder with such a name. Record a path that really is a resource, such as `staff` in an HR app, in `shipkit.architecture.audience_exceptions` with the reason.
+
 ## Point routes to controllers
 
 Routes reference controller actions. Do not define route closures that contain logic; use an invokable controller for a single endpoint.

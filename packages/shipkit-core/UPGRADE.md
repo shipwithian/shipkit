@@ -1,5 +1,7 @@
 # Upgrade notes
 
+From 6.0, `php artisan shipkit:upgrade` brings a release's template changes into a project's own files as a three-way merge: it reports first, and `--apply` writes the result without committing. The sections below keep only what files cannot carry (keys, environment variables, data) and the checks a major release tightens. A project created before 6.0 passes `--from=<the release it was created from>` once; after that, `shipkit.json` records the version.
+
 `shipkit-core` follows [semantic versioning](https://semver.org), and its major version is a promise about what your CI will do. A release that tightens a guard, so that code which passed before can now fail a check, is a **major** release. Minor and patch releases never make a passing project fail.
 
 Every major release has a section below named for the version, and each entry in it names three things:
@@ -19,6 +21,35 @@ Add the section in the pull request that makes the change, not afterwards. A maj
 - **Fix:** Load the model, change it, and call `save()` instead of writing through `toBase()`.
 - **Why:** A write through the base builder skipped every guard on the model.
 ```
+
+## Upgrading to 6.0
+
+`shipkit-core` 6.0 is a major release: the two checks below fail code that passed 5.2. Require it with `composer require shipwithian/shipkit-core:^6.0`, then run `php artisan shipkit:upgrade --from=<your current template version>` to see the template's changes, and `--apply` to take them; the `upgrade` skill walks an agent through it. Your project keeps working on the branch it uses today.
+
+Once the project is on 6.0, have every pull request reviewed with `php artisan shipkit:review`, and add the `shipkit/review` status to the integration branch's required checks (`docs/branch-protection.md` in the template), so an unreviewed commit cannot merge.
+
+To move to two branches, so that merging a pull request stops deploying:
+
+1. Set `SHIPKIT_INTEGRATION_BRANCH=staging` in `.env` and `.env.example`. If `config/shipkit.php` has no `workflow` block yet, copy it from the template's.
+2. Run `php artisan shipkit:doctor --fix`. It lists its changes and asks first, then creates `staging` from `main`, makes it GitHub's default branch, and turns on the deletion of merged branches.
+3. Where the app is hosted, set the production environment's branch to `main`.
+4. `shipkit:upgrade --apply` brings the template's `.github/workflows/pr-base.yml` and the `staging` push trigger of its workflows.
+
+The template README's "Branches and deploys" section has the daily commands, the release, and the hotfix path.
+
+### Hand-built controls instead of shadcn/ui primitives
+
+- **Fails:** `FrontendPrimitivesTest`, with a message such as `resources/js/pages/orders/index.tsx:12: <table> is hand-built; use Table from @/components/ui/table (add it with npx shadcn@latest add table)`.
+- **Fix:** replace each element with its primitive, adding a missing one with the command the message gives. Keep layout classes through `className`, and pick a variant (`ghost`, `link`, `icon`) instead of restyling. A file that genuinely needs raw markup goes in `shipkit.architecture.raw_element_exceptions` with the reason.
+- **Why:** hand-built controls drift from the app's look, its focus states, and its accessibility, and agents kept writing them unless told otherwise.
+
+### Routes named after a role
+
+- **Fails:** `AudienceNamingTest`, with a message such as `staff/orders: the path names an audience ("staff")`.
+- **Fix:** move the route to its resource's path and name (`/orders`, `orders.index`) and its pages to the feature's folder (`pages/orders/`). Keep the policy check in the controller, and show the link by ability. If two audiences see different lists, scope the list in its Query to the actor. If the path really is a resource, such as `staff` in an HR app, record it in `shipkit.architecture.audience_exceptions` with the reason.
+- **Why:** a role in the URL protects nothing and splits one resource across several URLs. The policy and the abilities already decide who sees what.
+
+To stay on one branch, change nothing. If you copy the new `pr-base.yml`, also run `gh variable set SHIPKIT_INTEGRATION_BRANCH --body main`, because the workflow now expects `staging` by default.
 
 ## Upgrading to 5.2
 

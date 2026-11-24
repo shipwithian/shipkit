@@ -5,10 +5,12 @@ namespace App\Http\Controllers\AccessControl;
 use App\Actions\AccessControl\SyncUserRolesAction;
 use App\Http\Controllers\Controller;
 use App\Http\Props\AccessControl\AssignableRole;
+use App\Http\Props\AccessControl\UserListFilters;
 use App\Http\Props\AccessControl\UserRoleIndexProps;
 use App\Http\Props\AccessControl\UserRoleListItem;
 use App\Http\Props\Pagination;
 use App\Http\Requests\AccessControl\UpdateUserRolesRequest;
+use App\Http\Requests\AccessControl\UserListRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Queries\AccessControl\RoleListQuery;
@@ -20,16 +22,17 @@ use Inertia\Response;
 
 class UserRoleController extends Controller
 {
-    public function index(UserRoleListQuery $userRoleList, RoleListQuery $roleList): Response
+    public function index(UserListRequest $request, UserRoleListQuery $userRoleList, RoleListQuery $roleList): Response
     {
         Gate::authorize('assignToUsers', Role::class);
 
-        $users = $userRoleList->handle();
+        $users = $userRoleList->handle($request->search(), $request->roleId());
 
         return Inertia::render('users/index', new UserRoleIndexProps(
             users: array_values(array_map(UserRoleListItem::from(...), $users->items())),
             pagination: Pagination::from($users),
             roles: array_values(array_map(AssignableRole::from(...), $roleList->handle()->all())),
+            filters: new UserListFilters(search: $request->search(), role: $request->roleId()),
         ));
     }
 

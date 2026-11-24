@@ -1,4 +1,13 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    Bot,
+    KeyRound,
+    LockKeyhole,
+    Palette,
+    ShieldCheck,
+    UserRound,
+    Users,
+} from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -7,6 +16,9 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAiAssistants } from '@/routes/ai-assistants';
 import { edit as editAppearance } from '@/routes/appearance';
+import { index as permissionsIndex } from '@/routes/permissions';
+import { index as rolesIndex } from '@/routes/roles';
+import { index as usersIndex } from '@/routes/users';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
@@ -15,33 +27,67 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: edit(),
-        icon: null,
+        icon: UserRound,
     },
     {
         title: 'Security',
         href: editSecurity(),
-        icon: null,
+        icon: LockKeyhole,
     },
     {
         title: 'AI assistants',
         href: editAiAssistants(),
-        icon: null,
+        icon: Bot,
     },
     {
         title: 'Appearance',
         href: editAppearance(),
-        icon: null,
+        icon: Palette,
     },
 ];
 
+/**
+ * The access-control pages, each shown only to who may open it, as its policy decides.
+ */
+function accessControlNavItems(can: {
+    viewRoles: boolean;
+    viewPermissions: boolean;
+    viewUsers: boolean;
+}): NavItem[] {
+    return [
+        ...(can.viewUsers
+            ? [{ title: 'Users', href: usersIndex(), icon: Users }]
+            : []),
+        ...(can.viewRoles
+            ? [{ title: 'Roles', href: rolesIndex(), icon: ShieldCheck }]
+            : []),
+        ...(can.viewPermissions
+            ? [
+                  {
+                      title: 'Permissions',
+                      href: permissionsIndex(),
+                      icon: KeyRound,
+                  },
+              ]
+            : []),
+    ];
+}
+
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
-
+    const page = usePage();
+    const accessControlItems = accessControlNavItems(page.props.auth.can);
+    const isAccountPage = page.component.startsWith('settings/');
+    const navItems = [...sidebarNavItems, ...accessControlItems];
     return (
         <div className="px-4 py-6">
             <Heading
                 title="Settings"
-                description="Manage your profile and account settings"
+                description={
+                    accessControlItems.length > 0
+                        ? 'Manage your account, and who can do what in the app'
+                        : 'Manage your profile and account settings'
+                }
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
@@ -50,7 +96,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                         className="flex flex-col space-y-1 space-x-0"
                         aria-label="Settings"
                     >
-                        {sidebarNavItems.map((item, index) => (
+                        {navItems.map((item, index) => (
                             <Button
                                 key={`${toUrl(item.href)}-${index}`}
                                 size="sm"
@@ -73,8 +119,18 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <Separator className="my-6 lg:hidden" />
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
+                <div
+                    className={cn(
+                        'min-w-0 flex-1',
+                        isAccountPage && 'md:max-w-2xl',
+                    )}
+                >
+                    <section
+                        className={cn(
+                            'space-y-12',
+                            isAccountPage && 'max-w-xl',
+                        )}
+                    >
                         {children}
                     </section>
                 </div>

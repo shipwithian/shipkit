@@ -17,6 +17,10 @@ Pass the trusted actor, parent model, and typed filters; never a Form Request. A
 
 A Query may also resolve a single record the actor owns, such as `ApiTokenQuery` finding one of the user's tokens. It looks the record up through the actor's relation (`$user->tokens()->findOrFail($id)`) and lets `ModelNotFoundException` answer 404, so a record that belongs to someone else looks the same as one that does not exist.
 
+## Search with SearchesText
+
+A Query behind a list page takes its search and filters as nullable typed parameters, so its other callers pass nothing and get every row. For a search box, use `whereContains()` from `App\Concerns\SearchesText`: it matches any of the given columns, ignoring case, with `%` and `_` taken literally, on SQLite, MySQL, and Postgres alike.
+
 ## Never write
 
 Query objects do not create, update, or delete records and do not dispatch side effects.

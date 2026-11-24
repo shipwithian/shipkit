@@ -4,7 +4,7 @@ One file per user-facing feature. Each answers what the feature is, how a user r
 
 | Feature                                     | Code feature  | Entry points                                                        |
 | ------------------------------------------- | ------------- | ------------------------------------------------------------------- |
-| [Roles](roles.md)                           | AccessControl | `/roles`, `/roles/{role}/permissions`                               |
-| [Permissions](permissions.md)               | AccessControl | `/permissions`                                                      |
+| [Roles](roles.md)                           | AccessControl | `/settings/roles`, `/settings/roles/{role}/permissions`             |
+| [Permissions](permissions.md)               | AccessControl | `/settings/permissions`                                             |
 | [Account settings](account-settings.md)     | Settings      | `/settings/profile`, `/settings/security`                           |
 | [API authentication](api-authentication.md) | Auth          | `/api/v1/login`, `/api/v1/user`, `/api/v1/logout`, `/api/v1/tokens` |

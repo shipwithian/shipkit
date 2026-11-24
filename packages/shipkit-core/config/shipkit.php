@@ -35,6 +35,16 @@ return [
     | protected_marker_exceptions: files allowed to write is_protected, keyed by path, such as a test
     | that proves the marker cannot change. Application code never belongs here.
     |
+    | audience_words: the project's own role names, such as barista, that AudienceNamingTest also
+    | refuses in a route's path or name and in a page folder, besides admin, staff, manager, and the like.
+    |
+    | audience_exceptions: route paths or page folders that are a resource rather than an audience,
+    | keyed by path, with the reason, such as 'staff' in an HR app whose staff members are the records.
+    |
+    | raw_element_exceptions: frontend files allowed to hand-build a button, input, label, select,
+    | textarea, table, or dialog instead of using its shadcn/ui primitive, keyed by path, with the
+    | reason, such as a printable receipt styled for paper.
+    |
     | long_frontend_files: files under resources/js allowed past FrontendFileLengthTest's limit
     | (200 lines for a page, 400 for any other file), keyed by path, with the reason.
     |
@@ -61,9 +71,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | integration_branch: the branch every pull request targets, read by the `branches` rule, the
-    | skills that open and merge pull requests, and `shipkit:doctor`. Set it to `staging` when work
-    | collects there before a release to `main`. The published config/shipkit.php reads it from
-    | SHIPKIT_INTEGRATION_BRANCH.
+    | skills that open and merge pull requests, and `shipkit:doctor`. A project created from ShipKit
+    | 6.0 or later sets it to `staging`, in its own config/shipkit.php from SHIPKIT_INTEGRATION_BRANCH:
+    | work collects there, and one pull request into `main` is a release. This default stays `main`,
+    | so a project that never set the key keeps working on one branch.
     |
     */
 
@@ -85,11 +96,32 @@ return [
 
     'agents' => [],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Review
+    |--------------------------------------------------------------------------
+    |
+    | `php artisan shipkit:review` runs review-diff on the current pull request in a fresh
+    | read-only Claude Code session on this machine, on the user's own Claude plan, and publishes
+    | the report and a shipkit/review commit status. The session coordinates; the two reviewers it
+    | spawns keep the model and effort their agent definitions pin.
+    |
+    */
+
+    'review' => [
+        'model' => 'sonnet',
+        'effort' => 'low',
+        'timeout' => 1800,
+    ],
+
     'architecture' => [
         'features_using_framework_exceptions' => [],
         'non_feature_folders' => [],
         'protected_marker_exceptions' => [],
         'long_frontend_files' => [],
+        'audience_words' => [],
+        'audience_exceptions' => [],
+        'raw_element_exceptions' => [],
     ],
 
     /*

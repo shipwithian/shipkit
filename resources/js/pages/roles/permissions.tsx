@@ -6,6 +6,15 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
 import { index as rolesIndex } from '@/routes/roles';
 import type { RolePermissionsEditProps } from '@/types';
 
@@ -33,7 +42,7 @@ export default function RolePermissions({
         <>
             <Head title={`${role.name} permissions`} />
 
-            <div className="flex flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-col gap-6">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                     <Heading
                         title={`${role.name} permissions`}
@@ -51,18 +60,18 @@ export default function RolePermissions({
 
                     <div className="bg-card overflow-hidden rounded-xl border">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-muted/50 border-b text-left">
-                                    <tr>
-                                        <th className="w-16 px-4 py-3 font-medium">
+                            <Table>
+                                <TableHeader className="bg-muted/50">
+                                    <TableRow>
+                                        <TableHead className="w-16 px-4 py-3 font-medium">
                                             Granted
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
+                                        </TableHead>
+                                        <TableHead className="px-4 py-3 font-medium">
                                             Permission
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {permissions.map((permission) => {
                                         const locked =
                                             role.is_protected &&
@@ -73,8 +82,8 @@ export default function RolePermissions({
                                             );
 
                                         return (
-                                            <tr key={permission.id}>
-                                                <td className="px-4 py-3">
+                                            <TableRow key={permission.id}>
+                                                <TableCell className="px-4 py-3">
                                                     <Checkbox
                                                         id={`permission-${permission.id}`}
                                                         checked={
@@ -90,9 +99,9 @@ export default function RolePermissions({
                                                             )
                                                         }
                                                     />
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <label
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3">
+                                                    <Label
                                                         htmlFor={`permission-${permission.id}`}
                                                         className="flex cursor-pointer items-center gap-2 font-medium"
                                                     >
@@ -102,28 +111,28 @@ export default function RolePermissions({
                                                                 Protected
                                                             </Badge>
                                                         )}
-                                                    </label>
-                                                </td>
-                                            </tr>
+                                                    </Label>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })}
                                     {permissions.length === 0 && (
-                                        <tr>
-                                            <td
+                                        <TableRow>
+                                            <TableCell
                                                 colSpan={2}
                                                 className="text-muted-foreground px-4 py-10 text-center"
                                             >
                                                 No permissions are available.
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
 
                     <div className="flex justify-end">
-                        <Button disabled={form.processing}>
+                        <Button disabled={form.processing || !form.isDirty}>
                             Save permissions
                         </Button>
                     </div>

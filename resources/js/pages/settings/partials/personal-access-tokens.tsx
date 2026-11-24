@@ -75,7 +75,7 @@ export function PersonalAccessTokens({
                 resetOnSuccess
                 className="flex items-end gap-3"
             >
-                {({ errors, processing }) => (
+                {({ errors, processing, isDirty }) => (
                     <>
                         <div className="grid flex-1 gap-2">
                             <Label htmlFor="token_name">Token name</Label>
@@ -86,7 +86,9 @@ export function PersonalAccessTokens({
                             />
                             <InputError message={errors.name} />
                         </div>
-                        <Button disabled={processing}>Create token</Button>
+                        <Button disabled={processing || !isDirty}>
+                            Create token
+                        </Button>
                     </>
                 )}
             </Form>

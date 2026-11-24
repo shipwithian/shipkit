@@ -48,7 +48,7 @@ export function EditPermissionDialog({
                     onSuccess={() => setOpen(false)}
                     className="space-y-4"
                 >
-                    {({ errors, processing }) => (
+                    {({ errors, processing, isDirty }) => (
                         <>
                             <div className="grid gap-2">
                                 <Label
@@ -71,7 +71,7 @@ export function EditPermissionDialog({
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button disabled={processing}>
+                                <Button disabled={processing || !isDirty}>
                                     Save changes
                                 </Button>
                             </DialogFooter>

@@ -59,6 +59,7 @@ Cascades, row locks, and the full pattern: `vendor/shipwithian/shipkit-core/reso
 - Controllers coordinate HTTP: `Gate::authorize()` as the first statement, then one Action for a write or one Query object for a read, then the response. They do not query models or use `DB`. Route model binding does not replace authorization.
 - Form Requests validate and normalize input only. They never authorize.
 - Routes apply authentication, verification, and throttling, never permission middleware.
+- URLs, route names, and page folders are named after the feature and resource, never the role that uses them: `/orders` and `pages/orders/`, not `/staff/orders` or `pages/admin/`. Who may open a page is its policy's decision, and whether a link shows is the abilities' decision.
 - API resources and Inertia props list every exposed field and never a secret. Inertia props are typed PHP classes in `app/Http/Props`, and the frontend imports the TypeScript types `composer types:generate` produces from them; payload types are generated, never hand-written.
 
 Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requests.md`, `routes.md`, `policies.md`, `responses.md`.
@@ -69,6 +70,10 @@ Details: `vendor/shipwithian/shipkit-core/resources/rules/controllers.md`, `requ
 - Eloquent models own persistence, relationships, casts, scopes, small model-local behavior, and their `ensure...()` invariants.
 - Services are for logic shared across Actions, a named calculation, or an external capability. Avoid catch-all `{Model}Service` classes.
 - Events represent completed facts, such as `{Model}Created`. Do not hide workflow in observers; the one exception is a model's own guards.
+
+## Frontend
+
+Screens are built from the shadcn/ui primitives in `resources/js/components/ui` (`Button`, `Input`, `Label`, `Select`, `Table`, `Dialog`, and the rest), never hand-built `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` elements. A missing primitive is added with `npx shadcn@latest add {name}`, and a primitive is adapted with its variants and `className`. A form that edits or creates something keeps its save button disabled until it has changes (`processing || !isDirty`), list pages use the shared list components, and every navigation item has a lucide icon. Details: `vendor/shipwithian/shipkit-core/resources/rules/js.md`.
 
 ## AI clients
 
@@ -88,18 +93,24 @@ ShipKit's path rules ship with `shipkit-core` in `vendor/shipwithian/shipkit-cor
 - **Feature work:** `to-spec` → `to-tickets` → `implement`, tracked in GitHub Issues as described in `.ai/issue-tracker.md`. `review-diff` reviews a branch against these rules and its own checklist.
 - **A bug or regression:** `diagnosing-bugs`.
 - **Proving behaviour in the running app:** `verify-app`.
-- **Shaping a feature's language:** `domain-modeling` or `grill-with-docs`.
+- **Shaping a feature's language:** `domain-modeling`, or `grilling`, which records terms and invariants through it as they settle.
+- **Moving to a newer ShipKit release:** `upgrade`, which runs `php artisan shipkit:upgrade`.
 - **After a session, or when the same correction repeats:** `retro` and `correct`. `.ai/rules/enforcement.md` pairs every rule with the check that enforces it; prefer adding a check over adding a rule.
+
+### Branches
+
+Run `php artisan config:show shipkit.workflow.integration_branch` to find the integration branch, `staging` unless the project works on `main` alone. Start every branch from it and open every pull request against it. Never open a pull request into `main`, except the release from the integration branch or a `hotfix/*` branch the maintainer agreed to, and never merge either: merging into `main` deploys. Stacks, retargeting, the release, and hotfixes: `vendor/shipwithian/shipkit-core/resources/rules/branches.md`.
 
 ### What agents may merge
 
-Agents may merge project-owned feature code alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code.
+Agents may merge project-owned feature code into the integration branch alone, on the handoff evidence and merge rule in the `implement` skill: a regression test shown failing without the change for every invariant change and bug fix, a green `composer ci:check`, and a `review-diff` verdict of "Agent may merge" from a session that did not write the code, which `php artisan shipkit:review` produces and records on the pull request as the `shipkit/review` status.
 
 A change to the checks themselves needs the maintainer. The repository's CODEOWNERS file lists those paths, and branch protection requires the maintainer's review on them. Without a CODEOWNERS file, these are maintainer-owned:
 
 - the `shipkit-core` version, and `config/shipkit.php`, where check exceptions are recorded;
 - agent guidance (`.ai/`, `boost.json`, and the `CLAUDE.md` and `AGENTS.md` compiled from them);
 - CI workflows, and the configuration of every check (PHPUnit, PHPStan, Rector, Pint, TypeScript, Vite, and the Composer and npm scripts);
-- the guarded models of protected records, and the tests that enforce a rule in `.ai/rules/enforcement.md`.
+- the guarded models of protected records, and the tests that enforce a rule in `.ai/rules/enforcement.md`;
+- every pull request into `main` when the integration branch is another branch: the release and hotfixes.
 
 Never weaken, skip, or work around a check to get a change merged.

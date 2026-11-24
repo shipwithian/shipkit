@@ -141,7 +141,7 @@ Passport signs tokens with a key pair. `composer setup` and project creation run
 
 ### Roles and permissions
 
-Authorization is powered by Spatie Laravel Permission and currently includes:
+Authorization is powered by Spatie Laravel Permission. Its pages live in Settings (`/settings/users`, `/settings/roles`, `/settings/permissions`), each shown only to who may open it, so the main sidebar stays free for the app's own work. It currently includes:
 
 - A protected, environment-configured Super Admin account
 - Protected system roles and permissions
@@ -181,57 +181,6 @@ The application includes an Inertia and React interface with:
 | Code quality       | PHPStan, Laravel Pint, Rector, TypeScript |
 
 Exact dependency constraints are maintained in `composer.json` and `package.json`.
-
-## Optional Jev developer quality workflow
-
-ShipKit includes a project-scoped Codex MCP configuration for [Jev](https://docs.typesafe.ai/), TypeSafe's typed judgment layer. Jev is an advisory development tool for risk classification, focused review, and completion verification. It does not modify code, commit changes, merge pull requests, or replace Pest, Pint, PHPStan, Rector, TypeScript checks, or human review.
-
-The configuration is tracked in [`.codex/config.toml`](.codex/config.toml), alongside the Laravel Boost server, so every project created from ShipKit gets the same MCP registration. The Jev MCP package is pinned to a known version for repeatable setup; update that pin deliberately when upgrading the workflow.
-
-### Benefits
-
-Jev gives every ShipKit-based project a shared, lightweight quality workflow around development:
-
-- **Risk-based effort:** classify changes before choosing review and test depth. Documentation-only work can stay lightweight, while authentication, authorization, database, dependency, and deployment changes can receive deeper checks.
-- **Focused review:** review the relevant diff and evidence instead of relying on broad, generic feedback.
-- **More reliable handoffs:** check completion claims against the proposed changes and reported test evidence before calling work finished.
-- **Consistent project setup:** every project generated from ShipKit can use the same advisory checkpoints without adding Jev to the Laravel runtime.
-- **Safe escalation:** missing keys, service failures, malformed results, and low-confidence judgments route to normal deterministic checks and human review.
-
-Jev improves where attention goes; it does not prove correctness. Pest, Pint, PHPStan, Rector, TypeScript checks, CI, and human review remain the authoritative quality gates.
-
-### One-time developer setup
-
-Each developer needs to complete these steps on their own machine:
-
-1. Create a TypeSafe API key and store it in the user environment as `TYPESAFE_API_KEY`. Never put the key in this repository, a Laravel `.env` file, a `VITE_` variable, a prompt, or a committed Codex configuration file.
-
-    For a temporary shell session, the shape is:
-
-    ```bash
-    export TYPESAFE_API_KEY='your-new-typesafe-key'
-    ```
-
-    For regular use, store the variable through your local shell profile or secret manager, then restart Codex so the desktop, CLI, or IDE process can read it.
-
-2. Install the official TypeSafe agent skill for Codex:
-
-    ```bash
-    npx skills add typesafe-ai/skills --skill typesafe-ai -g
-    ```
-
-3. Open the trusted ShipKit project in Codex Desktop, CLI, or IDE and restart the client if it was already open. The project-scoped configuration supplies the Jev MCP server and forwards only the local `TYPESAFE_API_KEY` environment variable.
-4. Confirm that the `jev` MCP server is listed, then use the enabled tools: `jev_classify`, `jev_review`, and `jev_gate`.
-
-For a local smoke test, ask Codex to classify a synthetic change description. A healthy response contains typed judgment data with confidence or probability information. Test with a focused diff and only the relevant repository context; do not send `.env` files, credentials, `vendor`, build output, or unrelated source files.
-
-Jev is used at three optional checkpoints:
-
-- classify change risk and affected areas before selecting review and test depth;
-- review a focused diff with `jev_review`;
-- verify acceptance claims and test evidence with `jev_gate` before handoff.
-
-If the key is missing, authentication fails, Jev is rate-limited or unavailable, or a result is malformed or low-confidence, route the change to normal human review and deterministic project checks. Jev must never be an approval bypass.
 
 ## Architecture
 
@@ -292,16 +241,16 @@ For the story of how this architecture was chosen, and how it was evaluated by l
 
 ShipKit's shared skills, path rules, and architecture guideline ship with `shipkit-core` (`vendor/shipwithian/shipkit-core/resources/`), so `composer update` brings their improvements; project-specific skills live in `.ai/skills/`. `php artisan boost:update` syncs both to Claude Code and Codex alongside Laravel Boost's package skills. `composer setup` runs it, so a fresh clone gets the skills along with the committed `boost.json`, `.mcp.json`, `CLAUDE.md`, and `AGENTS.md`. After editing `.ai/guidelines`, run `php artisan boost:update` and commit the regenerated `CLAUDE.md` and `AGENTS.md`; `AgentToolingTest` fails until you do.
 
-| Skill                                            | Use it to                                                                                      |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `new-feature`                                    | Create a feature with `php artisan make:feature {Name}`                                        |
-| `to-spec`, `to-tickets`, `implement`             | Turn a conversation into a GitHub issue spec, split it into tickets, and build them test-first |
-| `review-diff`                                    | Review a branch against the `.ai` rules and its originating issue                              |
-| `diagnosing-bugs`                                | Debug with a red-capable feedback loop before hypothesising                                    |
-| `verify-app`                                     | Drive an isolated copy of the app over HTTP and capture evidence                               |
-| `domain-modeling`, `grill-with-docs`, `grilling` | Sharpen a feature's language into `.ai/rules/features/`                                        |
-| `retro`, `correct`                               | Turn repeated agent mistakes into checks                                                       |
-| `writing-for-agents`, `handoff`                  | Write agent documents; hand work to a fresh session                                            |
+| Skill                                | Use it to                                                                                      |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `new-feature`                        | Create a feature with `php artisan make:feature {Name}`                                        |
+| `to-spec`, `to-tickets`, `implement` | Turn a conversation into a GitHub issue spec, split it into tickets, and build them test-first |
+| `review-diff`                        | Review a branch against the `.ai` rules and its originating issue                              |
+| `diagnosing-bugs`                    | Debug with a red-capable feedback loop before hypothesising                                    |
+| `verify-app`                         | Drive an isolated copy of the app over HTTP and capture evidence                               |
+| `domain-modeling`, `grilling`        | Sharpen a feature's language into `.ai/rules/features/`                                        |
+| `retro`, `correct`                   | Turn repeated agent mistakes into checks                                                       |
+| `writing-for-agents`, `handoff`      | Write agent documents; hand work to a fresh session                                            |
 
 Several skills are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) and [pstack](https://github.com/cursor/plugins/tree/main/pstack), both MIT licensed. Each adapted skill keeps its upstream `LICENSE` and names its source in `metadata.source`. To update one, compare it with the upstream file, re-apply the ShipKit adaptations (`.ai/rules` paths, GitHub Issues, Pest, `composer ci:check`), and keep the license. `tests/Feature/AgentToolingTest.php` checks that every skill has valid frontmatter, its license, and only references paths, commands, and links that exist.
 
@@ -406,7 +355,7 @@ git remote add origin https://github.com/YOUR_GITHUB_OWNER/YOUR_PROJECT.git
 git push -u origin main
 ```
 
-The generated repository is now independent from ShipKit. Its version sequence and release tags should be established separately from the template.
+The generated repository is now independent from ShipKit. Its version sequence and release tags should be established separately from the template. Next, set up its two branches: see [Branches and deploys](#branches-and-deploys).
 
 ### 2. Install and initialize the application
 
@@ -453,11 +402,113 @@ The development command starts the configured Laravel and frontend development p
 
 Local mail goes to [Mailpit](https://mailpit.axllent.org) on `127.0.0.1:1025`. When the `mailpit` binary is installed (`brew install mailpit`), `composer dev` runs it as the `mail` process (registered by `shipkit-core`; set `dev.mailpit` to `false` in `config/shipkit.php` to turn it off), and verification, password reset, and other emails land in the inbox at http://localhost:8025. Without Mailpit, set `MAIL_MAILER=log` to write emails to `storage/logs/laravel.log` instead. Tests always use the `array` mailer.
 
+## Branches and deploys
+
+A ShipKit project works on two branches, so merging a pull request never deploys by itself:
+
+```text
+your branch ──pull request──▶ staging ──release pull request──▶ main ──▶ deploy
+```
+
+- **`staging`** is where work collects. Every pull request targets it, and it is GitHub's default branch, so `gh pr create` and Dependabot pick it without being told.
+- **`main`** is what is live. The only pull requests into it are the release, from `staging`, and an urgent hotfix. Point your host's production environment at `main`: on Laravel Cloud, which deploys on every push to an environment's branch, a release is then the only thing that deploys.
+
+Agents follow the same flow: it is in the guidelines every session loads and in the `branches` rule, and the `pull request base` workflow fails a pull request that targets the wrong branch.
+
+### Set it up once
+
+After the first push, with the [GitHub CLI](https://cli.github.com) signed in:
+
+```bash
+php artisan shipkit:doctor --fix
+```
+
+It lists what it will change and asks before it does anything. It creates `staging` from `main`, makes `staging` the default branch, turns on "Automatically delete head branches", and installs ShipKit's agent definitions. Then, where the app is hosted, set the production environment's branch to `main`. On Laravel Cloud you can add a second environment on `staging` to preview what the next release holds.
+
+Before a pull request merges, have it reviewed by a session that did not write it. With the [Claude Code CLI](https://code.claude.com) signed in, on the pull request's branch:
+
+```bash
+php artisan shipkit:review
+```
+
+It runs the `review-diff` skill in a fresh read-only session on your machine (on your Claude plan; nothing runs in CI), posts the report on the pull request, and sets the `shipkit/review` status that branch protection requires. `--dry-run` prints the review without publishing it.
+
+Check the setup at any time:
+
+```bash
+php artisan shipkit:doctor
+```
+
+### Every day
+
+Start from `staging`:
+
+```bash
+git switch -c my-change origin/staging
+```
+
+Open a pull request. It targets `staging` because that is the default branch:
+
+```bash
+gh pr create --fill
+```
+
+Merge it once the checks pass, and delete the branch:
+
+```bash
+gh pr merge --merge --delete-branch
+```
+
+### Release
+
+When `staging` holds what you want live, open the release:
+
+```bash
+gh pr create --base main --head staging --title "Release"
+```
+
+Merge it with a merge commit, never a squash or a rebase, so the two branches stay in step. Merging it is what deploys, so it is the maintainer's to merge, never an agent's:
+
+```bash
+gh pr merge --merge
+```
+
+### Hotfix
+
+For a fix that cannot wait for the next release, branch from `main`:
+
+```bash
+git switch -c hotfix/short-name origin/main
+```
+
+Open it against `main`, and merge it:
+
+```bash
+gh pr create --base main --fill
+```
+
+Then bring the fix back, so the next release does not undo it:
+
+```bash
+gh pr create --base staging --head main --title "Bring the hotfix back to staging"
+```
+
+### One branch instead
+
+To work on `main` alone, set `SHIPKIT_INTEGRATION_BRANCH=main` in `.env`, and tell the workflow:
+
+```bash
+gh variable set SHIPKIT_INTEGRATION_BRANCH --body main
+```
+
+Every pull request then targets `main`, and every merge deploys.
+
 ## New-project checklist
 
 Before starting business features:
 
 - [ ] Create the project with the Laravel installer, or initialize an empty repository from a ShipKit release tag.
+- [ ] Run `php artisan shipkit:doctor --fix` to create `staging` and set the GitHub settings, and point the host's production environment at `main` ([Branches and deploys](#branches-and-deploys)).
 - [ ] Update `APP_NAME`, `APP_URL`, and project branding.
 - [ ] Update the root package name, description, and keywords in `composer.json`.
 - [ ] Replace the placeholder landing page copy in `resources/js/pages/welcome/partials/content.ts`.
@@ -468,10 +519,8 @@ Before starting business features:
 - [ ] Review token lifetimes, API policies, and bearer-token flows, or remove the API routes if the project does not need them.
 - [ ] Provide stable Passport keys in production (`PASSPORT_PRIVATE_KEY` and `PASSPORT_PUBLIC_KEY`).
 - [ ] Establish the project's independent semantic-version sequence and release tags.
-- [ ] (Optional) Configure `TYPESAFE_API_KEY`, install the TypeSafe Codex skill, and verify the project-scoped Jev MCP server.
 - [ ] Run the automated quality checks and production build.
 - [ ] Update this README with the project's business purpose and capabilities.
-- [ ] (Optional) Delete or replace `docs/how-shipkit-was-built.md`; it tells ShipKit's own story, not your project's.
 
 ## Development commands
 
@@ -581,7 +630,19 @@ composer ci:check
 
 `composer update` also runs `php artisan boost:update`, so the refreshed agent rules and skills arrive with the package. The project's constraint, such as `^3.0`, keeps it within one major version, and a minor or patch release never makes a passing project fail. A new major version tightens a guard, so moving to it is a deliberate step: require it with `composer require shipwithian/shipkit-core:^4.0`, then follow its section in the package's [`UPGRADE.md`](packages/shipkit-core/UPGRADE.md), which names each check that may now fail and the fix.
 
-**Template code: controllers, Actions, Queries, models, pages, and configuration.** Nothing updates it. The project copied it once and owns it from then on. To adopt an improvement from a later ShipKit release, read its section in [`CHANGELOG.md`](CHANGELOG.md), compare the two release tags on GitHub, for example `https://github.com/shipwithian/shipkit/compare/v2.0.0...v3.0.0`, and copy the parts you want.
+**Template code: controllers, Actions, Queries, models, pages, and configuration.** The project copied it once and owns it. `shipkit:upgrade` brings a newer release's changes into it as a three-way merge, keeping the project's own edits. Update `shipkit-core` first, since the command moves the template files to the installed core version, then read the report:
+
+```bash
+php artisan shipkit:upgrade
+```
+
+It lists every template file that changed and what applying does to it (updates, merges cleanly, conflicts, new, removed), followed by the upgrade notes. Nothing changes until you apply:
+
+```bash
+php artisan shipkit:upgrade --apply
+```
+
+It writes the changes and records the new version in `shipkit.json`, without staging or committing, so `git diff` shows exactly what it did. Resolve the conflicts it lists, then run `composer update`, `npm install`, `php artisan migrate`, and `composer ci:check`. A project created before 6.0 passes `--from=<the release it was created from>` the first time. To skip files you have replaced entirely, list them under `exclude` in `shipkit.json`.
 
 ## Bringing improvements back to ShipKit
 

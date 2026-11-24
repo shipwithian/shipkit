@@ -28,13 +28,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | integration_branch: the branch every pull request targets, read by the `branches` rule, the
-    | skills that open and merge pull requests, and `shipkit:doctor`. Set it to `staging` when work
-    | collects there before a release to `main`.
+    | skills that open and merge pull requests, and `shipkit:doctor`. Work collects on `staging`, and
+    | one pull request from it into `main` is a release, so merging a change never deploys by
+    | itself. Set it to `main` to work on one branch. `php artisan shipkit:doctor --fix` creates the
+    | branch and sets it as GitHub's default.
     |
     */
 
     'workflow' => [
-        'integration_branch' => env('SHIPKIT_INTEGRATION_BRANCH', 'main'),
+        'integration_branch' => env('SHIPKIT_INTEGRATION_BRANCH', 'staging'),
     ],
 
     /*
@@ -49,6 +51,22 @@ return [
     */
 
     'agents' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Review
+    |--------------------------------------------------------------------------
+    |
+    | The session `php artisan shipkit:review` starts to run review-diff. The two reviewers it
+    | spawns keep the model and effort their agent definitions pin.
+    |
+    */
+
+    'review' => [
+        'model' => 'sonnet',
+        'effort' => 'low',
+        'timeout' => 1800,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -73,6 +91,9 @@ return [
             'tests/Feature/AccessControl/AccessControlInvariantsTest.php' => 'attempts to change the marker to prove the models refuse it',
         ],
         'long_frontend_files' => [],
+        'audience_words' => [],
+        'audience_exceptions' => [],
+        'raw_element_exceptions' => [],
     ],
 
     /*

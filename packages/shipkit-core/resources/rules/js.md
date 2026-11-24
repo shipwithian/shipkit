@@ -13,9 +13,39 @@ Show a control only when the page's props say the actor may use it: `can.create`
 
 The shared `auth` prop (`AuthProps`) holds the signed-in user, `null` for a guest, and `can`, the navigation abilities. A page a guest can reach handles `auth.user === null`; a page behind `auth` reads the user with `useAuthUser()`.
 
+## Build screens from shadcn/ui primitives
+
+Every control and data display comes from the shadcn/ui primitives in `resources/js/components/ui` (configured by `components.json`): `Button`, `Input`, `Label`, `Select`, `Textarea`, `Checkbox`, `RadioGroup`, `Table`, `Dialog`, and the rest. Never hand-build a `<button>`, `<input>`, `<label>`, `<select>`, `<textarea>`, `<table>`, or `<dialog>` in a page, partial, or component; a hidden form field is the one exception, because it has no look.
+
+- When the primitive you need is missing, add it with the shadcn CLI, for example `npx shadcn@latest add table`, and commit the file it creates. Never write a look-alike by hand.
+- Adapt a primitive through its variants (`variant="ghost"`, `size="icon"`) and `className`, which `cn()` merges over its defaults. Never fork it inside a page.
+- Change a primitive itself in `components/ui` only for a change the whole app should share.
+
+The template's linter (`vp check`, oxlint's `react/forbid-elements`) flags a hand-built element in the editor as you type, and `FrontendPrimitivesTest` in `shipkit-core` fails on one outside `components/ui` in `composer ci:check`, naming the primitive to use and, when the project does not have it yet, the command that adds it. Record a file that genuinely needs raw markup, such as a printable receipt, in `shipkit.architecture.raw_element_exceptions` with the reason.
+
+## Enable a save button only when there is something to save
+
+A form that edits or creates something keeps its submit button disabled until the form has changes, and while it is submitting: `disabled={processing || !isDirty}` with `<Form>`, or `disabled={form.processing || !form.isDirty}` with `useForm`. Saving an unchanged form only reloads the page, and a button that wakes up as you type tells you the change was noticed. Actions are not edits, so a sign-in, confirmation, delete, revoke, or two-factor button keeps `disabled={processing}` only; a sign-in form also cannot rely on `isDirty`, because browser autofill does not always mark it changed. `FrontendPrimitivesTest` fails on a `pages/{feature}/partials/edit-*.tsx` or `create-*.tsx` dialog whose form never reads `isDirty`; review covers forms with other names, such as the profile page.
+
+## Give navigation items an icon
+
+Every item in a navigation list, the main sidebar and the Settings menu alike, has a `lucide-react` icon (`icon: Users`), so the lists scan at a glance and collapse to icons on a narrow screen.
+
+## Build list pages from the list components
+
+A page that lists records (an `index` page) is built from the same pieces, so every list searches, filters, and pages the same way:
+
+- `ListToolbar` from `@/components/list-toolbar`: a search box that searches as you type, with the page's filters as its children;
+- `ListFilter` from `@/components/list-filter`: one choice of options, or all of them;
+- `useListFilters(filters)` from `@/hooks/use-list-filters`: `apply({ search })` reloads the page with the filters in the URL, so a filtered list can be shared, bookmarked, and paged;
+- the feature's table partial, built from `Table`, with an empty message that says when filters hide every row;
+- `ListPagination` from `@/components/list-pagination` under a paginated list.
+
+The page receives the filters it was rendered with as a `filters` prop (see the `responses` rule) and passes them straight to `useListFilters`. Settings → Users is the example: search by name or email, a role filter, and pagination.
+
 ## Organize pages by controller action
 
-A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it: `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
+A file at `pages/{feature}/{action}.tsx` is a routable page named after the controller action that renders it, in its feature's folder and never an audience's such as `pages/staff/` or `pages/admin/` (see the `routes` rule): `index`, `create`, `edit`, or `show`. A page that serves more than one action, such as an index with create, edit, and delete, reads its props and composes partials; it does not hold form or table markup. A single-form page, such as an auth screen, may hold its own form.
 
 ## Keep files short by splitting them as they grow
 

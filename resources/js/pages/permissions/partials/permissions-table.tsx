@@ -1,35 +1,47 @@
 import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { DeletePermissionDialog } from '@/pages/permissions/partials/delete-permission-dialog';
 import { EditPermissionDialog } from '@/pages/permissions/partials/edit-permission-dialog';
 import type { PermissionListItem } from '@/types';
 
 export function PermissionsTable({
     permissions,
+    emptyMessage,
 }: {
     permissions: PermissionListItem[];
+    emptyMessage: string;
 }) {
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead className="bg-muted/50 border-b text-left">
-                        <tr>
-                            <th className="px-4 py-3 font-medium">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead className="px-4 py-3 font-medium">
                                 Permission
-                            </th>
-                            <th className="px-4 py-3 font-medium">Roles</th>
-                            <th className="px-4 py-3 font-medium">
+                            </TableHead>
+                            <TableHead className="px-4 py-3 font-medium">
+                                Roles
+                            </TableHead>
+                            <TableHead className="px-4 py-3 font-medium">
                                 Direct users
-                            </th>
-                            <th className="px-4 py-3 text-right font-medium">
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-right font-medium">
                                 Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {permissions.map((permission) => (
-                            <tr key={permission.id}>
-                                <td className="px-4 py-3">
+                            <TableRow key={permission.id}>
+                                <TableCell className="px-4 py-3">
                                     <div className="flex items-center gap-2 font-medium">
                                         {permission.name}
                                         {permission.is_protected && (
@@ -38,14 +50,14 @@ export function PermissionsTable({
                                             </Badge>
                                         )}
                                     </div>
-                                </td>
-                                <td className="text-muted-foreground px-4 py-3">
+                                </TableCell>
+                                <TableCell className="text-muted-foreground px-4 py-3">
                                     {permission.roles_count}
-                                </td>
-                                <td className="text-muted-foreground px-4 py-3">
+                                </TableCell>
+                                <TableCell className="text-muted-foreground px-4 py-3">
                                     {permission.users_count}
-                                </td>
-                                <td className="px-4 py-3">
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
                                     <div className="flex justify-end gap-2">
                                         {permission.can.update &&
                                             !permission.is_protected && (
@@ -60,21 +72,21 @@ export function PermissionsTable({
                                                 />
                                             )}
                                     </div>
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         ))}
                         {permissions.length === 0 && (
-                            <tr>
-                                <td
+                            <TableRow>
+                                <TableCell
                                     colSpan={4}
                                     className="text-muted-foreground px-4 py-10 text-center"
                                 >
-                                    No permissions have been created.
-                                </td>
-                            </tr>
+                                    {emptyMessage}
+                                </TableCell>
+                            </TableRow>
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );

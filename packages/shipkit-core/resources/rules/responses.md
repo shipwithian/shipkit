@@ -35,4 +35,6 @@ A collection returns the resource collection under `data`. A create returns 201 
 
 ## Paginate Inertia pages with a list and a pagination prop
 
+A list page also receives a `filters` prop with the search and filters it was rendered with: `App\Http\Props\SearchFilters` for a search box alone, or a `#[TypeScript]` class of the feature's own (`UserListFilters`) with one nullable property per filter. The controller reads them from a Form Request that validates them (`search` up to 100 characters, each filter an existing value) and passes the same values to the Query.
+
 The Query returns a paginator with `withQueryString()`. The page's props class holds a list prop named for the resource (`entries`), mapped from `$paginator->items()`, and a `pagination` prop: a `#[TypeScript]` class with `current_page`, `last_page`, `total`, `previous_page_url`, and `next_page_url`.

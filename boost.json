@@ -26,7 +26,6 @@
         "correct",
         "diagnosing-bugs",
         "domain-modeling",
-        "grill-with-docs",
         "grilling",
         "handoff",
         "implement",
@@ -35,6 +34,7 @@
         "review-diff",
         "to-spec",
         "to-tickets",
+        "upgrade",
         "writing-for-agents",
         "laravel-permission-development",
         "verify-app"

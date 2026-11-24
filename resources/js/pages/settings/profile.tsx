@@ -35,7 +35,7 @@ export default function Profile({ mustVerifyEmail, status }: ProfileEditProps) {
                     }}
                     className="space-y-6"
                 >
-                    {({ processing, errors }) => (
+                    {({ processing, errors, isDirty }) => (
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>
@@ -103,7 +103,7 @@ export default function Profile({ mustVerifyEmail, status }: ProfileEditProps) {
 
                             <div className="flex items-center gap-4">
                                 <Button
-                                    disabled={processing}
+                                    disabled={processing || !isDirty}
                                     data-test="update-profile-button"
                                 >
                                     Save

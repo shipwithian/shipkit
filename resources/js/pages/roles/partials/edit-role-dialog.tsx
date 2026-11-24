@@ -42,7 +42,7 @@ export function EditRoleDialog({ role }: { role: RoleListItem }) {
                     onSuccess={() => setOpen(false)}
                     className="space-y-4"
                 >
-                    {({ errors, processing }) => (
+                    {({ errors, processing, isDirty }) => (
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor={`role-name-${role.id}`}>
@@ -63,7 +63,7 @@ export function EditRoleDialog({ role }: { role: RoleListItem }) {
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button disabled={processing}>
+                                <Button disabled={processing || !isDirty}>
                                     Save changes
                                 </Button>
                             </DialogFooter>

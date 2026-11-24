@@ -3,35 +3,48 @@ import { KeyRound } from 'lucide-react';
 import RolePermissionController from '@/actions/App/Http/Controllers/AccessControl/RolePermissionController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { DeleteRoleDialog } from '@/pages/roles/partials/delete-role-dialog';
 import { EditRoleDialog } from '@/pages/roles/partials/edit-role-dialog';
 import type { RoleListItem } from '@/types';
 
 type Props = {
     roles: RoleListItem[];
+    emptyMessage: string;
 };
 
-export function RolesTable({ roles }: Props) {
+export function RolesTable({ roles, emptyMessage }: Props) {
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead className="bg-muted/50 border-b text-left">
-                        <tr>
-                            <th className="px-4 py-3 font-medium">Role</th>
-                            <th className="px-4 py-3 font-medium">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead className="px-4 py-3 font-medium">
+                                Role
+                            </TableHead>
+                            <TableHead className="px-4 py-3 font-medium">
                                 Permissions
-                            </th>
-                            <th className="px-4 py-3 font-medium">Users</th>
-                            <th className="px-4 py-3 text-right font-medium">
+                            </TableHead>
+                            <TableHead className="px-4 py-3 font-medium">
+                                Users
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-right font-medium">
                                 Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {roles.map((role) => (
-                            <tr key={role.id}>
-                                <td className="px-4 py-3">
+                            <TableRow key={role.id}>
+                                <TableCell className="px-4 py-3">
                                     <div className="flex items-center gap-2 font-medium">
                                         {role.name}
                                         {role.is_protected && (
@@ -40,14 +53,14 @@ export function RolesTable({ roles }: Props) {
                                             </Badge>
                                         )}
                                     </div>
-                                </td>
-                                <td className="text-muted-foreground px-4 py-3">
+                                </TableCell>
+                                <TableCell className="text-muted-foreground px-4 py-3">
                                     {role.permissions_count}
-                                </td>
-                                <td className="text-muted-foreground px-4 py-3">
+                                </TableCell>
+                                <TableCell className="text-muted-foreground px-4 py-3">
                                     {role.users_count}
-                                </td>
-                                <td className="px-4 py-3">
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
                                     <div className="flex justify-end gap-2">
                                         {role.can.assignPermissions && (
                                             <Button
@@ -74,21 +87,21 @@ export function RolesTable({ roles }: Props) {
                                                 <DeleteRoleDialog role={role} />
                                             )}
                                     </div>
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         ))}
                         {roles.length === 0 && (
-                            <tr>
-                                <td
+                            <TableRow>
+                                <TableCell
                                     colSpan={4}
                                     className="text-muted-foreground px-4 py-10 text-center"
                                 >
-                                    No roles have been created.
-                                </td>
-                            </tr>
+                                    {emptyMessage}
+                                </TableCell>
+                            </TableRow>
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );

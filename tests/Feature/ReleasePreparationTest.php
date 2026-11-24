@@ -38,6 +38,11 @@ describe('a prepared release', function () {
             ->and(is_dir($this->checkout.'/packages'))->toBeFalse();
     });
 
+    it('records its own version as the template version, where shipkit:upgrade reads it', function () {
+        expect(json_decode((string) file_get_contents(base_path('shipkit.json')), true))->toBe(['template' => 'dev'])
+            ->and(json_decode((string) file_get_contents($this->checkout.'/shipkit.json'), true))->toBe(['template' => '1.4.2']);
+    });
+
     it("drops main's branch alias, which only exists to rank main below the releases", function () {
         $composer = json_decode((string) file_get_contents($this->checkout.'/composer.json'), true);
 

@@ -48,6 +48,11 @@ mv composer.json.tmp composer.json
 
 git rm -r -q packages/shipkit-core
 
+echo "Recording template version $version in shipkit.json, where shipkit:upgrade reads it"
+
+jq --arg version "$version" '.template = $version' shipkit.json >shipkit.json.tmp
+mv shipkit.json.tmp shipkit.json
+
 # The checks that listed the package's folders for the development checkout.
 sed -i.bak '/packages\/shipkit-core/d' phpstan.neon rector.php phpunit.xml
 rm -f phpstan.neon.bak rector.php.bak phpunit.xml.bak
