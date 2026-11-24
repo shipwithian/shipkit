@@ -61,6 +61,9 @@ function fakeReview(string $verdict = 'needs-maintainer', array $overrides = [],
         "git diff 'origin/staging...HEAD'" => Process::result("diff --git a/app/Models/User.php b/app/Models/User.php\n+// a change\n"),
         "git diff --name-only 'origin/staging...HEAD'" => Process::result("app/Models/User.php\n"),
         "git log --oneline 'origin/staging..HEAD'" => Process::result("abc1234 change the user\n"),
+        "git show 'origin/staging:.github/CODEOWNERS'" => Process::result(exitCode: 128),
+        "git show 'origin/staging:CODEOWNERS'" => Process::result(exitCode: 128),
+        "git show 'origin/staging:docs/CODEOWNERS'" => Process::result(exitCode: 128),
         'gh pr checks 12' => Process::result("ci\tpass\n"),
         'gh issue view * --comments' => Process::result("title: the spec\n"),
         'claude -p *' => reviewerSays($verdict),
@@ -246,4 +249,36 @@ it('refuses a pull request with nothing to review', function () {
         ->assertFailed();
 
     Process::assertNotRan(fn ($process) => str_starts_with($process->command, 'claude -p '));
+});
+
+it('never lets an agent merge a change to a file the base branch\'s CODEOWNERS owns', function () {
+    fakeReview('agent-may-merge', ["git show 'origin/staging:.github/CODEOWNERS'" => Process::result("/app/Models/User.php @maintainer\n")]);
+
+    $this->artisan('shipkit:review')
+        ->expectsOutputToContain('Needs the maintainer')
+        ->assertSuccessful();
+
+    Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ')
+        && str_contains($process->command, 'storage/framework/cache/shipkit-review/maintainer-owned.txt'));
+    Process::assertRan(fn ($process) => $process->command === 'gh api repos/acme/cafe/statuses/'.REVIEWED_SHA." -f state=success -f context=shipkit/review -f 'description=Needs the maintainer'");
+});
+
+it('lets an agent merge when CODEOWNERS owns none of the changed files', function () {
+    fakeReview('agent-may-merge', ["git show 'origin/staging:CODEOWNERS'" => Process::result("/.github/ @maintainer\n")]);
+
+    $this->artisan('shipkit:review')
+        ->expectsOutputToContain('Agent may merge')
+        ->assertSuccessful();
+
+    Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ')
+        && str_contains($process->command, 'no maintainer-owned path is touched'));
+});
+
+it('falls back to the guideline\'s list when the base branch has no CODEOWNERS file', function () {
+    fakeReview('agent-may-merge');
+
+    $this->artisan('shipkit:review')->assertSuccessful();
+
+    Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ')
+        && str_contains($process->command, 'has no CODEOWNERS file'));
 });
