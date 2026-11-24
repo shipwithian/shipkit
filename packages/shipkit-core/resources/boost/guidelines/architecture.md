@@ -93,7 +93,7 @@ ShipKit's path rules ship with `shipkit-core` in `vendor/shipwithian/shipkit-cor
 - **Feature work:** `to-spec` → `to-tickets` → `implement`, tracked in GitHub Issues as described in `.ai/issue-tracker.md`. `review-diff` reviews a branch against these rules and its own checklist.
 - **A bug or regression:** `diagnosing-bugs`.
 - **Proving behaviour in the running app:** `verify-app`.
-- **Shaping a feature's language:** `domain-modeling` or `grill-with-docs`.
+- **Shaping a feature's language:** `domain-modeling`, or `grilling`, which records terms and invariants through it as they settle.
 - **Moving to a newer ShipKit release:** `upgrade`, which runs `php artisan shipkit:upgrade`.
 - **After a session, or when the same correction repeats:** `retro` and `correct`. `.ai/rules/enforcement.md` pairs every rule with the check that enforces it; prefer adding a check over adding a rule.
 
