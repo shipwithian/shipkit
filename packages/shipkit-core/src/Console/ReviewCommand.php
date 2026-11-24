@@ -159,7 +159,9 @@ class ReviewCommand extends Command
             "Run the review-diff skill on this branch, with fixed point origin/{$base}.",
             $spec,
             'You are the independent review: you did not write this code.',
-            'For the Checks item, read the pull request\'s CI with `gh pr checks`; do not run composer ci:check.',
+            'Spawn the shipkit-standards-reviewer and shipkit-spec-reviewer agents with the Agent tool, as the skill says, and report what they find; never review the diff yourself in their place.',
+            'Run one command per Bash call, with no pipes, `&&`, redirects, or `cd`: only plain git and gh commands are allowed, and a compound command is refused.',
+            'Branch protection requires CI separately, so for the Checks item read it with `gh pr checks` and report its state, but do not base the verdict on CI that is still running; never run composer ci:check.',
             'Do not edit, stage, commit, push, or comment; this command publishes your report.',
             'Return the full report, as markdown, in `report`, and the Handoff verdict in `verdict`: agent-may-merge, needs-maintainer, or not-ready.',
         ]);

@@ -213,3 +213,15 @@ it('lets the reviewer read but never write', function () {
         return array_intersect(preg_split('/\s+(?![^(]*\))/', $tools[1]), ['Edit', 'Write', 'NotebookEdit', 'Bash', 'Bash(git push:*)', 'Bash(git commit:*)']) === [];
     });
 });
+
+it('tells the reviewer to use the pinned reviewers, plain commands, and CI as reported rather than gating', function () {
+    fakeReview();
+
+    $this->artisan('shipkit:review')->assertSuccessful();
+
+    Process::assertRan(fn ($process) => str_starts_with($process->command, 'claude -p ')
+        && str_contains($process->command, 'shipkit-standards-reviewer')
+        && str_contains($process->command, 'shipkit-spec-reviewer')
+        && str_contains($process->command, 'no pipes')
+        && str_contains($process->command, 'do not base the verdict on CI that is still running'));
+});
